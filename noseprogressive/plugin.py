@@ -31,8 +31,8 @@ class ProgressivePlugin(Plugin):
         class DevNullStream(object):
             writeln = flush = write = lambda self, *args: None
 
-        stream.__class__ = StreamWithProgress  # in the hope that this will keep other users of the stream from wrecking our progress indicator
         self.stream = stream
+        self.shy_progress_bar = ShyProgressBar(self.stream)
         return DevNullStream()
 
     def getDescription(self, test):
@@ -40,47 +40,57 @@ class ProgressivePlugin(Plugin):
 
     def printError(self, kind, err, test):
         formatted_err = format_exception(*err)
-        writeln = self.stream.writeln
-        writeln()
-        writeln('=' * 70)
-        writeln('%s: %s' % (kind, self.getDescription(test)))
-        writeln('-' * 70)
-        writeln(''.join(formatted_err))
-        self.stream.flush()
+        with self.shy_progress_bar:
+            writeln = self.stream.writeln
+            writeln()
+            writeln('=' * 70)
+            writeln('%s: %s' % (kind, self.getDescription(test)))
+            writeln('-' * 70)
+            writeln(''.join(formatted_err))
 
     def printErrors(self):
         # The current summary doesn't begin with a \n.
-        self.stream.writeln()
+        with self.shy_progress_bar:
+            self.stream.writeln()
 
     # TODO: Override printSummary() to add footer.
 
     def addError(self, test, err):
         exc, val, tb = err
-        if isinstance(exc, SkipTest):
-            self.stream.writeln()
-            self.stream.writeln('SKIP: %s' % nice_test_address(test))
-        else:
-            self.printError('ERROR', err, test)
+        with self.shy_progress_bar:
+            if isinstance(exc, SkipTest):
+                self.stream.writeln()
+                self.stream.writeln('SKIP: %s' % nice_test_address(test))
+            else:
+                self.printError('ERROR', err, test)
 
     def addFailure(self, test, err):
         self.printError('FAIL', err, test)
 
     def addSkip(self, test, reason):
         # Only in 2.7+
-        self.stream.writeln()
-        self.stream.writeln('SKIP: %s' % nice_test_address(test))
+        with self.shy_progress_bar:
+            self.stream.writeln()
+            self.stream.writeln('SKIP: %s' % nice_test_address(test))
 
     def addSuccess(self, test):
-        self.stream.writeln(get_context(test.test) + '.' + test.test._testMethodName)
+        with self.shy_progress_bar:
+            self.stream.writeln(get_context(test.test) + '.' + test.test._testMethodName)
+
+
+class ShyProgressBar(_WritelnDecorator):
+    """A progress bar that gets out of the way, lets you print what you want, and then springs back into place"""
+
+    def __init__(self, stream):
+        self.stream = stream
+
+    def __enter__(self):
+        # TODO: Hide progress bar.
+        pass
+    
+    def __exit__(self, type, value, tb):
+        # TODO: Redraw progress bar.
         self.stream.flush()
-
-
-class StreamWithProgress(_WritelnDecorator):
-    # TODO: Think about doing this as a "with" statement.
-    def writeln(self, arg=None):
-        # TODO: Erase progress indicator.
-        super(StreamWithProgress, self).writeln(arg)
-        # TODO: Redraw progress indicator.
 
 
 def nice_test_address(test):
