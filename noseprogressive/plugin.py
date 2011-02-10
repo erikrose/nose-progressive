@@ -1,6 +1,9 @@
+from curses import tigetnum, tigetstr, setupterm, tparm
 import inspect
 import logging
 import os
+import random
+from time import sleep
 from traceback import format_exception
 import unittest
 from unittest import TestCase, _WritelnDecorator
@@ -32,6 +35,7 @@ class ProgressivePlugin(Plugin):
             writeln = flush = write = lambda self, *args: None
 
         self.stream = stream
+        setupterm()  # TODO: Don't do this if self.stream isn't a terminal. Use os.isatty(self.stream.fileno()). If it isn't, perhaps replace the ShyProgressBar with a dummy object.
         self.shy_progress_bar = ShyProgressBar(self.stream)
         return DevNullStream()
 
@@ -84,12 +88,30 @@ class ShyProgressBar(_WritelnDecorator):
     def __init__(self, stream):
         self.stream = stream
 
-    def __enter__(self):
-        # TODO: Hide progress bar.
-        pass
+    def move_to_progress_bar(self):
+        """Save position and move to progress bar, col 1."""
+        self.stream.write(tigetstr('sc'))  # save position
+        width, height = tigetnum('cols'), tigetnum('lines')
+        self.stream.write(tparm(tigetstr('cup'), height, 0))
     
+    def move_back(self):
+        self.stream.write(tigetstr('rc'))  # restore position        
+    
+    def __enter__(self):
+        # My terminal has no status line, so we make one manually.
+        # Doing this each time gives us a hope of adjusting if people resize their terminals during test runs:
+        self.move_to_progress_bar()
+        self.stream.write(tigetstr('el'))  # erase to EOL
+        self.move_back()
+        
+        self.stream.flush()
+
     def __exit__(self, type, value, tb):
         # TODO: Redraw progress bar.
+        self.move_to_progress_bar()
+        self.stream.write(''.join(random.choice('ABCDEF') for x in xrange(30)))  # print progress bar
+        self.move_back()
+
         self.stream.flush()
 
 
