@@ -2,7 +2,7 @@ from curses import tigetnum, tigetstr, setupterm, tparm
 import inspect
 import logging
 import os
-from traceback import format_exception
+from traceback import format_exception, extract_tb
 from unittest import TestCase
 
 from nose.plugins import Plugin
@@ -16,7 +16,7 @@ log = logging.getLogger('nose.plugins.ProgressivePlugin')
 class ProgressivePlugin(Plugin):
     """Nose plugin which prioritizes the important information"""
     name = 'progressive'
-    testsRun = 0
+    testsRun = failures = errors = skips = 0
 
     def options(self, parser, env=os.environ):
         super(ProgressivePlugin, self).options(parser, env=env)
@@ -43,11 +43,20 @@ class ProgressivePlugin(Plugin):
 
     def printError(self, kind, err, test):
         formatted_err = format_exception(*err)
+        # TODO: Format the tb ourselves and eliminate the space-wasting
+        # "Traceback (most recent..." line to make up for the extra pathname
+        # line.
         with ShyProgressBar(self.stream, self.bar):
             writeln = self.stream.writeln
             writeln()
             writeln('=' * 70)
             writeln('%s: %s' % (kind, self.getDescription(test)))
+
+            # File name and line num in a format vi can take:
+            file_name = test.address()[0]
+            line_num = extract_tb(err[2])[-1][1]
+            writeln(' ' * len(kind) + '  %s +%s' % (file_name, line_num))
+
             writeln('-' * 70)
             self.stream.write(''.join(formatted_err))
 
@@ -64,6 +73,7 @@ class ProgressivePlugin(Plugin):
             self.stream.write(self.bar.get(test, self.testsRun))
 
     def addError(self, test, err):
+        self.errors += 1
         exc, val, tb = err
         with ShyProgressBar(self.stream, self.bar):
             if isinstance(exc, SkipTest):
@@ -73,10 +83,12 @@ class ProgressivePlugin(Plugin):
                 self.printError('ERROR', err, test)
 
     def addFailure(self, test, err):
+        self.failures += 1
         self.printError('FAIL', err, test)
 
     def addSkip(self, test, reason):
         # Only in 2.7+
+        self.skips += 1
         with ShyProgressBar(self.stream, self.bar):
             self.stream.writeln()
             self.stream.writeln('SKIP: %s' % nice_test_address(test))
