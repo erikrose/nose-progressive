@@ -2,7 +2,7 @@ from curses import tigetnum, tigetstr, setupterm, tparm
 import inspect
 import logging
 import os
-from traceback import format_exception, extract_tb
+from traceback import format_list, extract_tb
 from unittest import TestCase
 
 from nose.plugins import Plugin
@@ -42,11 +42,10 @@ class ProgressivePlugin(Plugin):
         self.bar = ProgressBar()
         return DummyStream()
 
-    def getDescription(self, test):
-        return nice_test_address(test)
-
     def printError(self, kind, err, test):
-        formatted_err = format_exception(*err)
+        _, _, tb = err
+        extracted_tb = extract_tb(tb)
+        formatted_err = ''.join(format_list(extracted_tb))
         # TODO: Format the tb ourselves and eliminate the space-wasting
         # "Traceback (most recent..." line to make up for the extra pathname
         # line.
@@ -54,15 +53,18 @@ class ProgressivePlugin(Plugin):
             writeln = self.stream.writeln
             writeln()
             writeln('=' * 70)
-            writeln('%s: %s' % (kind, self.getDescription(test)))
+            writeln('%s: %s' % (kind, python_path(test)))
 
             # File name and line num in a format vi can take:
-            file_name = test.address()[0]
-            line_num = extract_tb(err[2])[-1][1]
-            writeln(' ' * len(kind) + '  %s +%s' % (file_name, line_num))
+            address = test.address()
+            if address:
+                file_name = address[0]
+                line_num = extracted_tb[-1][1]
+                writeln(' ' * len(kind) +
+                        '  %s +%s' % (relative_source_path(file_name), line_num))
 
             writeln('-' * 70)
-            self.stream.write(''.join(formatted_err))
+            self.stream.write(formatted_err)
 
     def printErrors(self):
         # The current summary doesn't begin with a \n.
@@ -94,7 +96,7 @@ class ProgressivePlugin(Plugin):
         with ShyProgressBar(self.stream, self.bar):
             if isinstance(exc, SkipTest):
                 self.stream.writeln()
-                self.stream.writeln('SKIP: %s' % nice_test_address(test))
+                self.stream.writeln('SKIP: %s' % nose_selector(test))
             else:
                 self.printError('ERROR', err, test)
 
@@ -106,7 +108,7 @@ class ProgressivePlugin(Plugin):
         # TODO: This never gets called, at least in 2.6.
         with ShyProgressBar(self.stream, self.bar):
             self.stream.writeln()
-            self.stream.writeln('SKIP: %s' % nice_test_address(test))
+            self.stream.writeln('SKIP: %s' % nose_selector(test))
 
 
 class ProgressBar(object):
@@ -117,7 +119,7 @@ class ProgressBar(object):
     def get(self, test, number):
         number = str(number)
         BOLD = tigetstr('bold')
-        test_path = get_context(test.test) + '.' + test.test._testMethodName
+        test_path = python_path(test.test) + '.' + test.test._testMethodName
         width = tigetnum('cols')
         cols_for_path = width - len(number) - 2  # 2 spaces between path and number
         if len(test_path) > cols_for_path:
@@ -168,35 +170,35 @@ class ShyProgressBar(object):
         self.stream.flush()
 
 
-def nice_test_address(test):
-    addr = test_address(test)
-    if addr is None:
-        return '??'
-    path, module, test_path = addr
-    path = nice_path(path)
-    if test_path is None:
-        return path
-    return '%s:%s' % (path, test_path)
-
-nice_test_address.__test__ = False  # Not a test for Nose
-
-
-def get_context(test):
-    # TODO: Can't we just use test.address()?
-    if isinstance(test, FunctionTestCase):
-        context = nice_path(inspect.getfile(inspect.getmodule(test.test)))
-    elif isinstance(test, TestCase):
-        context = '%s:%s' % (nice_path(inspect.getfile(test.__class__)),
-                             test.__class__.__name__)
+def nose_selector(test):
+    """Return the string you can pass to nose to run `test`."""
+    file, module, rest = test_address(test)
+    file = relative_source_path(file)
+    if rest:
+        return '%s:%s' % (file, rest)
     else:
-        raise NotImplemented('Unsure how to get context from: %r' % test)
-    return context
+        return file
 
 
-def nice_path(path):
+def python_path(test):
+    address = test_address(test)
+    if address:
+        file, module, rest = address
+    else:
+        return 'Unknown test'
+
+    if rest:
+        return '%s:%s' % (module, rest)
+    else:
+        return module
+
+
+def relative_source_path(path):
+    """Return a relative filesystem path to the source file of the possibly-compiled module at the given path."""
     path = os.path.abspath(path)
-    if path.startswith(os.getcwd()):
-        path = path.replace(os.getcwd(), '')[1:]  # shorten and remove slash
+    cwd = os.getcwd()
+    if path.startswith(cwd):
+        path = path[len(cwd) + 1:]  # Make path relative. Remove leading slash.
     if path.endswith('.pyc'):
-        path = path[0:-1]
+        path = path[:-1]
     return path

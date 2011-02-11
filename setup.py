@@ -8,9 +8,9 @@ if sys.version_info >= (3,):
 
 setup(
     name='noseprogressive',
-    version='1.0',
+    version='0.1',
     description='Nose plugin to show progress bar and tracebacks during tests',
-    long_description="""The philosophy of noseprogressive is to get useful information onto the screen as soon as possible and keep it there as long as possible while still indicating progress. Thus, it refrains from printing dots, since that tends to scroll informative tracebacks away. Instead, it draws a nice progress bar and the current test path, all on 1 line.""",
+    long_description="""The philosophy of noseprogressive is to get useful information onto the screen as soon as possible and keep it there as long as possible while still indicating progress. Thus, it refrains from printing dots, since that tends to scroll informative tracebacks away. Instead, it draws a nice progress bar and the current test path, all on one line.""",
     author='Erik Rose',
     author_email='erikrose@grinchcentral.com',
     license='GPL',
