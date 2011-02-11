@@ -10,6 +10,7 @@ from nose.exc import SkipTest
 from nose.case import FunctionTestCase
 from nose.util import test_address
 
+
 log = logging.getLogger('nose.plugins.ProgressivePlugin')
 
 
@@ -17,6 +18,9 @@ class ProgressivePlugin(Plugin):
     """Nose plugin which prioritizes the important information"""
     name = 'progressive'
     testsRun = 0
+
+    # TODO: Decrease score so we run early, and monkeypatch stderr in __init__.
+    # See if that works.
 
     def options(self, parser, env=os.environ):
         super(ProgressivePlugin, self).options(parser, env=env)
@@ -72,9 +76,11 @@ class ProgressivePlugin(Plugin):
         msg = ', '.join('%s %s%s' % (v, t, 's' if v != 1 else '')
                         for t, v in zip(types, values))
 
-        with ShyProgressBar(self.stream, self.bar):
-            # The arg `stream` is a DummyStream.
-            self.stream.writeln('\n' + msg)        
+        # Erase progress bar. Bash doesn't clear the whole line when printing
+        # the prompt, leaving a piece of the bar.
+        with AtProgressBar(self.stream):
+            self.stream.write(tigetstr('el'))
+        self.stream.writeln('\n' + msg)
 
     def startTest(self, test):
         # Overriding this seems to prevent TextTestRunner from running its, so
@@ -97,6 +103,7 @@ class ProgressivePlugin(Plugin):
 
     def addSkip(self, test, reason):
         # Only in 2.7+
+        # TODO: This never gets called, at least in 2.6.
         with ShyProgressBar(self.stream, self.bar):
             self.stream.writeln()
             self.stream.writeln('SKIP: %s' % nice_test_address(test))
