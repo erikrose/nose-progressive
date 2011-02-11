@@ -16,7 +16,7 @@ log = logging.getLogger('nose.plugins.ProgressivePlugin')
 class ProgressivePlugin(Plugin):
     """Nose plugin which prioritizes the important information"""
     name = 'progressive'
-    testsRun = failures = errors = skips = 0
+    testsRun = 0
 
     def options(self, parser, env=os.environ):
         super(ProgressivePlugin, self).options(parser, env=env)
@@ -30,13 +30,13 @@ class ProgressivePlugin(Plugin):
 
     def setOutputStream(self, stream):
         """Steal the stream, and return a mock one for everybody else to shut them up."""
-        class DevNullStream(object):
+        class DummyStream(object):
             writeln = flush = write = lambda self, *args: None
 
         self.stream = stream
         setupterm(None, stream.fileno())  # Make setupterm() work even when -s is passed. TODO: Don't do this if self.stream isn't a terminal. Use os.isatty(self.stream.fileno()). If it isn't, perhaps replace the ShyProgressBar with a dummy object.
         self.bar = ProgressBar()
-        return DevNullStream()
+        return DummyStream()
 
     def getDescription(self, test):
         return nice_test_address(test)
@@ -65,15 +65,25 @@ class ProgressivePlugin(Plugin):
         with ShyProgressBar(self.stream, self.bar):
             self.stream.writeln()
 
-    # TODO: Override printSummary() to add footer.
+    def finalize(self, result):
+        """Print counts of tests run."""
+        types = ['test', 'failure', 'error', 'skip']
+        values = [self.testsRun, len(result.failures), len(result.errors), len(result.skipped)]
+        msg = ', '.join('%s %s%s' % (v, t, 's' if v != 1 else '')
+                        for t, v in zip(types, values))
+
+        with ShyProgressBar(self.stream, self.bar):
+            # The arg `stream` is a DummyStream.
+            self.stream.writeln('\n' + msg)        
 
     def startTest(self, test):
+        # Overriding this seems to prevent TextTestRunner from running its, so
+        # we have to keep track of the test count ourselves.
         self.testsRun += 1
         with AtProgressBar(self.stream):
             self.stream.write(self.bar.get(test, self.testsRun))
 
     def addError(self, test, err):
-        self.errors += 1
         exc, val, tb = err
         with ShyProgressBar(self.stream, self.bar):
             if isinstance(exc, SkipTest):
@@ -83,12 +93,10 @@ class ProgressivePlugin(Plugin):
                 self.printError('ERROR', err, test)
 
     def addFailure(self, test, err):
-        self.failures += 1
         self.printError('FAIL', err, test)
 
     def addSkip(self, test, reason):
         # Only in 2.7+
-        self.skips += 1
         with ShyProgressBar(self.stream, self.bar):
             self.stream.writeln()
             self.stream.writeln('SKIP: %s' % nice_test_address(test))
