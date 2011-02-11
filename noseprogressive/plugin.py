@@ -1,8 +1,8 @@
-from curses import tigetnum, tigetstr, setupterm, tparm
+from curses import tigetnum, tigetstr, setupterm, tparm, termname
 import inspect
 import logging
 import os
-import random
+import sys
 from time import sleep
 from traceback import format_exception
 import unittest
@@ -15,9 +15,11 @@ from nose.util import test_address
 
 log = logging.getLogger('nose.plugins.ProgressivePlugin')
 
+
 class ProgressivePlugin(Plugin):
     """Nose plugin which prioritizes the important information"""
     name = 'progressive'
+    testsRun = 0
 
     def options(self, parser, env=os.environ):
         super(ProgressivePlugin, self).options(parser, env=env)
@@ -35,7 +37,25 @@ class ProgressivePlugin(Plugin):
             writeln = flush = write = lambda self, *args: None
 
         self.stream = stream
-        setupterm()  # TODO: Don't do this if self.stream isn't a terminal. Use os.isatty(self.stream.fileno()). If it isn't, perhaps replace the ShyProgressBar with a dummy object.
+        
+        # Monkeypath sys.stderr to keep other users of the stream (like
+        # logging, when you don't pass --logging-clear-handlers) from smearing bits of our progress bar upward:
+#         class StreamWrapper(object):
+#             def __init__(self, stream):
+#                 self._stream = stream
+# 
+#             def __getattr__(self, name):
+#                 return getattr(self._stream, name)
+# 
+#             def write(self, data):
+#                 self._stream.write(data)
+#                 self._stream.flush()
+#         
+#         # TODO: Only if isatty. Consider doing stdout as well.
+#         sys.stderr = StreamWrapper(sys.stderr)
+
+        setupterm(None, stream.fileno())  # Make setupterm() work even when -s is passed. TODO: Don't do this if self.stream isn't a terminal. Use os.isatty(self.stream.fileno()). If it isn't, perhaps replace the ShyProgressBar with a dummy object.
+        self._bar = ProgressBar()
         return DevNullStream()
 
     def getDescription(self, test):
@@ -43,24 +63,29 @@ class ProgressivePlugin(Plugin):
 
     def printError(self, kind, err, test):
         formatted_err = format_exception(*err)
-        with ShyProgressBar(self.stream, test):
+        with ShyProgressBar(self.stream, self._bar):
             writeln = self.stream.writeln
             writeln()
             writeln('=' * 70)
             writeln('%s: %s' % (kind, self.getDescription(test)))
             writeln('-' * 70)
-            writeln(''.join(formatted_err))
+            self.stream.write(''.join(formatted_err))
 
     def printErrors(self):
         # The current summary doesn't begin with a \n.
-        with ShyProgressBar(self.stream, test):
+        with ShyProgressBar(self.stream, self._bar):
             self.stream.writeln()
 
     # TODO: Override printSummary() to add footer.
+    
+    def startTest(self, test):
+        self.testsRun += 1
+        with AtProgressBar(self.stream):
+            self.stream.write(self._bar.get(test, self.testsRun))
 
     def addError(self, test, err):
         exc, val, tb = err
-        with ShyProgressBar(self.stream, test):
+        with ShyProgressBar(self.stream, self._bar):
             if isinstance(exc, SkipTest):
                 self.stream.writeln()
                 self.stream.writeln('SKIP: %s' % nice_test_address(test))
@@ -72,28 +97,40 @@ class ProgressivePlugin(Plugin):
 
     def addSkip(self, test, reason):
         # Only in 2.7+
-        with ShyProgressBar(self.stream, test):
+        with ShyProgressBar(self.stream, self._bar):
             self.stream.writeln()
             self.stream.writeln('SKIP: %s' % nice_test_address(test))
 
-    def addSuccess(self, test):
-        with AtProgressBar(self.stream):
-            self.stream.write(progress_bar(test))
 
+class ProgressBar(object):
+    def __init__(self):
+        width = tigetnum('cols')
+        self.last = ' ' * width
 
-def progress_bar(test):
-    REV = tigetstr('rev')
-    return tigetstr('el') + REV + get_context(test.test) + '.' + test.test._testMethodName + REV
+    def get(self, test, number):
+        number = str(number)
+        BOLD = tigetstr('bold')
+        test_path = get_context(test.test) + '.' + test.test._testMethodName
+        width = tigetnum('cols')
+        cols_for_path = width - len(number) - 2  # 2 spaces between path and number
+        if len(test_path) > cols_for_path:
+            test_path = test_path[len(test_path) - cols_for_path:]
+        else:
+            test_path += ' ' * (cols_for_path - len(test_path))
+        self.last = BOLD + test_path + '  ' + number + BOLD
+        return self.last
 
 
 class AtProgressBar(object):
+    """Context manager which goes to the progress bar line on entry and goes back to where it was on exit"""
+    
     def __init__(self, stream):
         self.stream = stream
 
     def __enter__(self):
         """Save position and move to progress bar, col 1."""
         self.stream.write(tigetstr('sc'))  # save position
-        width, height = tigetnum('cols'), tigetnum('lines')
+        height = tigetnum('lines')
         self.stream.write(tparm(tigetstr('cup'), height, 0))
     
     def __exit__(self, type, value, tb):
@@ -101,12 +138,11 @@ class AtProgressBar(object):
 
 
 class ShyProgressBar(object):
-    """Context manager that implements a progress bar that gets out of the way
-    """
+    """Context manager that implements a progress bar that gets out of the way"""
 
-    def __init__(self, stream, test):
+    def __init__(self, stream, bar):
         self.stream = stream
-        self.test = test
+        self.bar = bar
 
     def __enter__(self):
         """Erase the progress bar so bits of disembodied progress bar don't get scrolled up the terminal."""
@@ -117,9 +153,9 @@ class ShyProgressBar(object):
         self.stream.flush()
 
     def __exit__(self, type, value, tb):
-        """Redraw the progress bar at the bottom of the terminal."""
+        """Do nothing; the bar will come back at the top of the next test, which is imminent."""
         with AtProgressBar(self.stream):
-            self.stream.write(progress_bar(self.test))
+            self.stream.write(self.bar.last)
         self.stream.flush()
 
 
