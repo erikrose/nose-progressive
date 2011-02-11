@@ -37,25 +37,26 @@ class ProgressivePlugin(Plugin):
             writeln = flush = write = lambda self, *args: None
 
         self.stream = stream
+        setupterm(None, stream.fileno())  # Make setupterm() work even when -s is passed. TODO: Don't do this if self.stream isn't a terminal. Use os.isatty(self.stream.fileno()). If it isn't, perhaps replace the ShyProgressBar with a dummy object.
+        self.bar = ProgressBar()
         
         # Monkeypath sys.stderr to keep other users of the stream (like
         # logging, when you don't pass --logging-clear-handlers) from smearing bits of our progress bar upward:
-#         class StreamWrapper(object):
-#             def __init__(self, stream):
-#                 self._stream = stream
-# 
-#             def __getattr__(self, name):
-#                 return getattr(self._stream, name)
-# 
-#             def write(self, data):
-#                 self._stream.write(data)
-#                 self._stream.flush()
-#         
-#         # TODO: Only if isatty. Consider doing stdout as well.
-#         sys.stderr = StreamWrapper(sys.stderr)
+        class StreamWrapper(object):
+            def __init__(me, stream):
+                me._stream = stream
 
-        setupterm(None, stream.fileno())  # Make setupterm() work even when -s is passed. TODO: Don't do this if self.stream isn't a terminal. Use os.isatty(self.stream.fileno()). If it isn't, perhaps replace the ShyProgressBar with a dummy object.
-        self._bar = ProgressBar()
+            def __getattr__(me, name):
+                print name
+                return getattr(me._stream, name)
+
+            def write(me, data):
+                with ShyProgressBar(self.stream, self.bar):
+                    me._stream.write(data)
+        
+        # TODO: Only if isatty. Consider doing stdout as well.
+        sys.stderr = StreamWrapper(sys.stderr)
+
         return DevNullStream()
 
     def getDescription(self, test):
@@ -63,7 +64,7 @@ class ProgressivePlugin(Plugin):
 
     def printError(self, kind, err, test):
         formatted_err = format_exception(*err)
-        with ShyProgressBar(self.stream, self._bar):
+        with ShyProgressBar(self.stream, self.bar):
             writeln = self.stream.writeln
             writeln()
             writeln('=' * 70)
@@ -73,7 +74,7 @@ class ProgressivePlugin(Plugin):
 
     def printErrors(self):
         # The current summary doesn't begin with a \n.
-        with ShyProgressBar(self.stream, self._bar):
+        with ShyProgressBar(self.stream, self.bar):
             self.stream.writeln()
 
     # TODO: Override printSummary() to add footer.
@@ -81,11 +82,11 @@ class ProgressivePlugin(Plugin):
     def startTest(self, test):
         self.testsRun += 1
         with AtProgressBar(self.stream):
-            self.stream.write(self._bar.get(test, self.testsRun))
+            self.stream.write(self.bar.get(test, self.testsRun))
 
     def addError(self, test, err):
         exc, val, tb = err
-        with ShyProgressBar(self.stream, self._bar):
+        with ShyProgressBar(self.stream, self.bar):
             if isinstance(exc, SkipTest):
                 self.stream.writeln()
                 self.stream.writeln('SKIP: %s' % nice_test_address(test))
@@ -97,7 +98,7 @@ class ProgressivePlugin(Plugin):
 
     def addSkip(self, test, reason):
         # Only in 2.7+
-        with ShyProgressBar(self.stream, self._bar):
+        with ShyProgressBar(self.stream, self.bar):
             self.stream.writeln()
             self.stream.writeln('SKIP: %s' % nice_test_address(test))
 
