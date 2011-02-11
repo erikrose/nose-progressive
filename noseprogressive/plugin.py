@@ -1,12 +1,9 @@
-from curses import tigetnum, tigetstr, setupterm, tparm, termname
+from curses import tigetnum, tigetstr, setupterm, tparm
 import inspect
 import logging
 import os
-import sys
-from time import sleep
 from traceback import format_exception
-import unittest
-from unittest import TestCase, _WritelnDecorator
+from unittest import TestCase
 
 from nose.plugins import Plugin
 from nose.exc import SkipTest
@@ -39,24 +36,6 @@ class ProgressivePlugin(Plugin):
         self.stream = stream
         setupterm(None, stream.fileno())  # Make setupterm() work even when -s is passed. TODO: Don't do this if self.stream isn't a terminal. Use os.isatty(self.stream.fileno()). If it isn't, perhaps replace the ShyProgressBar with a dummy object.
         self.bar = ProgressBar()
-        
-        # Monkeypath sys.stderr to keep other users of the stream (like
-        # logging, when you don't pass --logging-clear-handlers) from smearing bits of our progress bar upward:
-        class StreamWrapper(object):
-            def __init__(me, stream):
-                me._stream = stream
-
-            def __getattr__(me, name):
-                print name
-                return getattr(me._stream, name)
-
-            def write(me, data):
-                with ShyProgressBar(self.stream, self.bar):
-                    me._stream.write(data)
-        
-        # TODO: Only if isatty. Consider doing stdout as well.
-        sys.stderr = StreamWrapper(sys.stderr)
-
         return DevNullStream()
 
     def getDescription(self, test):
@@ -78,7 +57,7 @@ class ProgressivePlugin(Plugin):
             self.stream.writeln()
 
     # TODO: Override printSummary() to add footer.
-    
+
     def startTest(self, test):
         self.testsRun += 1
         with AtProgressBar(self.stream):
@@ -124,7 +103,7 @@ class ProgressBar(object):
 
 class AtProgressBar(object):
     """Context manager which goes to the progress bar line on entry and goes back to where it was on exit"""
-    
+
     def __init__(self, stream):
         self.stream = stream
 
@@ -133,7 +112,7 @@ class AtProgressBar(object):
         self.stream.write(tigetstr('sc'))  # save position
         height = tigetnum('lines')
         self.stream.write(tparm(tigetstr('cup'), height, 0))
-    
+
     def __exit__(self, type, value, tb):
         self.stream.write(tigetstr('rc'))  # restore position
 
@@ -155,6 +134,8 @@ class ShyProgressBar(object):
 
     def __exit__(self, type, value, tb):
         """Do nothing; the bar will come back at the top of the next test, which is imminent."""
+        # This isn't really necessary unless we monkeypatch stderr; the next
+        # test is about to start and will redraw the bar.
         with AtProgressBar(self.stream):
             self.stream.write(self.bar.last)
         self.stream.flush()
@@ -170,7 +151,7 @@ def nice_test_address(test):
         return path
     return '%s:%s' % (path, test_path)
 
-nice_test_address.__test__ = False # Not a test for Nose
+nice_test_address.__test__ = False  # Not a test for Nose
 
 
 def get_context(test):
@@ -182,14 +163,13 @@ def get_context(test):
                              test.__class__.__name__)
     else:
         raise NotImplemented('Unsure how to get context from: %r' % test)
-
     return context
 
 
 def nice_path(path):
     path = os.path.abspath(path)
     if path.startswith(os.getcwd()):
-        path = path.replace(os.getcwd(), '')[1:] # shorten and remove slash
+        path = path.replace(os.getcwd(), '')[1:]  # shorten and remove slash
     if path.endswith('.pyc'):
         path = path[0:-1]
     return path
