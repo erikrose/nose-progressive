@@ -26,7 +26,7 @@ Installation
 ============
 
   pip install -e \
-    git+git://github.com/erikrose/nose-progessive.git#egg=noseprogressive
+    git://github.com/erikrose/nose-progressive.git#egg=noseprogressive
 
 Use
 ===
@@ -36,14 +36,14 @@ Use
 Example
 =======
 
-::
+This doesn't quite do it justice; in an actual terminal, the 2 pathname lines
+after FAIL or ERROR are bold to aid visual chunking, and the progress bar is
+bold as well::
 
   % nosetests --with-progressive
   
-  ======================================================================
   FAIL: kitsune.apps.notifications.tests.test_events:MailTests.test_anonymous
         apps/notifications/tests/test_events.py +31
-  ----------------------------------------------------------------------
     File "/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/unittest.py", line 279, in run
       testMethod()
     File "/Users/erose/Checkouts/kitsune/../kitsune/apps/notifications/tests/test_events.py", line 361, in test_anonymous
@@ -51,10 +51,8 @@ Example
     File "/Users/erose/Checkouts/kitsune/vendor/packages/nose/nose/tools.py", line 31, in eq_
       assert a == b, msg or "%r != %r" % (a, b)
   
-  ======================================================================
   ERROR: kitsune.apps.questions.tests.test_templates:TemplateTestCase.test_woo
          apps/questions/tests/test_templates.py +494
-  ----------------------------------------------------------------------
     File "/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/unittest.py", line 279, in run
       testMethod()
     File "/Users/erose/Checkouts/kitsune/vendor/packages/mock/mock.py", line 196, in patched
@@ -76,9 +74,15 @@ Caveats and known bugs
 * I haven't tried this in anything but Python 2.6. Bug reports are welcome!
 * No tests yet. Ironic? :-)
 
+Future plans
+============
+
+* A proper progress bar. nose doesn't count tests for us ahead of time, so
+  we'll have to preflight ourselves.
+
 Kudos
 =====
 
 Thanks to Kumar McMillan for his nose-nicedots plugin, which provided
-inspiration and starting points for some pretty-printing. Thanks to the
+inspiration and starting points for the pretty-printing. Thanks to the
 support.mozilla.com team for writing so many tests that this became necessary.

@@ -51,8 +51,9 @@ class ProgressivePlugin(Plugin):
         # line.
         with ShyProgressBar(self.stream, self.bar):
             writeln = self.stream.writeln
+            write = self.stream.write
             writeln()
-            writeln('=' * 70)
+            write(tigetstr('bold'))
             writeln('%s: %s' % (kind, python_path(test)))
 
             # File name and line num in a format vi can take:
@@ -63,7 +64,7 @@ class ProgressivePlugin(Plugin):
                 writeln(' ' * len(kind) +
                         '  %s +%s' % (relative_source_path(file_name), line_num))
 
-            writeln('-' * 70)
+            write(tigetstr('sgr0'))
             self.stream.write(formatted_err)
 
     def printErrors(self):
@@ -118,7 +119,6 @@ class ProgressBar(object):
 
     def get(self, test, number):
         number = str(number)
-        BOLD = tigetstr('bold')
         test_path = python_path(test.test) + '.' + test.test._testMethodName
         width = tigetnum('cols')
         cols_for_path = width - len(number) - 2  # 2 spaces between path and number
@@ -126,7 +126,7 @@ class ProgressBar(object):
             test_path = test_path[len(test_path) - cols_for_path:]
         else:
             test_path += ' ' * (cols_for_path - len(test_path))
-        self.last = BOLD + test_path + '  ' + number + BOLD
+        self.last = tigetstr('bold') + test_path + '  ' + number + tigetstr('sgr0')
         return self.last
 
 
