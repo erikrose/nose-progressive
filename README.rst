@@ -3,10 +3,16 @@ Nose Progressive
 ================
 
 Nose Progressive is a nose_ plugin which displays progress in a stationary
-progress bar, gives you useful information as soon as possible, and avoids
-scrolling things off the screen in favor of less useful things.
+progress bar, freeing the rest of the screen (as well as the scrollbar buffer)
+for the compact display of test failures. It displays failures and errors as
+soon as they occur and avoids scrolling them off the screen in favor of less
+useful output.
 
 .. _nose: http://somethingaboutorange.com/mrl/projects/nose/
+
+The governing philosophy of Nose Progressive is to get useful information onto
+the screen as soon as possible and keep it there as long as possible while
+still indicating progress.
 
 Features
 ========
@@ -92,15 +98,19 @@ Kudos
 =====
 
 Thanks to Kumar McMillan for his nose-nicedots plugin, which provided
-inspiration and starting points for the pretty-printing. Thanks to the
-support.mozilla.com team for writing so many tests that this became necessary.
+inspiration and starting points for the path formatting. Thanks to my
+support.mozilla.com teammates for writing so many tests that this became
+necessary.
 
 Version history
 ===============
 
-0.1
-  Initial release
+0.1.2
+  More documentation tweaks. Package long_description now contains README.
 
 0.1.1
   Add instructions for installing without git. Change package name in readme to
   the hypenated one. No behavior changes.
+
+0.1
+  Initial release
