@@ -3,7 +3,7 @@ Nose Progressive
 ================
 
 Nose Progressive is a nose_ plugin which displays progress in a stationary
-progress bar, freeing the rest of the screen (as well as the scrollbar buffer)
+progress bar, freeing the rest of the screen (as well as the scrollback buffer)
 for the compact display of test failures. It displays failures and errors as
 soon as they occur and avoids scrolling them off the screen in favor of less
 useful output.
@@ -93,6 +93,7 @@ Future plans
 
 * A proper progress bar. nose doesn't count tests for us ahead of time, so
   we'll have to preflight ourselves.
+* Commandline switches for every little thing
 
 Kudos
 =====
