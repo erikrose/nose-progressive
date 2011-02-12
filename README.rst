@@ -25,8 +25,14 @@ Features
 Installation
 ============
 
+::
+
+  pip install nose-progressive
+
+Or, to get the bleeding-edge, unreleased version::
+
   pip install -e \
-    git://github.com/erikrose/nose-progressive.git#egg=noseprogressive
+    git://github.com/erikrose/nose-progressive.git#egg=nose-progressive
 
 Use
 ===
@@ -86,3 +92,13 @@ Kudos
 Thanks to Kumar McMillan for his nose-nicedots plugin, which provided
 inspiration and starting points for the pretty-printing. Thanks to the
 support.mozilla.com team for writing so many tests that this became necessary.
+
+Version history
+===============
+
+0.1
+  Initial release
+
+0.1.1
+  Add instructions for installing without git. Change package name in readme to
+  the hypenated one. No behavior changes.
