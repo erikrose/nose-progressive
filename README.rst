@@ -37,14 +37,16 @@ Or, to get the bleeding-edge, unreleased version::
 Use
 ===
 
+::
+
   nosetests --with-progressive
 
 Example
 =======
 
-This doesn't quite do it justice; in an actual terminal, the 2 pathname lines
-after FAIL or ERROR are bold to aid visual chunking, and the progress bar is
-bold as well::
+The following doesn't quite do it justice; in an actual terminal, the 2
+pathname lines after FAIL or ERROR are bold to aid visual chunking, and the
+progress bar at the bottom is bold as well::
 
   % nosetests --with-progressive
   
@@ -66,7 +68,7 @@ bold as well::
     File "/Users/erose/Checkouts/kitsune/../kitsune/apps/questions/tests/test_templates.py", line 494, in test_woo
       attrs_eq(mail.outbox[0], to=['some@bo.dy'],
   
-  kitsune.apps.search.tests.test_json:JSONTest.test_json_format             458
+  kitsune.apps.search.tests.test_json:JSONTest.test_json_format                                                       458
 
 Caveats and known bugs
 ======================
