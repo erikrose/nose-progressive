@@ -1,14 +1,11 @@
 from curses import tigetnum, tigetstr, setupterm, tparm
-import inspect
 from itertools import cycle
 import logging
 import os
 from traceback import format_list, extract_tb, format_exception_only
-from unittest import TestCase
 
 from nose.plugins import Plugin
 from nose.exc import SkipTest
-from nose.case import FunctionTestCase
 from nose.util import test_address
 
 
@@ -94,7 +91,6 @@ class ProgressivePlugin(Plugin):
 
             # Exception:
             self.stream.write(''.join(format_exception_only(exception_type, exception_value)))
-
 
     def printErrors(self):
         # The current summary doesn't begin with a \n.
@@ -184,7 +180,7 @@ class ProgressBar(object):
             test_path = test_path[len(test_path) - cols_for_path:]
         else:
             test_path += ' ' * (cols_for_path - len(test_path))
-        
+
         # Put them together, and let simmer:
         self.last = tigetstr('bold') + test_path + '  ' + graph + tigetstr('sgr0')
         return self.last
