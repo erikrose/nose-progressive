@@ -26,7 +26,9 @@ Features
   to re-run them.
 * Print a filesystem path complete with vi-style line number, so you can paste
   it to the commandline and be taken straight to the bug in your editor.
-* Work great with Django via django-nose (of course).
+* Work great with Django via django-nose_ (of course).
+
+.. _django-nose: https://github.com/jbalogh/django-nose
 
 Installation
 ============
@@ -102,10 +104,12 @@ Future plans
 Kudos
 =====
 
-Thanks to Kumar McMillan for his nose-nicedots plugin, which provided
+Thanks to Kumar McMillan for his nose-nicedots_ plugin, which provided
 inspiration and starting points for the path formatting. Thanks to my
 support.mozilla.com teammates for writing so many tests that this became
 necessary.
+
+.. _nose-nicedots: https://github.com/kumar303/nose-nicedots
 
 Version history
 ===============
