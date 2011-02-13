@@ -64,7 +64,8 @@ progress bar at the bottom is bold as well::
       eq_(1, len(mail.outbox))
     File "/Users/erose/Checkouts/kitsune/vendor/packages/nose/nose/tools.py", line 31, in eq_
       assert a == b, msg or "%r != %r" % (a, b)
-  
+  AssertionError
+
   ERROR: kitsune.apps.questions.tests.test_templates:TemplateTestCase.test_woo
          apps/questions/tests/test_templates.py +494
     File "/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/unittest.py", line 279, in run
@@ -73,8 +74,9 @@ progress bar at the bottom is bold as well::
       return func(*args, **keywargs)
     File "/Users/erose/Checkouts/kitsune/../kitsune/apps/questions/tests/test_templates.py", line 494, in test_woo
       attrs_eq(mail.outbox[0], to=['some@bo.dy'],
-  
-  kitsune.apps.search.tests.test_json:JSONTest.test_json_format                                                       458
+  IndexError: list index out of range
+
+  ns.tests.test_templates:TaggingViewTestsAsAdmin.test_add_new_canonicalizes.test_add_new_canonicalizes  [===========-  ]
 
 Caveats and known bugs
 ======================
@@ -109,14 +111,17 @@ Version history
 ===============
 
 0.2
-  Don't crash at the end when ``--no-skips`` is passed.
+  * Real progress bar!
+  * Don't crash at the end when ``--no-skips`` is passed.
+  * Print the exception, not just the traceback. That's kind of important. :-)
+  * Don't crash when a requested test doesn't exist.
 
 0.1.2
-  More documentation tweaks. Package ``long_description`` now contains README.
+  * More documentation tweaks. Package ``long_description`` now contains README.
 
 0.1.1
-  Add instructions for installing without git. Change package name in readme to
-  the hypenated one. No behavior changes.
+  * Add instructions for installing without git.
+  * Change package name in readme to the hypenated one. No behavior changes.
 
 0.1
-  Initial release
+  * Initial release

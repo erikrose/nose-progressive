@@ -3,7 +3,7 @@ import inspect
 from itertools import cycle
 import logging
 import os
-from traceback import format_list, extract_tb
+from traceback import format_list, extract_tb, format_exception_only
 from unittest import TestCase
 
 from nose.plugins import Plugin
@@ -39,7 +39,12 @@ class ProgressivePlugin(Plugin):
             writeln = flush = write = lambda self, *args: None
 
         self.stream = stream
-        setupterm(None, stream.fileno())  # Make setupterm() work even when -s is passed. TODO: Don't do this if self.stream isn't a terminal. Use os.isatty(self.stream.fileno()). If it isn't, perhaps replace the ShyProgressBar with a dummy object.
+        # Explicit args make setupterm() work even when -s is passed:
+        setupterm(None, stream.fileno())
+        # TODO: Don't call setupterm() if self.stream isn't a terminal. Use
+        # os.isatty(self.stream.fileno()). If it isn't, perhaps replace the
+        # ShyProgressBar with a dummy object.
+
         return DummyStream()
 
     def prepareTest(self, test):
@@ -51,8 +56,17 @@ class ProgressivePlugin(Plugin):
         self.bar = ProgressBar(test.countTestCases())
 
     def printError(self, kind, err, test):
-        _, _, tb = err
-        extracted_tb = extract_tb(tb)
+        """Output a human-readable error report to the stream.
+
+        kind -- the (string) type of incident the precipitated this call
+        err -- exc_info()-style traceback triple
+        test -- the test that precipitated this call
+
+        """
+        # Don't bind third item to a local var; that can create circular refs
+        # which are expensive to collect. See the sys.exc_info() docs.
+        exception_type, exception_value = err[:2]
+        extracted_tb = extract_tb(err[2])
         formatted_err = ''.join(format_list(extracted_tb))
         # TODO: Canonicalize the path to remove /kitsune/../kitsune nonsense.
         # Don't relativize, though, as that hurts the ability to paste into
@@ -68,12 +82,19 @@ class ProgressivePlugin(Plugin):
             address = test.address()
             if address:
                 file_name = address[0]
-                line_num = extracted_tb[-1][1]
-                writeln(' ' * len(kind) +
-                        '  %s +%s' % (relative_source_path(file_name), line_num))
+                if file_name:
+                    line_num = extracted_tb[-1][1]
+                    writeln(' ' * len(kind) +
+                            '  %s +%s' % (relative_source_path(file_name), line_num))
 
             write(tigetstr('sgr0'))
+
+            # Traceback:
             self.stream.write(formatted_err)
+
+            # Exception:
+            self.stream.write(''.join(format_exception_only(exception_type, exception_value)))
+
 
     def printErrors(self):
         # The current summary doesn't begin with a \n.
@@ -134,7 +155,7 @@ class ProgressBar(object):
 
     def get(self, test, number):
         """Return updated content for the progress bar.
-        
+
         At the moment, the graph takes a fixed width, and the test identifier
         takes the rest of the row, truncated from the left to fit.
 
@@ -143,7 +164,7 @@ class ProgressBar(object):
 
         """
         # TODO: Play nicely with absurdly narrow terminals.
-        
+
         # Figure out graph:
         # We cheat a bit and dedicate extra column to the spinner to make the
         # logic simple, so the graph is just sliiiightly misproportional.
@@ -158,7 +179,7 @@ class ProgressBar(object):
         # Figure out the test identifier portion:
         test_path = python_path(test.test) + '.' + test.test._testMethodName
         width = tigetnum('cols')
-        cols_for_path = width - len(graph) - 2  # 2 spaces between path and graph
+        cols_for_path = width - len(graph) - 2  # 2 spaces between path & graph
         if len(test_path) > cols_for_path:
             test_path = test_path[len(test_path) - cols_for_path:]
         else:
