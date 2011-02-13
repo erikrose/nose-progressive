@@ -51,7 +51,7 @@ Example
 =======
 
 The following doesn't quite do it justice; in an actual terminal, the 2
-pathname lines after FAIL or ERROR are bold to aid visual chunking, and the
+pathname lines after FAIL or ERROR are **bold** to aid visual chunking, and the
 progress bar at the bottom is bold as well::
 
   % nosetests --with-progressive
@@ -83,16 +83,18 @@ Caveats and known bugs
   consider skips something to be discouraged, so I plan to fix this.
 * Tests which themselves write to stderr will smear bits of the progress bar
   upward if they don't print complete lines. I hope to fix this with some
-  monkeypatching, but in the meantime, passing --logging-clear-handlers fixes
-  most of these in practice.
+  monkeypatching, but in the meantime, passing ``--logging-clear-handlers``
+  fixes most of these in practice.
 * I haven't tried this in anything but Python 2.6. Bug reports are welcome!
 * No tests yet. Ironic? :-)
+
+Got more? Pop over to the `issue tracker`_.
+
+.. _`issue tracker`: https://github.com/erikrose/nose-progressive/issues
 
 Future plans
 ============
 
-* A proper progress bar. nose doesn't count tests for us ahead of time, so
-  we'll have to preflight ourselves.
 * Commandline switches for every little thing
 
 Kudos
@@ -107,10 +109,10 @@ Version history
 ===============
 
 0.2
-  Don't crash at the end when --no-skips is passed.
+  Don't crash at the end when ``--no-skips`` is passed.
 
 0.1.2
-  More documentation tweaks. Package long_description now contains README.
+  More documentation tweaks. Package ``long_description`` now contains README.
 
 0.1.1
   Add instructions for installing without git. Change package name in readme to

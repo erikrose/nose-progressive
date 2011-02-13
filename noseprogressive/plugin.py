@@ -1,5 +1,6 @@
 from curses import tigetnum, tigetstr, setupterm, tparm
 import inspect
+from itertools import cycle
 import logging
 import os
 from traceback import format_list, extract_tb
@@ -39,16 +40,23 @@ class ProgressivePlugin(Plugin):
 
         self.stream = stream
         setupterm(None, stream.fileno())  # Make setupterm() work even when -s is passed. TODO: Don't do this if self.stream isn't a terminal. Use os.isatty(self.stream.fileno()). If it isn't, perhaps replace the ShyProgressBar with a dummy object.
-        self.bar = ProgressBar()
         return DummyStream()
+
+    def prepareTest(self, test):
+        """Init the progress bar, and tell it how many tests there are."""
+        # Not really clear from the docs whether this always gets called in
+        # every plugin or whether another plugin can prevent this from getting
+        # called by returning something. If the latter, we'll be surprised when
+        # self.bar doesn't exist.
+        self.bar = ProgressBar(test.countTestCases())
 
     def printError(self, kind, err, test):
         _, _, tb = err
         extracted_tb = extract_tb(tb)
         formatted_err = ''.join(format_list(extracted_tb))
-        # TODO: Format the tb ourselves and eliminate the space-wasting
-        # "Traceback (most recent..." line to make up for the extra pathname
-        # line.
+        # TODO: Canonicalize the path to remove /kitsune/../kitsune nonsense.
+        # Don't relativize, though, as that hurts the ability to paste into
+        # running editors.
         with ShyProgressBar(self.stream, self.bar):
             writeln = self.stream.writeln
             write = self.stream.write
@@ -116,20 +124,48 @@ class ProgressivePlugin(Plugin):
 
 
 class ProgressBar(object):
-    def __init__(self):
-        width = tigetnum('cols')
-        self.last = ' ' * width
+    SPINNER_CHARS = r'/-\|'
+
+    def __init__(self, max):
+        """max is the highest value I will attain. Must be >0."""
+        self.last = ''  # The contents of the previous progress line printed
+        self.max = max
+        self.spinner = cycle(self.SPINNER_CHARS)
 
     def get(self, test, number):
-        number = str(number)
+        """Return updated content for the progress bar.
+        
+        At the moment, the graph takes a fixed width, and the test identifier
+        takes the rest of the row, truncated from the left to fit.
+
+        test -- the test being run
+        number -- how many tests have been run so far, including this one
+
+        """
+        # TODO: Play nicely with absurdly narrow terminals.
+        
+        # Figure out graph:
+        # We cheat a bit and dedicate extra column to the spinner to make the
+        # logic simple, so the graph is just sliiiightly misproportional.
+        GRAPH_WIDTH = 14
+        num_markers = int(round(float(number) / self.max * GRAPH_WIDTH))
+        # If there are any markers, replace the last one with the spinner.
+        # Otherwise, have just a spinner:
+        markers = '=' * (num_markers - 1) + self.spinner.next()
+        graph = '[%s%s]' % (markers,
+                            ' ' * (GRAPH_WIDTH - len(markers)))
+
+        # Figure out the test identifier portion:
         test_path = python_path(test.test) + '.' + test.test._testMethodName
         width = tigetnum('cols')
-        cols_for_path = width - len(number) - 2  # 2 spaces between path and number
+        cols_for_path = width - len(graph) - 2  # 2 spaces between path and graph
         if len(test_path) > cols_for_path:
             test_path = test_path[len(test_path) - cols_for_path:]
         else:
             test_path += ' ' * (cols_for_path - len(test_path))
-        self.last = tigetstr('bold') + test_path + '  ' + number + tigetstr('sgr0')
+        
+        # Put them together, and let simmer:
+        self.last = tigetstr('bold') + test_path + '  ' + graph + tigetstr('sgr0')
         return self.last
 
 
@@ -159,7 +195,6 @@ class ShyProgressBar(object):
     def __enter__(self):
         """Erase the progress bar so bits of disembodied progress bar don't get scrolled up the terminal."""
         # My terminal has no status line, so we make one manually.
-        # Doing this each time gives us a hope of adjusting if people resize their terminals during test runs:
         with AtProgressBar(self.stream):
             self.stream.write(tigetstr('el'))  # erase to EOL
         self.stream.flush()
