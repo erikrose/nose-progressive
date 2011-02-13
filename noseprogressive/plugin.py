@@ -20,16 +20,6 @@ class ProgressivePlugin(Plugin):
     # TODO: Decrease score so we run early, and monkeypatch stderr in __init__.
     # See if that works.
 
-    def options(self, parser, env=os.environ):
-        super(ProgressivePlugin, self).options(parser, env=env)
-        self.parser = parser
-
-    def configure(self, options, conf):
-        super(ProgressivePlugin, self).configure(options, conf)
-        if self.enabled:
-            self.cmd_options = options
-            self.config = conf
-
     def setOutputStream(self, stream):
         """Steal the stream, and return a mock one for everybody else to shut them up."""
         class DummyStream(object):
