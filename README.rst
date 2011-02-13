@@ -106,6 +106,9 @@ necessary.
 Version history
 ===============
 
+0.2
+  Don't crash at the end when --no-skips is passed.
+
 0.1.2
   More documentation tweaks. Package long_description now contains README.
 

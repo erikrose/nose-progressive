@@ -74,8 +74,11 @@ class ProgressivePlugin(Plugin):
 
     def finalize(self, result):
         """Print counts of tests run."""
-        types = ['test', 'failure', 'error', 'skip']
-        values = [self.testsRun, len(result.failures), len(result.errors), len(result.skipped)]
+        types = ['test', 'failure', 'error']
+        values = [self.testsRun, len(result.failures), len(result.errors)]
+        if hasattr(result, 'skipped'):  # Absent if --no-skip is passed
+            types.append('skip')
+            values.append(len(result.skipped))
         msg = ', '.join('%s %s%s' % (v, t, 's' if v != 1 else '')
                         for t, v in zip(types, values))
 
