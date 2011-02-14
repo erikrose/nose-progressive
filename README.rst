@@ -90,7 +90,7 @@ Caveats and known bugs
   monkeypatching, but in the meantime, passing ``--logging-clear-handlers``
   fixes most of these in practice.
 * I haven't tried this in anything but Python 2.6. Bug reports are welcome!
-* No tests yet. Ironic? :-)
+* Crappy test coverage. Ironic? :-)
 
 Got more? Pop over to the `issue tracker`_.
 
@@ -117,7 +117,7 @@ Version history
 0.2.1
   * Quit repeating the test name in the progress bar.
   * Basic terminal resizing (SIGWINCH) support. Contracting is still a little
-    ugly.
+    ugly. Suggestions welcome.
 
 0.2
   * Real progress bar!

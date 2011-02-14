@@ -1,5 +1,6 @@
 from curses import tigetnum, tigetstr, setupterm, tparm
 from fcntl import ioctl
+from functools import partial
 from itertools import cycle
 import os
 from signal import signal, SIGWINCH
@@ -16,6 +17,7 @@ class ProgressivePlugin(Plugin):
     """Nose plugin which prioritizes the important information"""
     name = 'progressive'
     testsRun = 0
+    _totalTests = 0
 
     # TODO: Decrease score so we run early, and monkeypatch stderr in __init__.
     # See if that works.
@@ -25,7 +27,9 @@ class ProgressivePlugin(Plugin):
         class DummyStream(object):
             writeln = flush = write = lambda self, *args: None
 
-        self.bar = ProgressBar(stream, self._totalTests)
+        # 1 in case test counting failed and returned 0
+        self.bar = ProgressBar(stream, self._totalTests or 1)
+        
         self.stream = self.bar.stream = stream
         # Explicit args make setupterm() work even when -s is passed:
         setupterm(None, stream.fileno())  # so things like tigetstr() work
@@ -37,11 +41,66 @@ class ProgressivePlugin(Plugin):
 
     def prepareTest(self, test):
         """Init the progress bar, and tell it how many tests there are."""
-        # Not really clear from the docs whether this always gets called in
-        # every plugin or whether another plugin can prevent this from getting
-        # called by returning something. If the latter, we'll be surprised when
-        # self.bar doesn't exist.
-        self._totalTests = test.countTestCases()
+        # TODO: It's not documented, but another plugin can prevent this from
+        # getting called by returning something. If that happens latter, we'll
+        # be surprised when self.bar doesn't exist.
+        
+        # We can't just call test.countTestCases(), because that exhausts the
+        # iterator, and then the actual test runner doesn't find any tests. We
+        # could tee the generator, but that generator is full of other
+        # generators, so it's complicated and would use RAM proportional with
+        # the number of tests. So instead, we re-run the discovery process
+        # ourselves.
+#         tests_for_preflight, test._tests = tee(test._tests)
+# 
+#         total = 0
+#         for t in tests_for_preflight:
+#             total += t.countTestCases()
+
+        # Okay, re-running everything and getting the exact same options is
+        # quite hard: nose isn't written such that I can easily set everything
+        # up and then hook in and get the info I need without firing off the
+        # test runs in its entirety. Let's blow the RAM.
+        # OTOH, I can call nose.core.collector() and get the number out of .suite.countTestCases(). However, the options used by collector() don't always reflect the options the in-progress run is using. For example, django-nose calls TestProgram itself and passes in a customized argv and plugin list. collector() doesn't even seem to see argv, at least under django-nose. Thus, we pretty much need to start from where we are and tee generators or something.
+        
+        # Phase 1: tee the generators, and replace the sources with one of the tees:
+        
+        # Phase 2: Take one of the tees, and traverse/iterator through it, counting things.
+        
+        # So if each thing is a TestSuite subclass, replace it with thing._tests.
+        # If it's a unittest.TestCase subclass, leave it alone.
+        # [Then,] If it's a generator (callable), replace it with list(thing).
+        
+        
+        #self._totalTests = 2
+#         
+#         return test
+
+    def prepareTestLoader(self, loader):
+        """Insert ourselves into loader calls to count tests.
+        
+        The top-level loader call often returns lazy results. This is a
+        problem, as we would destroy them by iterating over them to count the
+        test cases. Monkeypatch the top-level loader call to do the load twice:
+        once for the actual test running and again to yield something we can
+        iterate over to do the count.
+        
+        """
+        def capture_suite(orig_method, *args, **kwargs):
+            """Intercept calls to the loader before they get lazy.
+
+            Re-execute them to grab a copy of the possibly lazy results, and
+            count the tests therein.
+
+            """
+            suite = orig_method(*args, **kwargs)
+            self._totalTests += orig_method(*args, **kwargs).countTestCases()
+            return suite
+        
+        if hasattr(loader, 'loadTestsFromNames'):
+            loader.loadTestsFromNames = partial(capture_suite,
+                                                loader.loadTestsFromNames)
+        return loader
 
     def printError(self, kind, err, test):
         """Output a human-readable error report to the stream.
@@ -158,7 +217,8 @@ class ProgressBar(object):
 
         # Figure out graph:
         GRAPH_WIDTH = 14
-        num_markers = int(round(float(number) / self.max * GRAPH_WIDTH))
+        # min() is in case we somehow get the total test count wrong. It's tricky.
+        num_markers = int(round(min(1.0, float(number) / self.max) * GRAPH_WIDTH))
         # If there are any markers, replace the last one with the spinner.
         # Otherwise, have just a spinner:
         markers = '=' * (num_markers - 1) + self._spinner.next()
@@ -197,7 +257,7 @@ class ProgressBar(object):
                 """Redraw the last saved state of the progress bar."""
                 # This isn't really necessary unless we monkeypatch stderr; the
                 # next test is about to start and will redraw the bar.
-                with AtProgressBar(bar.stream):
+                with AtLine(bar.stream, bar.lines):
                     bar.stream.write(bar.last)
                 bar.stream.flush()
 

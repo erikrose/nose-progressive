@@ -19,7 +19,7 @@ setup(
     url='',
     include_package_data=True,
     entry_points="""
-        [nose.plugins.0.10]
+        [nose.plugins]
         noseprogressive = noseprogressive:ProgressivePlugin
         """,
     classifiers = [
