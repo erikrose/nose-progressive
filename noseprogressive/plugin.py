@@ -1,15 +1,11 @@
 from curses import tigetnum, tigetstr, setupterm, tparm
 from itertools import cycle
-import logging
 import os
 from traceback import format_list, extract_tb, format_exception_only
 
 from nose.plugins import Plugin
 from nose.exc import SkipTest
 from nose.util import test_address
-
-
-log = logging.getLogger('nose.plugins.ProgressivePlugin')
 
 
 class ProgressivePlugin(Plugin):
@@ -25,7 +21,7 @@ class ProgressivePlugin(Plugin):
         class DummyStream(object):
             writeln = flush = write = lambda self, *args: None
 
-        self.stream = stream
+        self.stream = self.bar.stream = stream
         # Explicit args make setupterm() work even when -s is passed:
         setupterm(None, stream.fileno())
         # TODO: Don't call setupterm() if self.stream isn't a terminal. Use
@@ -58,7 +54,7 @@ class ProgressivePlugin(Plugin):
         # TODO: Canonicalize the path to remove /kitsune/../kitsune nonsense.
         # Don't relativize, though, as that hurts the ability to paste into
         # running editors.
-        with ShyProgressBar(self.stream, self.bar):
+        with self.bar.dodging():
             writeln = self.stream.writeln
             write = self.stream.write
             writeln()
@@ -84,7 +80,7 @@ class ProgressivePlugin(Plugin):
 
     def printErrors(self):
         # The current summary doesn't begin with a \n.
-        with ShyProgressBar(self.stream, self.bar):
+        with self.bar.dodging():
             self.stream.writeln()
 
     def finalize(self, result):
@@ -99,20 +95,18 @@ class ProgressivePlugin(Plugin):
 
         # Erase progress bar. Bash doesn't clear the whole line when printing
         # the prompt, leaving a piece of the bar.
-        with AtProgressBar(self.stream):
-            self.stream.write(tigetstr('el'))
+        self.bar.erase()
         self.stream.writeln('\n' + msg)
 
     def startTest(self, test):
         # Overriding this seems to prevent TextTestRunner from running its, so
         # we have to keep track of the test count ourselves.
         self.testsRun += 1
-        with AtProgressBar(self.stream):
-            self.stream.write(self.bar.get(test, self.testsRun))
+        self.bar.update(test, self.testsRun)
 
     def addError(self, test, err):
         exc, val, tb = err
-        with ShyProgressBar(self.stream, self.bar):
+        with self.bar.dodging():
             if isinstance(exc, SkipTest):
                 self.stream.writeln()
                 self.stream.writeln('SKIP: %s' % nose_selector(test))
@@ -132,8 +126,10 @@ class ProgressBar(object):
         self.max = max
         self.spinner = cycle(self.SPINNER_CHARS)
 
-    def get(self, test, number):
-        """Return updated content for the progress bar.
+    def update(self, test, number):
+        """Draw an updated progress bar.
+
+        You must set .stream before calling this.
 
         At the moment, the graph takes a fixed width, and the test identifier
         takes the rest of the row, truncated from the left to fit.
@@ -164,7 +160,34 @@ class ProgressBar(object):
 
         # Put them together, and let simmer:
         self.last = tigetstr('bold') + test_path + '  ' + graph + tigetstr('sgr0')
-        return self.last
+        with AtProgressBar(self.stream):
+            self.stream.write(self.last)
+
+    def erase(self):
+        """White out the progress bar."""
+        with AtProgressBar(self.stream):
+            self.stream.write(tigetstr('el'))
+        self.stream.flush()
+
+    def dodging(bar):
+        """Return a context manager which erases the bar, lets you output things, and then redraws the bar."""
+        class ShyProgressBar(object):
+            """Context manager that implements a progress bar that gets out of the way"""
+        
+            def __enter__(self):
+                """Erase the progress bar so bits of disembodied progress bar don't get scrolled up the terminal."""
+                # My terminal has no status line, so we make one manually.
+                bar.erase()
+        
+            def __exit__(self, type, value, tb):
+                """Redraw the last saved state of the progress bar."""
+                # This isn't really necessary unless we monkeypatch stderr; the
+                # next test is about to start and will redraw the bar.
+                with AtProgressBar(bar.stream):
+                    bar.stream.write(bar.last)
+                bar.stream.flush()
+        
+        return ShyProgressBar()
 
 
 class AtProgressBar(object):
@@ -181,29 +204,6 @@ class AtProgressBar(object):
 
     def __exit__(self, type, value, tb):
         self.stream.write(tigetstr('rc'))  # restore position
-
-
-class ShyProgressBar(object):
-    """Context manager that implements a progress bar that gets out of the way"""
-
-    def __init__(self, stream, bar):
-        self.stream = stream
-        self.bar = bar
-
-    def __enter__(self):
-        """Erase the progress bar so bits of disembodied progress bar don't get scrolled up the terminal."""
-        # My terminal has no status line, so we make one manually.
-        with AtProgressBar(self.stream):
-            self.stream.write(tigetstr('el'))  # erase to EOL
-        self.stream.flush()
-
-    def __exit__(self, type, value, tb):
-        """Do nothing; the bar will come back at the top of the next test, which is imminent."""
-        # This isn't really necessary unless we monkeypatch stderr; the next
-        # test is about to start and will redraw the bar.
-        with AtProgressBar(self.stream):
-            self.stream.write(self.bar.last)
-        self.stream.flush()
 
 
 def nose_selector(test):
