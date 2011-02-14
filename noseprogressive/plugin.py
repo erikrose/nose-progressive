@@ -63,7 +63,7 @@ class ProgressivePlugin(Plugin):
             write = self.stream.write
             writeln()
             write(tigetstr('bold'))
-            writeln('%s: %s' % (kind, python_path(test)))
+            writeln('%s: %s' % (kind, nose_selector(test)))
 
             # File name and line num in a format vi can take:
             address = test.address()
@@ -122,13 +122,6 @@ class ProgressivePlugin(Plugin):
     def addFailure(self, test, err):
         self.printError('FAIL', err, test)
 
-    def addSkip(self, test, reason):
-        # Only in 2.7+
-        # TODO: This never gets called, at least in 2.6.
-        with ShyProgressBar(self.stream, self.bar):
-            self.stream.writeln()
-            self.stream.writeln('SKIP: %s' % nose_selector(test))
-
 
 class ProgressBar(object):
     SPINNER_CHARS = r'/-\|'
@@ -161,7 +154,7 @@ class ProgressBar(object):
         graph = '[%s%s]' % (markers, ' ' * (GRAPH_WIDTH - len(markers)))
 
         # Figure out the test identifier portion:
-        test_path = python_path(test.test)
+        test_path = nose_selector(test)
         width = tigetnum('cols')
         cols_for_path = width - len(graph) - 2  # 2 spaces between path & graph
         if len(test_path) > cols_for_path:
@@ -215,20 +208,10 @@ class ShyProgressBar(object):
 
 def nose_selector(test):
     """Return the string you can pass to nose to run `test`."""
-    file, module, rest = test_address(test)
-    file = relative_source_path(file)
-    if rest:
-        return '%s:%s' % (file, rest)
-    else:
-        return file
-
-
-def python_path(test):
     address = test_address(test)
-    if address:
-        file, module, rest = address
-    else:
+    if not address:
         return 'Unknown test'
+    file, module, rest = address
 
     if rest:
         return '%s:%s' % (module, rest)
