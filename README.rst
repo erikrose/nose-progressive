@@ -114,6 +114,9 @@ necessary.
 Version history
 ===============
 
+0.2.1
+  * Quit repeating the test name in the progress bar.
+
 0.2
   * Real progress bar!
   * Don't crash at the end when ``--no-skips`` is passed.

@@ -149,21 +149,19 @@ class ProgressBar(object):
         number -- how many tests have been run so far, including this one
 
         """
-        # TODO: Play nicely with absurdly narrow terminals.
+        # TODO: Play nicely with absurdly narrow terminals. (OS X's won't even
+        # go small enough to hurt us.)
 
         # Figure out graph:
-        # We cheat a bit and dedicate extra column to the spinner to make the
-        # logic simple, so the graph is just sliiiightly misproportional.
         GRAPH_WIDTH = 14
         num_markers = int(round(float(number) / self.max * GRAPH_WIDTH))
         # If there are any markers, replace the last one with the spinner.
         # Otherwise, have just a spinner:
         markers = '=' * (num_markers - 1) + self.spinner.next()
-        graph = '[%s%s]' % (markers,
-                            ' ' * (GRAPH_WIDTH - len(markers)))
+        graph = '[%s%s]' % (markers, ' ' * (GRAPH_WIDTH - len(markers)))
 
         # Figure out the test identifier portion:
-        test_path = python_path(test.test) + '.' + test.test._testMethodName
+        test_path = python_path(test.test)
         width = tigetnum('cols')
         cols_for_path = width - len(graph) - 2  # 2 spaces between path & graph
         if len(test_path) > cols_for_path:
