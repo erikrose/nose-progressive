@@ -114,7 +114,8 @@ necessary.
 Version history
 ===============
 
-next
+0.4
+  * Add time elapsed to the final summary.
   * In the test failure output, switch the order of the line number and file
     name. This makes it work with the BBEdit command-line tools in addition to
     emacs and vi.

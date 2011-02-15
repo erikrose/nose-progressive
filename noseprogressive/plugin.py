@@ -6,6 +6,7 @@ import os
 from signal import signal, SIGWINCH
 import struct
 from termios import TIOCGWINSZ
+from time import time
 from traceback import format_list, extract_tb, format_exception_only
 
 from nose.plugins import Plugin
@@ -68,6 +69,10 @@ class ProgressivePlugin(Plugin):
                                                 loader.loadTestsFromNames)
         return loader
 
+    def prepareTestRunner(self, runner):
+        """Store start time so finalize() can use it."""
+        self._startTime = time()
+
     def printError(self, kind, err, test):
         """Output a human-readable error report to the stream.
 
@@ -117,7 +122,8 @@ class ProgressivePlugin(Plugin):
             types.append('skip')
             values.append(len(result.skipped))
         msg = ', '.join('%s %s%s' % (v, t, 's' if v != 1 else '')
-                        for t, v in zip(types, values))
+                        for t, v in zip(types, values)) + \
+              ' in %.1fs' % (time() - self._startTime)
 
         # Erase progress bar. Bash doesn't clear the whole line when printing
         # the prompt, leaving a piece of the bar.
