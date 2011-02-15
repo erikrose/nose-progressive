@@ -114,6 +114,10 @@ necessary.
 Version history
 ===============
 
+0.3.1
+  * Cowboy attempt to fix a crasher on error by changing the entry_point to
+    nose.plugin.0.10
+
 0.3
   * Progress bar now works with plain old nosetests, not just django-nose.
     Sorry about that!
