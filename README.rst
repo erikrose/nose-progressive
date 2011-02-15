@@ -115,9 +115,11 @@ Version history
 ===============
 
 0.2.1
-  * Quit repeating the test name in the progress bar.
-  * Basic terminal resizing (SIGWINCH) support. Contracting is still a little
-    ugly. Suggestions welcome.
+  * Progress bar now works with plain old nosetests, not just django-nose.
+    Sorry about that!
+  * Stop printing the test name twice in the progress bar.
+  * Add basic terminal resizing (SIGWINCH) support. Expanding is great, but
+    contracting is still a little ugly. Suggestions welcome.
 
 0.2
   * Real progress bar!

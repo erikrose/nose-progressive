@@ -1,4 +1,4 @@
-from curses import tigetnum, tigetstr, setupterm, tparm
+from curses import tigetstr, setupterm, tparm
 from fcntl import ioctl
 from functools import partial
 from itertools import cycle
@@ -29,7 +29,7 @@ class ProgressivePlugin(Plugin):
 
         # 1 in case test counting failed and returned 0
         self.bar = ProgressBar(stream, self._totalTests or 1)
-        
+
         self.stream = self.bar.stream = stream
         # Explicit args make setupterm() work even when -s is passed:
         setupterm(None, stream.fileno())  # so things like tigetstr() work
@@ -39,52 +39,15 @@ class ProgressivePlugin(Plugin):
 
         return DummyStream()
 
-    def prepareTest(self, test):
-        """Init the progress bar, and tell it how many tests there are."""
-        # TODO: It's not documented, but another plugin can prevent this from
-        # getting called by returning something. If that happens latter, we'll
-        # be surprised when self.bar doesn't exist.
-        
-        # We can't just call test.countTestCases(), because that exhausts the
-        # iterator, and then the actual test runner doesn't find any tests. We
-        # could tee the generator, but that generator is full of other
-        # generators, so it's complicated and would use RAM proportional with
-        # the number of tests. So instead, we re-run the discovery process
-        # ourselves.
-#         tests_for_preflight, test._tests = tee(test._tests)
-# 
-#         total = 0
-#         for t in tests_for_preflight:
-#             total += t.countTestCases()
-
-        # Okay, re-running everything and getting the exact same options is
-        # quite hard: nose isn't written such that I can easily set everything
-        # up and then hook in and get the info I need without firing off the
-        # test runs in its entirety. Let's blow the RAM.
-        # OTOH, I can call nose.core.collector() and get the number out of .suite.countTestCases(). However, the options used by collector() don't always reflect the options the in-progress run is using. For example, django-nose calls TestProgram itself and passes in a customized argv and plugin list. collector() doesn't even seem to see argv, at least under django-nose. Thus, we pretty much need to start from where we are and tee generators or something.
-        
-        # Phase 1: tee the generators, and replace the sources with one of the tees:
-        
-        # Phase 2: Take one of the tees, and traverse/iterator through it, counting things.
-        
-        # So if each thing is a TestSuite subclass, replace it with thing._tests.
-        # If it's a unittest.TestCase subclass, leave it alone.
-        # [Then,] If it's a generator (callable), replace it with list(thing).
-        
-        
-        #self._totalTests = 2
-#         
-#         return test
-
     def prepareTestLoader(self, loader):
         """Insert ourselves into loader calls to count tests.
-        
-        The top-level loader call often returns lazy results. This is a
-        problem, as we would destroy them by iterating over them to count the
-        test cases. Monkeypatch the top-level loader call to do the load twice:
-        once for the actual test running and again to yield something we can
-        iterate over to do the count.
-        
+
+        The top-level loader call often returns lazy results, like a LazySuite.
+        This is a problem, as we would destroy the suite by iterating over it
+        to count the tests. Consequently, we monkeypatch the top-level loader
+        call to do the load twice: once for the actual test running and again
+        to yield something we can iterate over to do the count.
+
         """
         def capture_suite(orig_method, *args, **kwargs):
             """Intercept calls to the loader before they get lazy.
@@ -93,10 +56,13 @@ class ProgressivePlugin(Plugin):
             count the tests therein.
 
             """
-            suite = orig_method(*args, **kwargs)
             self._totalTests += orig_method(*args, **kwargs).countTestCases()
-            return suite
-        
+            return orig_method(*args, **kwargs)
+
+        # TODO: If there's ever a practical need, also patch loader.suiteClass
+        # or even TestProgram.createTests. createTests seems to be main top-
+        # level caller of loader methods, and nose.core.collector() (which
+        # isn't even called in nose) is an alternate one.
         if hasattr(loader, 'loadTestsFromNames'):
             loader.loadTestsFromNames = partial(capture_suite,
                                                 loader.loadTestsFromNames)
