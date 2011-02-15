@@ -109,11 +109,6 @@ class ProgressivePlugin(Plugin):
             # Exception:
             self.stream.write(''.join(format_exception_only(exception_type, exception_value)))
 
-    def printErrors(self):
-        # The current summary doesn't begin with a \n.
-        with self.bar.dodging():
-            self.stream.writeln()
-
     def finalize(self, result):
         """Print counts of tests run."""
         types = ['test', 'failure', 'error']
