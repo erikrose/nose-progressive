@@ -114,6 +114,11 @@ necessary.
 Version history
 ===============
 
+next
+  * In the test failure output, switch the order of the line number and file
+    name. This makes it work with the BBEdit command-line tools in addition to
+    emacs and vi.
+
 0.3.1
   * Cowboy attempt to fix a crasher on error by changing the entry_point to
     nose.plugin.0.10

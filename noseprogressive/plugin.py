@@ -98,7 +98,8 @@ class ProgressivePlugin(Plugin):
                 if file_name:
                     line_num = extracted_tb[-1][1]
                     writeln(' ' * len(kind) +
-                            '  %s +%s' % (relative_source_path(file_name), line_num))
+                            '  +%s %s' % (line_num,
+                                          relative_source_path(file_name)))
 
             write(tigetstr('sgr0'))
 
