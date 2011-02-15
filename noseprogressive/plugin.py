@@ -25,6 +25,7 @@ class ProgressivePlugin(Plugin):
         class DummyStream(object):
             writeln = flush = write = lambda self, *args: None
 
+        self.bar = ProgressBar(stream, self._totalTests)
         self.stream = self.bar.stream = stream
         # Explicit args make setupterm() work even when -s is passed:
         setupterm(None, stream.fileno())  # so things like tigetstr() work
@@ -40,7 +41,7 @@ class ProgressivePlugin(Plugin):
         # every plugin or whether another plugin can prevent this from getting
         # called by returning something. If the latter, we'll be surprised when
         # self.bar doesn't exist.
-        self.bar = ProgressBar(test.countTestCases())
+        self._totalTests = test.countTestCases()
 
     def printError(self, kind, err, test):
         """Output a human-readable error report to the stream.
@@ -124,16 +125,12 @@ class ProgressivePlugin(Plugin):
 class ProgressBar(object):
     SPINNER_CHARS = r'/-\|'
 
-    def __init__(self, max):
-        """max is the highest value I will attain. Must be >0.
-
-        Other things you should set before calling anything else:
-        .stream
-
-        """
+    def __init__(self, stream, max):
+        """max is the highest value I will attain. Must be >0."""
+        self.stream = stream
         self.last = ''  # The contents of the previous progress line printed
         self.max = max
-        self.spinner = cycle(self.SPINNER_CHARS)
+        self._spinner = cycle(self.SPINNER_CHARS)
         self._measure_terminal()
         signal(SIGWINCH, self._handle_winch)
 
@@ -164,7 +161,7 @@ class ProgressBar(object):
         num_markers = int(round(float(number) / self.max * GRAPH_WIDTH))
         # If there are any markers, replace the last one with the spinner.
         # Otherwise, have just a spinner:
-        markers = '=' * (num_markers - 1) + self.spinner.next()
+        markers = '=' * (num_markers - 1) + self._spinner.next()
         graph = '[%s%s]' % (markers, ' ' * (GRAPH_WIDTH - len(markers)))
 
         # Figure out the test identifier portion:
