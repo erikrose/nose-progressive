@@ -16,7 +16,7 @@ from nose.util import test_address
 class ProgressivePlugin(Plugin):
     """Nose plugin which prioritizes the important information"""
     name = 'progressive'
-    testsRun = 0
+    _testsRun = 0
     _totalTests = 0
 
     # TODO: Decrease score so we run early, and monkeypatch stderr in __init__.
@@ -116,7 +116,7 @@ class ProgressivePlugin(Plugin):
     def finalize(self, result):
         """Print counts of tests run."""
         types = ['test', 'failure', 'error']
-        values = [self.testsRun, len(result.failures), len(result.errors)]
+        values = [self._testsRun, len(result.failures), len(result.errors)]
         if hasattr(result, 'skipped'):  # Absent if --no-skip is passed
             types.append('skip')
             values.append(len(result.skipped))
@@ -131,8 +131,8 @@ class ProgressivePlugin(Plugin):
     def startTest(self, test):
         # Overriding this seems to prevent TextTestRunner from running its, so
         # we have to keep track of the test count ourselves.
-        self.testsRun += 1
-        self.bar.update(test, self.testsRun)
+        self._testsRun += 1
+        self.bar.update(test, self._testsRun)
 
     def addError(self, test, err):
         exc, val, tb = err
