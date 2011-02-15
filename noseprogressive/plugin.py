@@ -1,6 +1,10 @@
 from curses import tigetnum, tigetstr, setupterm, tparm
+from fcntl import ioctl
 from itertools import cycle
 import os
+from signal import signal, SIGWINCH
+import struct
+from termios import TIOCGWINSZ
 from traceback import format_list, extract_tb, format_exception_only
 
 from nose.plugins import Plugin
@@ -23,7 +27,7 @@ class ProgressivePlugin(Plugin):
 
         self.stream = self.bar.stream = stream
         # Explicit args make setupterm() work even when -s is passed:
-        setupterm(None, stream.fileno())
+        setupterm(None, stream.fileno())  # so things like tigetstr() work
         # TODO: Don't call setupterm() if self.stream isn't a terminal. Use
         # os.isatty(self.stream.fileno()). If it isn't, perhaps replace the
         # ShyProgressBar with a dummy object.
@@ -121,15 +125,29 @@ class ProgressBar(object):
     SPINNER_CHARS = r'/-\|'
 
     def __init__(self, max):
-        """max is the highest value I will attain. Must be >0."""
+        """max is the highest value I will attain. Must be >0.
+
+        Other things you should set before calling anything else:
+        .stream
+
+        """
         self.last = ''  # The contents of the previous progress line printed
         self.max = max
         self.spinner = cycle(self.SPINNER_CHARS)
+        self._measure_terminal()
+        signal(SIGWINCH, self._handle_winch)
+
+    def _measure_terminal(self):
+        self.lines, self.cols = \
+            struct.unpack('hhhh', ioctl(0, TIOCGWINSZ, '\000' * 8))[0:2]
+
+    def _handle_winch(self, *args):
+        #self.erase()  # Doesn't seem to help.
+        self._measure_terminal()
+        # TODO: Reprint the bar but at the new width.
 
     def update(self, test, number):
         """Draw an updated progress bar.
-
-        You must set .stream before calling this.
 
         At the moment, the graph takes a fixed width, and the test identifier
         takes the rest of the row, truncated from the left to fit.
@@ -151,8 +169,7 @@ class ProgressBar(object):
 
         # Figure out the test identifier portion:
         test_path = nose_selector(test)
-        width = tigetnum('cols')
-        cols_for_path = width - len(graph) - 2  # 2 spaces between path & graph
+        cols_for_path = self.cols - len(graph) - 2  # 2 spaces between path & graph
         if len(test_path) > cols_for_path:
             test_path = test_path[len(test_path) - cols_for_path:]
         else:
@@ -160,12 +177,12 @@ class ProgressBar(object):
 
         # Put them together, and let simmer:
         self.last = tigetstr('bold') + test_path + '  ' + graph + tigetstr('sgr0')
-        with AtProgressBar(self.stream):
+        with AtLine(self.stream, self.lines):
             self.stream.write(self.last)
 
     def erase(self):
         """White out the progress bar."""
-        with AtProgressBar(self.stream):
+        with AtLine(self.stream, self.lines):
             self.stream.write(tigetstr('el'))
         self.stream.flush()
 
@@ -173,12 +190,12 @@ class ProgressBar(object):
         """Return a context manager which erases the bar, lets you output things, and then redraws the bar."""
         class ShyProgressBar(object):
             """Context manager that implements a progress bar that gets out of the way"""
-        
+
             def __enter__(self):
                 """Erase the progress bar so bits of disembodied progress bar don't get scrolled up the terminal."""
                 # My terminal has no status line, so we make one manually.
                 bar.erase()
-        
+
             def __exit__(self, type, value, tb):
                 """Redraw the last saved state of the progress bar."""
                 # This isn't really necessary unless we monkeypatch stderr; the
@@ -186,21 +203,21 @@ class ProgressBar(object):
                 with AtProgressBar(bar.stream):
                     bar.stream.write(bar.last)
                 bar.stream.flush()
-        
+
         return ShyProgressBar()
 
 
-class AtProgressBar(object):
-    """Context manager which goes to the progress bar line on entry and goes back to where it was on exit"""
+class AtLine(object):
+    """Context manager which moves the cursor to a certain line on entry and goes back to where it was on exit"""
 
-    def __init__(self, stream):
+    def __init__(self, stream, line):
         self.stream = stream
+        self.line = line
 
     def __enter__(self):
         """Save position and move to progress bar, col 1."""
         self.stream.write(tigetstr('sc'))  # save position
-        height = tigetnum('lines')
-        self.stream.write(tparm(tigetstr('cup'), height, 0))
+        self.stream.write(tparm(tigetstr('cup'), self.line, 0))
 
     def __exit__(self, type, value, tb):
         self.stream.write(tigetstr('rc'))  # restore position

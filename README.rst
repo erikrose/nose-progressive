@@ -116,6 +116,8 @@ Version history
 
 0.2.1
   * Quit repeating the test name in the progress bar.
+  * Basic terminal resizing (SIGWINCH) support. Contracting is still a little
+    ugly.
 
 0.2
   * Real progress bar!
