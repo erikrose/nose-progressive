@@ -52,7 +52,7 @@ class ProgressivePlugin(Plugin):
         def capture_suite(orig_method, *args, **kwargs):
             """Intercept calls to the loader before they get lazy.
 
-            Re-execute them to grab a copy of the possibly lazy results, and
+            Re-execute them to grab a copy of the possibly lazy suite, and
             count the tests therein.
 
             """

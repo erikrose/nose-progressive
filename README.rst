@@ -78,7 +78,7 @@ progress bar at the bottom is bold as well::
       attrs_eq(mail.outbox[0], to=['some@bo.dy'],
   IndexError: list index out of range
 
-  ns.tests.test_templates:TaggingViewTestsAsAdmin.test_add_new_canonicalizes.test_add_new_canonicalizes  [===========-  ]
+  kitsune.apps.questions.tests.test_templates:TaggingViewTestsAsAdmin.test_add_new_canonicalizes         [===========-  ]
 
 Caveats and known bugs
 ======================
@@ -90,7 +90,7 @@ Caveats and known bugs
   monkeypatching, but in the meantime, passing ``--logging-clear-handlers``
   fixes most of these in practice.
 * I haven't tried this in anything but Python 2.6. Bug reports are welcome!
-* Crappy test coverage. Ironic? :-)
+* No tests yet. Ironic? :-)
 
 Got more? Pop over to the `issue tracker`_.
 
@@ -114,7 +114,7 @@ necessary.
 Version history
 ===============
 
-0.2.1
+0.3
   * Progress bar now works with plain old nosetests, not just django-nose.
     Sorry about that!
   * Stop printing the test name twice in the progress bar.
