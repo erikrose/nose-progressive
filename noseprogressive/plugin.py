@@ -2,7 +2,8 @@ from curses import tigetstr, setupterm, tparm
 from fcntl import ioctl
 from functools import partial
 from itertools import cycle
-import os
+from os import getcwd
+from os.path import abspath
 from signal import signal, SIGWINCH
 import struct
 from termios import TIOCGWINSZ
@@ -11,7 +12,7 @@ from traceback import format_list, extract_tb, format_exception_only
 
 from nose.plugins import Plugin
 from nose.exc import SkipTest
-from nose.util import test_address
+from nose.util import test_address, src
 
 
 class ProgressivePlugin(Plugin):
@@ -70,7 +71,12 @@ class ProgressivePlugin(Plugin):
         return loader
 
     def prepareTestRunner(self, runner):
-        """Store start time so finalize() can use it."""
+        """Store start time so finalize() can use it.
+
+        This is as close to the start of the run as we can get without being
+        our own testrunner.
+
+        """
         self._startTime = time()
 
     def printError(self, kind, err, test):
@@ -261,12 +267,15 @@ def nose_selector(test):
         return module
 
 
-def relative_source_path(path):
-    """Return a relative filesystem path to the source file of the possibly-compiled module at the given path."""
-    path = os.path.abspath(path)
-    cwd = os.getcwd()
+def human_path(path):
+    """Return the most human-readable representation of the given path.
+    
+    If an absolute path is given that's within the current directory, convert
+    it to a relative path to shorten it. Otherwise, return the absolute path.
+    
+    """
+    path = abspath(path)
+    cwd = getcwd()
     if path.startswith(cwd):
         path = path[len(cwd) + 1:]  # Make path relative. Remove leading slash.
-    if path.endswith('.pyc'):
-        path = path[:-1]
     return path
