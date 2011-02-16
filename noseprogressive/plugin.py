@@ -95,12 +95,11 @@ class ProgressivePlugin(Plugin):
         # TODO: Canonicalize the path to remove /kitsune/../kitsune nonsense.
         # Don't relativize, though, as that hurts the ability to paste into
         # running editors.
+        writeln = self.stream.writeln
+        write = self.stream.write
         with self.bar.dodging():
-            writeln = self.stream.writeln
-            write = self.stream.write
-            writeln()
-            write(tigetstr('bold'))
-            writeln('%s: %s' % (kind, nose_selector(test)))
+            writeln('\n' + tigetstr('bold') +
+                  '%s: %s' % (kind, nose_selector(test)))
 
             # File name and line num in a format vi can take:
             address = test.address()
@@ -108,17 +107,16 @@ class ProgressivePlugin(Plugin):
                 file_name = address[0]
                 if file_name:
                     line_num = extracted_tb[-1][1]
-                    writeln(' ' * len(kind) +
-                            '  +%s %s' % (line_num,
-                                          relative_source_path(file_name)))
+                    writeln(' ' * len(kind) + '  +%s %s' %
+                            (line_num, human_path(src(file_name))))
 
-            write(tigetstr('sgr0'))
+            write(tigetstr('sgr0'))  # end bold
 
             # Traceback:
-            self.stream.write(formatted_err)
+            write(formatted_err)
 
             # Exception:
-            self.stream.write(''.join(format_exception_only(exception_type, exception_value)))
+            write(''.join(format_exception_only(exception_type, exception_value)))
 
     def finalize(self, result):
         """Print counts of tests run."""
@@ -134,7 +132,10 @@ class ProgressivePlugin(Plugin):
         # Erase progress bar. Bash doesn't clear the whole line when printing
         # the prompt, leaving a piece of the bar.
         self.bar.erase()
-        self.stream.writeln('\n' + msg)
+        self.stream.writeln()
+        if not result.failures:
+            self.stream.write('OK!  ')
+        self.stream.writeln(msg)
 
     def startTest(self, test):
         # Overriding this seems to prevent TextTestRunner from running its, so

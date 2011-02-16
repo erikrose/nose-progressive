@@ -116,8 +116,10 @@ Version history
 
 0.4
   * Add time elapsed to the final summary.
+  * Print "OK!" if no tests went ill. I seem to need this explicit affirmation
+    in order to avoid thinking after a test run.
   * In the test failure output, switch the order of the line number and file
-    name. This makes it work with the BBEdit command-line tools in addition to
+    name. This makes it work with the BBEdit command-line tool in addition to
     emacs and vi.
 
 0.3.1
