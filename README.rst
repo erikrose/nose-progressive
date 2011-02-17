@@ -90,7 +90,7 @@ Caveats and known bugs
   monkeypatching, but in the meantime, passing ``--logging-clear-handlers``
   fixes most of these in practice.
 * I haven't tried this in anything but Python 2.6. Bug reports are welcome!
-* No tests yet. Ironic? :-)
+* Horrible test coverage. Ironic? :-)
 
 Got more? Pop over to the `issue tracker`_.
 
