@@ -25,7 +25,10 @@ Features
 * Identify failed tests in a format that can be fed back to nose, so it's easy
   to re-run them.
 * Print a filesystem path complete with vi-style line number, so you can paste
-  it to the commandline and be taken straight to the bug in your editor.
+  it to the commandline and be taken straight to the bug in your editor. It
+  tries to be intelligent about choosing which file and line to choose: it does
+  its best to find the stack frame of your actual test, rather than plopping
+  you down unhelpfully in the middle of nose helper functions like eq_().
 * Work great with Django via django-nose_ (of course).
 
 .. _django-nose: https://github.com/jbalogh/django-nose
@@ -59,14 +62,14 @@ progress bar at the bottom is bold as well::
   % nosetests --with-progressive
   
   FAIL: kitsune.apps.notifications.tests.test_events:MailTests.test_anonymous
-        +31 apps/notifications/tests/test_events.py
+        +361 apps/notifications/tests/test_events.py
     File "/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/unittest.py", line 279, in run
       testMethod()
     File "/Users/erose/Checkouts/kitsune/../kitsune/apps/notifications/tests/test_events.py", line 361, in test_anonymous
       eq_(1, len(mail.outbox))
     File "/Users/erose/Checkouts/kitsune/vendor/packages/nose/nose/tools.py", line 31, in eq_
       assert a == b, msg or "%r != %r" % (a, b)
-  AssertionError
+  AssertionError: 1 != 0
 
   ERROR: kitsune.apps.questions.tests.test_templates:TemplateTestCase.test_woo
          +494 apps/questions/tests/test_templates.py
@@ -113,6 +116,11 @@ necessary.
 
 Version history
 ===============
+
+0.5
+  * Guess the frame of the test, and spit that out as the editor shortcut. No
+    more pointers to eq_()!
+  * Embolden bits of the summary that indicate errors or failures.
 
 0.4
   * Add time elapsed to the final summary.
