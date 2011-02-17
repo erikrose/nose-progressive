@@ -1,8 +1,9 @@
+from collections import defaultdict
 from curses import tigetstr, setupterm, tparm
 from fcntl import ioctl
 from functools import partial
 from itertools import cycle
-from os import getcwd
+from os import getcwd, isatty
 from os.path import abspath
 from signal import signal, SIGWINCH
 import struct
@@ -29,17 +30,36 @@ class ProgressivePlugin(Plugin):
         class DummyStream(object):
             writeln = flush = write = lambda self, *args: None
 
+        self._codes = self._terminalCodes(stream)
+
         # 1 in case test counting failed and returned 0
-        self.bar = ProgressBar(stream, self._totalTests or 1)
+        self.bar = ProgressBar(stream, self._totalTests or 1, self._codes)
 
         self.stream = self.bar.stream = stream
-        # Explicit args make setupterm() work even when -s is passed:
-        setupterm(None, stream.fileno())  # so things like tigetstr() work
-        # TODO: Don't call setupterm() if self.stream isn't a terminal. Use
-        # os.isatty(self.stream.fileno()). If it isn't, perhaps replace the
-        # ShyProgressBar with a dummy object.
-
         return DummyStream()
+
+    def _terminalCodes(self, stream):
+        """Return a hash of termcap codes and values for the terminal `stream`.
+
+        If `stream` is not a terminal, return empty values so you can pipe this
+        to a file without making a mess of it. (I'm not sure why you would want
+        to do that; this is mostly in place to make the Progressive's test
+        suite run.)
+
+        """
+        capabilities = ['bold', 'sc', 'rc', 'sgr0', 'el']
+        if hasattr(stream, 'fileno') and isatty(stream.fileno()):
+            # Explicit args make setupterm() work even when -s is passed:
+            setupterm(None, stream.fileno())  # so things like tigetstr() work
+            codes = dict((x, tigetstr(x)) for x in capabilities)
+            cup = tigetstr('cup')
+            codes['cup'] = lambda line, column: tparm(cup, line, column)
+        else:
+            # If you're crazy enough to pipe this to a file or something, don't
+            # output terminal codes:
+            codes = defaultdict(lambda: '', cup=lambda line, column: '')
+        return codes
+
 
     def prepareTestLoader(self, loader):
         """Insert ourselves into loader calls to count tests.
@@ -98,8 +118,8 @@ class ProgressivePlugin(Plugin):
         writeln = self.stream.writeln
         write = self.stream.write
         with self.bar.dodging():
-            writeln('\n' + tigetstr('bold') +
-                  '%s: %s' % (kind, nose_selector(test)))
+            writeln('\n' + self._codes['bold'] +
+                    '%s: %s' % (kind, nose_selector(test)))
 
             # File name and line num in a format vi can take:
             address = test.address()
@@ -110,7 +130,7 @@ class ProgressivePlugin(Plugin):
                     writeln(' ' * len(kind) + '  +%s %s' %
                             (line_num, human_path(src(file_name))))
 
-            write(tigetstr('sgr0'))  # end bold
+            write(self._codes['sgr0'])  # end bold
 
             # Traceback:
             write(formatted_err)
@@ -130,7 +150,8 @@ class ProgressivePlugin(Plugin):
               ' in %.1fs' % (time() - self._startTime)
 
         # Erase progress bar. Bash doesn't clear the whole line when printing
-        # the prompt, leaving a piece of the bar.
+        # the prompt, leaving a piece of the bar. Also, the prompt may not be
+        # at the bottom of the terminal.
         self.bar.erase()
         self.stream.writeln()
         if not result.failures and not result.errors:
@@ -159,11 +180,12 @@ class ProgressivePlugin(Plugin):
 class ProgressBar(object):
     SPINNER_CHARS = r'/-\|'
 
-    def __init__(self, stream, max):
+    def __init__(self, stream, max, codes):
         """max is the highest value I will attain. Must be >0."""
         self.stream = stream
-        self.last = ''  # The contents of the previous progress line printed
         self.max = max
+        self._codes = codes
+        self.last = ''  # The contents of the previous progress line printed
         self._spinner = cycle(self.SPINNER_CHARS)
         self._measure_terminal()
         signal(SIGWINCH, self._handle_winch)
@@ -208,15 +230,19 @@ class ProgressBar(object):
             test_path += ' ' * (cols_for_path - len(test_path))
 
         # Put them together, and let simmer:
-        self.last = tigetstr('bold') + test_path + '  ' + graph + tigetstr('sgr0')
-        with AtLine(self.stream, self.lines):
+        self.last = self._codes['bold'] + test_path + '  ' + graph + self._codes['sgr0']
+        with self._at_last_line():
             self.stream.write(self.last)
 
     def erase(self):
         """White out the progress bar."""
-        with AtLine(self.stream, self.lines):
-            self.stream.write(tigetstr('el'))
+        with self._at_last_line():
+            self.stream.write(self._codes['el'])
         self.stream.flush()
+
+    def _at_last_line(self):
+        """Return a context manager that positions the cursor at the last line, lets you write things, and then returns it to its previous position."""
+        return AtLine(self.stream, self.lines, self._codes)
 
     def dodging(bar):
         """Return a context manager which erases the bar, lets you output things, and then redraws the bar."""
@@ -232,7 +258,7 @@ class ProgressBar(object):
                 """Redraw the last saved state of the progress bar."""
                 # This isn't really necessary unless we monkeypatch stderr; the
                 # next test is about to start and will redraw the bar.
-                with AtLine(bar.stream, bar.lines):
+                with bar._at_last_line():
                     bar.stream.write(bar.last)
                 bar.stream.flush()
 
@@ -242,17 +268,18 @@ class ProgressBar(object):
 class AtLine(object):
     """Context manager which moves the cursor to a certain line on entry and goes back to where it was on exit"""
 
-    def __init__(self, stream, line):
+    def __init__(self, stream, line, codes):
         self.stream = stream
         self.line = line
+        self._codes = codes
 
     def __enter__(self):
         """Save position and move to progress bar, col 1."""
-        self.stream.write(tigetstr('sc'))  # save position
-        self.stream.write(tparm(tigetstr('cup'), self.line, 0))
+        self.stream.write(self._codes['sc'])  # save position
+        self.stream.write(self._codes['cup'](self.line, 0))
 
     def __exit__(self, type, value, tb):
-        self.stream.write(tigetstr('rc'))  # restore position
+        self.stream.write(self._codes['rc'])  # restore position
 
 
 def nose_selector(test):
@@ -270,10 +297,10 @@ def nose_selector(test):
 
 def human_path(path):
     """Return the most human-readable representation of the given path.
-    
+
     If an absolute path is given that's within the current directory, convert
     it to a relative path to shorten it. Otherwise, return the absolute path.
-    
+
     """
     path = abspath(path)
     cwd = getcwd()
