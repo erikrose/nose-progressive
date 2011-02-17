@@ -102,13 +102,10 @@ class ProgressivePlugin(Plugin):
                   '%s: %s' % (kind, nose_selector(test)))
 
             # File name and line num in a format vi can take:
-            address = test.address()
-            if address:
-                file_name = address[0]
-                if file_name:
-                    line_num = extracted_tb[-1][1]
-                    writeln(' ' * len(kind) + '  +%s %s' %
-                            (line_num, human_path(src(file_name))))
+            if test.address():  # None if no such callable found. No sense trying to find the test frame if there's no such thing.
+                file_name, line_num = extracted_tb[-1][:2]
+                writeln(' ' * len(kind) + '  +%s %s' %
+                        (line_num, human_path(src(file_name))))
 
             write(tigetstr('sgr0'))  # end bold
 
