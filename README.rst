@@ -59,7 +59,7 @@ progress bar at the bottom is bold as well::
   % nosetests --with-progressive
   
   FAIL: kitsune.apps.notifications.tests.test_events:MailTests.test_anonymous
-        apps/notifications/tests/test_events.py +31
+        +31 apps/notifications/tests/test_events.py
     File "/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/unittest.py", line 279, in run
       testMethod()
     File "/Users/erose/Checkouts/kitsune/../kitsune/apps/notifications/tests/test_events.py", line 361, in test_anonymous
@@ -69,7 +69,7 @@ progress bar at the bottom is bold as well::
   AssertionError
 
   ERROR: kitsune.apps.questions.tests.test_templates:TemplateTestCase.test_woo
-         apps/questions/tests/test_templates.py +494
+         +494 apps/questions/tests/test_templates.py
     File "/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/unittest.py", line 279, in run
       testMethod()
     File "/Users/erose/Checkouts/kitsune/vendor/packages/mock/mock.py", line 196, in patched
