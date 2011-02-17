@@ -3,7 +3,7 @@ from fcntl import ioctl
 from functools import partial
 from itertools import cycle
 from os import getcwd
-from os.path import abspath
+from os.path import abspath, realpath
 from signal import signal, SIGWINCH
 import struct
 from termios import TIOCGWINSZ
@@ -91,7 +91,7 @@ class ProgressivePlugin(Plugin):
         # which are expensive to collect. See the sys.exc_info() docs.
         exception_type, exception_value = err[:2]
         extracted_tb = extract_tb(err[2])
-        formatted_err = ''.join(format_list(extracted_tb))
+        formatted_traceback = ''.join(format_list(extracted_tb))
         # TODO: Canonicalize the path to remove /kitsune/../kitsune nonsense.
         # Don't relativize, though, as that hurts the ability to paste into
         # running editors.
@@ -99,18 +99,19 @@ class ProgressivePlugin(Plugin):
         write = self.stream.write
         with self.bar.dodging():
             writeln('\n' + tigetstr('bold') +
-                  '%s: %s' % (kind, nose_selector(test)))
+                    '%s: %s' % (kind, nose_selector(test)))
 
             # File name and line num in a format vi can take:
-            if test.address():  # None if no such callable found. No sense trying to find the test frame if there's no such thing.
-                file_name, line_num = extracted_tb[-1][:2]
+            address = test.address()
+            if address:  # None if no such callable found. No sense trying to find the test frame if there's no such thing.
+                file, line = frame_of_test(address, extracted_tb)[:2]
                 writeln(' ' * len(kind) + '  +%s %s' %
-                        (line_num, human_path(src(file_name))))
+                        (line, human_path(src(file))))
 
             write(tigetstr('sgr0'))  # end bold
 
             # Traceback:
-            write(formatted_err)
+            write(formatted_traceback)
 
             # Exception:
             write(''.join(format_exception_only(exception_type, exception_value)))
@@ -273,13 +274,64 @@ def nose_selector(test):
 
 def human_path(path):
     """Return the most human-readable representation of the given path.
-    
+
     If an absolute path is given that's within the current directory, convert
     it to a relative path to shorten it. Otherwise, return the absolute path.
-    
+
     """
     path = abspath(path)
     cwd = getcwd()
     if path.startswith(cwd):
         path = path[len(cwd) + 1:]  # Make path relative. Remove leading slash.
     return path
+
+
+class OneTrackMind(object):
+    """An accurate simulation of my brain
+
+    I can know one thing at a time, at some level of confidence. You can tell
+    me other things, but if I'm not as confident of them, I'll forget them. If
+    I'm more confident of them, they'll replace what I knew before.
+
+    """
+    def __init__(self):
+        self.confidence = 0
+        self.best = None
+
+    def know(self, what, confidence):
+        """Know something with the given confidence, and return self for chaining.
+
+        If confidence is higher than that of what we already know, replace
+        what we already know with what you're telling us.
+
+        """
+        if confidence > self.confidence:
+            self.best = what
+            self.confidence = confidence
+        return self
+
+
+def frame_of_test((test_file, test_module, test_call), extracted_tb):
+    """Return the frame of a traceback that represents the given result of test_address().
+
+    Sometimes this is hard. It takes its best guess.
+
+    """
+    test_file_path = realpath(test_file)
+    # OneTrackMind helps us favor the latest frame, even if there's more than
+    # one match of equal confidence.
+    knower = OneTrackMind().know(extracted_tb[-1], 1)
+
+    # TODO: Perfect. Right now, I'm just comparing by function name within a
+    # module. This should break only if you have two identically-named
+    # functions from a single module in the call stack when your test fails.
+    # However, it bothers me. I'd rather be finding the actual callables and
+    # comparing them directly.
+    for frame in reversed(extracted_tb):
+        file, line, function, text = frame
+        if test_file_path == realpath(file):  # A test address always has a file, at least.
+            knower.know(frame, 2)
+            if function == test_call.rsplit('.')[-1]:
+                knower.know(frame, 3)
+                break
+    return knower.best
