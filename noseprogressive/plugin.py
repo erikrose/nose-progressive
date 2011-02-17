@@ -117,13 +117,19 @@ class ProgressivePlugin(Plugin):
 
     def finalize(self, result):
         """Print counts of tests run."""
+        def renderResultType(type, number):
+            """Return a rendering like '2 failures', given a type like 'failure' and a number of them."""
+            ret = '%s %s%s' % (number, type, 's' if number != 1 else '')
+            if type in ['failure', 'error'] and number:
+                ret = tigetstr('bold') + ret + tigetstr('sgr0')
+            return ret
+
         types = ['test', 'failure', 'error']
         values = [self._testsRun, len(result.failures), len(result.errors)]
         if hasattr(result, 'skipped'):  # Absent if --no-skip is passed
             types.append('skip')
             values.append(len(result.skipped))
-        msg = ', '.join('%s %s%s' % (v, t, 's' if v != 1 else '')
-                        for t, v in zip(types, values)) + \
+        msg = ', '.join(renderResultType(t, v) for t, v in zip(types, values)) + \
               ' in %.1fs' % (time() - self._startTime)
 
         # Erase progress bar. Bash doesn't clear the whole line when printing
