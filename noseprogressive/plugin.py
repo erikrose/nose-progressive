@@ -133,7 +133,7 @@ class ProgressivePlugin(Plugin):
         # the prompt, leaving a piece of the bar.
         self.bar.erase()
         self.stream.writeln()
-        if not result.failures:
+        if not result.failures and not result.errors:
             self.stream.write('OK!  ')
         self.stream.writeln(msg)
 
