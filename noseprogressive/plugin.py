@@ -4,7 +4,7 @@ from fcntl import ioctl
 from functools import partial
 from itertools import cycle
 from os import getcwd, isatty
-from os.path import abspath
+from os.path import abspath, realpath
 from signal import signal, SIGWINCH
 import struct
 from termios import TIOCGWINSZ
@@ -24,6 +24,11 @@ class ProgressivePlugin(Plugin):
 
     # TODO: Decrease score so we run early, and monkeypatch stderr in __init__.
     # See if that works.
+
+    def begin(self):
+        # nosetests changes directories to the tests dir when run from a
+        # distribution dir, so save the original cwd.
+        self._cwd = getcwd()
 
     def setOutputStream(self, stream):
         """Steal the stream, and return a mock one for everybody else to shut them up."""
@@ -111,7 +116,7 @@ class ProgressivePlugin(Plugin):
         # which are expensive to collect. See the sys.exc_info() docs.
         exception_type, exception_value = err[:2]
         extracted_tb = extract_tb(err[2])
-        formatted_err = ''.join(format_list(extracted_tb))
+        formatted_traceback = ''.join(format_list(extracted_tb))
         # TODO: Canonicalize the path to remove /kitsune/../kitsune nonsense.
         # Don't relativize, though, as that hurts the ability to paste into
         # running editors.
@@ -123,30 +128,34 @@ class ProgressivePlugin(Plugin):
 
             # File name and line num in a format vi can take:
             address = test.address()
-            if address:
-                file_name = address[0]
-                if file_name:
-                    line_num = extracted_tb[-1][1]
-                    writeln(' ' * len(kind) + '  +%s %s' %
-                            (line_num, human_path(src(file_name))))
+            if address:  # None if no such callable found. No sense trying to find the test frame if there's no such thing.
+                file, line = frame_of_test(address, extracted_tb)[:2]
+                writeln(' ' * len(kind) + '  +%s %s' %
+                        (line, human_path(src(file), self._cwd)))
 
             write(self._codes['sgr0'])  # end bold
 
             # Traceback:
-            write(formatted_err)
+            write(formatted_traceback)
 
             # Exception:
             write(''.join(format_exception_only(exception_type, exception_value)))
 
     def finalize(self, result):
         """Print counts of tests run."""
+        def renderResultType(type, number):
+            """Return a rendering like '2 failures', given a type like 'failure' and a number of them."""
+            ret = '%s %s%s' % (number, type, 's' if number != 1 else '')
+            if type in ['failure', 'error'] and number:
+                ret = self._codes['bold'] + ret + self._codes['sgr0']
+            return ret
+
         types = ['test', 'failure', 'error']
         values = [self._testsRun, len(result.failures), len(result.errors)]
         if hasattr(result, 'skipped'):  # Absent if --no-skip is passed
             types.append('skip')
             values.append(len(result.skipped))
-        msg = ', '.join('%s %s%s' % (v, t, 's' if v != 1 else '')
-                        for t, v in zip(types, values)) + \
+        msg = ', '.join(renderResultType(t, v) for t, v in zip(types, values)) + \
               ' in %.1fs' % (time() - self._startTime)
 
         # Erase progress bar. Bash doesn't clear the whole line when printing
@@ -295,7 +304,7 @@ def nose_selector(test):
         return module
 
 
-def human_path(path):
+def human_path(path, cwd):
     """Return the most human-readable representation of the given path.
 
     If an absolute path is given that's within the current directory, convert
@@ -303,7 +312,58 @@ def human_path(path):
 
     """
     path = abspath(path)
-    cwd = getcwd()
     if path.startswith(cwd):
         path = path[len(cwd) + 1:]  # Make path relative. Remove leading slash.
     return path
+
+
+class OneTrackMind(object):
+    """An accurate simulation of my brain
+
+    I can know one thing at a time, at some level of confidence. You can tell
+    me other things, but if I'm not as confident of them, I'll forget them. If
+    I'm more confident of them, they'll replace what I knew before.
+
+    """
+    def __init__(self):
+        self.confidence = 0
+        self.best = None
+
+    def know(self, what, confidence):
+        """Know something with the given confidence, and return self for chaining.
+
+        If confidence is higher than that of what we already know, replace
+        what we already know with what you're telling us.
+
+        """
+        if confidence > self.confidence:
+            self.best = what
+            self.confidence = confidence
+        return self
+
+
+def frame_of_test((test_file, test_module, test_call), extracted_tb):
+    """Return the frame of a traceback that represents the given result of test_address().
+
+    Sometimes this is hard. It takes its best guess.
+
+    """
+    test_file_path = realpath(test_file)
+    # OneTrackMind helps us favor the latest frame, even if there's more than
+    # one match of equal confidence.
+    knower = OneTrackMind().know(extracted_tb[-1], 1)
+
+    # TODO: Perfect. Right now, I'm just comparing by function name within a
+    # module. This should break only if you have two identically-named
+    # functions from a single module in the call stack when your test fails.
+    # However, it bothers me. I'd rather be finding the actual callables and
+    # comparing them directly.
+    for frame in reversed(extracted_tb):
+        file, line, function, text = frame
+        if file is not None and test_file_path == realpath(file):
+            knower.know(frame, 2)
+            if (hasattr(test_call, 'rsplit') and  # test_call can be None
+                function == test_call.rsplit('.')[-1]):
+                knower.know(frame, 3)
+                break
+    return knower.best
