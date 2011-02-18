@@ -117,6 +117,10 @@ necessary.
 Version history
 ===============
 
+0.5.1
+  * Fix a crash on error when file of a stack frame or function of a test are
+    None.
+
 0.5
   * Guess the frame of the test, and spit that out as the editor shortcut. No
     more pointers to eq_()!

@@ -8,7 +8,7 @@ if sys.version_info >= (3,):
 
 setup(
     name='nose-progressive',
-    version='0.5',
+    version='0.5.1',
     description='Nose plugin to show progress bar and tracebacks during tests',
     long_description=open('README.rst').read(),
     author='Erik Rose',

@@ -333,9 +333,10 @@ def frame_of_test((test_file, test_module, test_call), extracted_tb):
     # comparing them directly.
     for frame in reversed(extracted_tb):
         file, line, function, text = frame
-        if test_file_path == realpath(file):  # A test address always has a file, at least.
+        if file is not None and test_file_path == realpath(file):
             knower.know(frame, 2)
-            if function == test_call.rsplit('.')[-1]:
+            if (hasattr(test_call, 'rsplit') and  # test_call can be None
+                function == test_call.rsplit('.')[-1]):
                 knower.know(frame, 3)
                 break
     return knower.best
