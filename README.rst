@@ -120,6 +120,8 @@ Version history
 0.5
   * Guess the frame of the test, and spit that out as the editor shortcut. No
     more pointers to eq_()!
+  * More reliably determine the editor shortcut pathname, e.g. when running
+    tests from an egg distribution directory.
   * Embolden bits of the summary that indicate errors or failures.
 
 0.4

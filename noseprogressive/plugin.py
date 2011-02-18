@@ -24,6 +24,11 @@ class ProgressivePlugin(Plugin):
     # TODO: Decrease score so we run early, and monkeypatch stderr in __init__.
     # See if that works.
 
+    def begin(self):
+        # nosetests changes directories to the tests dir when run from a
+        # distribution dir, so save the original cwd.
+        self._cwd = getcwd()
+
     def setOutputStream(self, stream):
         """Steal the stream, and return a mock one for everybody else to shut them up."""
         class DummyStream(object):
@@ -106,7 +111,7 @@ class ProgressivePlugin(Plugin):
             if address:  # None if no such callable found. No sense trying to find the test frame if there's no such thing.
                 file, line = frame_of_test(address, extracted_tb)[:2]
                 writeln(' ' * len(kind) + '  +%s %s' %
-                        (line, human_path(src(file))))
+                        (line, human_path(src(file), self._cwd)))
 
             write(tigetstr('sgr0'))  # end bold
 
@@ -272,7 +277,7 @@ def nose_selector(test):
         return module
 
 
-def human_path(path):
+def human_path(path, cwd):
     """Return the most human-readable representation of the given path.
 
     If an absolute path is given that's within the current directory, convert
@@ -280,7 +285,6 @@ def human_path(path):
 
     """
     path = abspath(path)
-    cwd = getcwd()
     if path.startswith(cwd):
         path = path[len(cwd) + 1:]  # Make path relative. Remove leading slash.
     return path
