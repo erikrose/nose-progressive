@@ -1,6 +1,6 @@
-from os.path import dirname, join
 from unittest import TestCase, TestSuite
 
+from nose import SkipTest
 from nose.plugins import PluginTester
 from nose.plugins.skip import Skip
 
@@ -38,3 +38,7 @@ def test_slowly():
         from time import sleep
         sleep(0.1)
         yield failer, x
+
+
+def test_skip():
+    raise SkipTest

@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from nose.tools import eq_
 
-from noseprogressive import human_path
+from noseprogressive.utils import human_path
 
 
 class UnitTests(TestCase):
