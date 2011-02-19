@@ -24,6 +24,17 @@ class FailureTests(IntegrationTestCase):
 
     def test_fail(self):
         """Make sure skipped tests print a line."""
-        import pdb;pdb.set_trace()
+#        import pdb;pdb.set_trace()
         # Grrr, we seem to get stdout here, not stderr.
         assert 'FAIL: ' in self.output
+
+
+def test_slowly():
+    def failer(y):
+        print "booga"
+        if y == 1:
+            assert False
+    for x in range(10):
+        from time import sleep
+        sleep(0.1)
+        yield failer, x

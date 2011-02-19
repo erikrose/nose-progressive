@@ -7,6 +7,7 @@ from os import getcwd, isatty
 from os.path import abspath, realpath
 from signal import signal, SIGWINCH
 import struct
+import sys
 from termios import TIOCGWINSZ
 from time import time
 from traceback import format_list, extract_tb, format_exception_only
@@ -21,14 +22,38 @@ class ProgressivePlugin(Plugin):
     name = 'progressive'
     _testsRun = 0
     _totalTests = 0
-
-    # TODO: Decrease score so we run early, and monkeypatch stderr in __init__.
-    # See if that works.
+    score = 10000  # Grab stdout and stderr before the capture plugin.
 
     def begin(self):
         # nosetests changes directories to the tests dir when run from a
         # distribution dir, so save the original cwd.
+        class StreamWrapper(object):
+            def __init__(me, stream):
+                me._stream = stream
+        
+            def __getattr__(me, name):
+                return getattr(me._stream, name)
+        
+            def write(me, data):
+                if hasattr(self, 'bar'):
+                    with self.bar.dodging():
+                        me._stream.write(data)
+                else:
+                    # Just in case somebody writes something to stderr before
+                    # the bar is inited
+                    me._stream.write(data)
+        
+        # TODO: Only if isatty.
+        self._stderr = sys.stderr
+        self._stdout = sys.stdout
+        sys.stderr = StreamWrapper(sys.stderr)
+        sys.stdout = StreamWrapper(sys.stdout)
+
         self._cwd = getcwd()
+    
+    def end(self):
+        sys.stderr = self._stderr
+        sys.stdout = self._stdout
 
     def setOutputStream(self, stream):
         """Steal the stream, and return a mock one for everybody else to shut them up."""
@@ -155,8 +180,8 @@ class ProgressivePlugin(Plugin):
         if hasattr(result, 'skipped'):  # Absent if --no-skip is passed
             types.append('skip')
             values.append(len(result.skipped))
-        msg = ', '.join(renderResultType(t, v) for t, v in zip(types, values)) + \
-              ' in %.1fs' % (time() - self._startTime)
+        msg = (', '.join(renderResultType(t, v) for t, v in zip(types, values)) +
+               ' in %.1fs' % (time() - self._startTime))
 
         # Erase progress bar. Bash doesn't clear the whole line when printing
         # the prompt, leaving a piece of the bar. Also, the prompt may not be
