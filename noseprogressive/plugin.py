@@ -77,7 +77,9 @@ class ProgressivePlugin(Plugin):
         return ProgressiveRunner(self._cwd,
                                  self._totalTests,
                                  runner.stream,
-                                 verbosity=self.conf.verbosity)
+                                 verbosity=self.conf.verbosity,
+                                 config=self.conf)  # So we don't get a default
+                                                    # NoPlugins manager
 
     def prepareTestResult(self, result):
         self._bar = result.bar
