@@ -14,6 +14,7 @@ class ProgressivePlugin(Plugin):
     score = 10000  # Grab stdout and stderr before the capture plugin.
 
     def begin(self):
+        """Wrap stderr and stdout to keep other users of them from smearing our progress bar."""
         class StreamWrapper(object):
             def __init__(me, stream):
                 me._stream = stream

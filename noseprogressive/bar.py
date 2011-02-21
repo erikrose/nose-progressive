@@ -9,6 +9,7 @@ from noseprogressive.utils import nose_selector
 
 class ProgressBar(object):
     SPINNER_CHARS = r'/-\|'
+    _is_dodging = 0  # Like a semaphore
 
     def __init__(self, stream, max, codes):
         """max is the highest value I will attain. Must be >0."""
@@ -75,22 +76,32 @@ class ProgressBar(object):
         return AtLine(self.stream, self.lines, self._codes)
 
     def dodging(bar):
-        """Return a context manager which erases the bar, lets you output things, and then redraws the bar."""
+        """Return a context manager which erases the bar, lets you output things, and then redraws the bar.
+
+        It's reentrant.
+
+        """
         class ShyProgressBar(object):
             """Context manager that implements a progress bar that gets out of the way"""
 
             def __enter__(self):
                 """Erase the progress bar so bits of disembodied progress bar don't get scrolled up the terminal."""
                 # My terminal has no status line, so we make one manually.
-                bar.erase()
+                if not bar._is_dodging:
+                    bar.erase()
+                bar._is_dodging += 1
 
             def __exit__(self, type, value, tb):
                 """Redraw the last saved state of the progress bar."""
-                # This isn't really necessary unless we monkeypatch stderr; the
-                # next test is about to start and will redraw the bar.
-                with bar._at_last_line():
-                    bar.stream.write(bar.last)
-                bar.stream.flush()
+                if bar._is_dodging == 1:  # Can't decrement yet; write() could
+                                          # read it.
+                    # This is really necessary only because we monkeypatch
+                    # stderr; the next test is about to start and will redraw
+                    # the bar.
+                    with bar._at_last_line():
+                        bar.stream.write(bar.last)
+                    bar.stream.flush()
+                bar._is_dodging -= 1
 
         return ShyProgressBar()
 

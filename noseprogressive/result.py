@@ -88,14 +88,14 @@ class ProgressiveResult(TextTestResult):
                     file, line = frame_of_test(address, extracted_tb)[:2]
                     writeln(' ' * len(kind) + '  +%s %s' %
                             (line, human_path(src(file), self._cwd)))
-    
+
                 write(self._codes['sgr0'])  # end bold
-    
+
                 # Traceback:
-                # TODO: Think about using self._exc_info_to_string, which does some
-                # pretty whizzy skipping of unittest frames.
+                # TODO: Think about using self._exc_info_to_string, which does
+                # some pretty whizzy skipping of unittest frames.
                 write(formatted_traceback)
-    
+
                 # Exception:
                 write(''.join(format_exception_only(exception_type,
                                                     exception_value)))

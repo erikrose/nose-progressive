@@ -86,8 +86,6 @@ progress bar at the bottom is bold as well::
 Caveats and known bugs
 ======================
 
-* Skipped tests get counted in Python 2.6, but they don't get printed. I
-  consider skips something to be discouraged, so I plan to fix this.
 * Tests which themselves write to stderr will smear bits of the progress bar
   upward if they don't print complete lines. I hope to fix this with some
   monkeypatching, but in the meantime, passing ``--logging-clear-handlers``
