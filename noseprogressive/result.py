@@ -5,7 +5,7 @@ from traceback import format_list, extract_tb, format_exception_only
 from unittest import TestResult
 
 from nose.exc import SkipTest
-from nose.util import src
+from nose.util import src, test_address
 
 from noseprogressive.bar import ProgressBar
 from noseprogressive.utils import nose_selector, human_path, frame_of_test
@@ -82,7 +82,7 @@ class ProgressiveResult(TestResult):
                     '%s: %s' % (kind, nose_selector(test)))
 
             # File name and line num in a format vi can take:
-            address = test.address()
+            address = test_address(test)
             if address:  # None if no such callable found. No sense trying to
                          # find the test frame if there's no such thing.
                 file, line = frame_of_test(address, extracted_tb)[:2]
