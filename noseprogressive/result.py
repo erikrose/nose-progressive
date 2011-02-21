@@ -104,17 +104,22 @@ class ProgressiveResult(TextTestResult):
 
     def addError(self, test, err):
         exc, val, tb = err
+        # We don't read this, but some other plugin might conceivably expect it
+        # to be there:
+        excInfo = self._exc_info_to_string(err, test)
 
-        # We duplicate a few lines of errorclass handling from super rather
-        # than calling it and monkeying around with flags to keep it from
-        # printing anything.
+        # We duplicate the errorclass handling from super rather than calling
+        # it and monkeying around with flags to keep it from printing anything.
         isErrorClass = False
         for cls, (storage, label, isFailure) in self.errorClasses.iteritems():
             if isclass(exc) and issubclass(exc, cls):
                 if isFailure:
                     test.passed = False
-                storage.append((test, 'some exception info no one reads'))
+                storage.append((test, excInfo))
                 isErrorClass = True
+        if not isErrorClass:
+            self.errors.append((test, excInfo))
+            test.passed = False
 
         with self.bar.dodging():
             self._printError(label if isErrorClass else 'ERROR',
