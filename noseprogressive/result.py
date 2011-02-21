@@ -58,7 +58,7 @@ class ProgressiveResult(TextTestResult):
         super(ProgressiveResult, self).startTest(test)
         self.bar.update(test, self.testsRun)
 
-    def _printError(self, kind, err, test):
+    def _printError(self, kind, err, test, showTraceback=True):
         """Output a human-readable error report to the stream.
 
         kind -- the (string) type of incident the precipitated this call
@@ -80,24 +80,27 @@ class ProgressiveResult(TextTestResult):
             writeln('\n' + self._codes['bold'] +
                     '%s: %s' % (kind, nose_selector(test)))
 
-            # File name and line num in a format vi can take:
-            address = test_address(test)
-            if address:  # None if no such callable found. No sense trying to
-                         # find the test frame if there's no such thing.
-                file, line = frame_of_test(address, extracted_tb)[:2]
-                writeln(' ' * len(kind) + '  +%s %s' %
-                        (line, human_path(src(file), self._cwd)))
-
-            write(self._codes['sgr0'])  # end bold
-
-            # Traceback:
-            # TODO: Think about using self._exc_info_to_string, which does some
-            # pretty whizzy skipping of unittest frames.
-            write(formatted_traceback)
-
-            # Exception:
-            write(''.join(format_exception_only(exception_type,
-                                                exception_value)))
+            if showTraceback:
+                # File name and line num in a format vi can take:
+                address = test_address(test)
+                if address:  # None if no such callable found. No sense trying
+                             # to find the test frame if there's no such thing.
+                    file, line = frame_of_test(address, extracted_tb)[:2]
+                    writeln(' ' * len(kind) + '  +%s %s' %
+                            (line, human_path(src(file), self._cwd)))
+    
+                write(self._codes['sgr0'])  # end bold
+    
+                # Traceback:
+                # TODO: Think about using self._exc_info_to_string, which does some
+                # pretty whizzy skipping of unittest frames.
+                write(formatted_traceback)
+    
+                # Exception:
+                write(''.join(format_exception_only(exception_type,
+                                                    exception_value)))
+            else:
+                write(self._codes['sgr0'])  # end bold
 
     def addError(self, test, err):
         exc, val, tb = err
@@ -114,7 +117,10 @@ class ProgressiveResult(TextTestResult):
                 isErrorClass = True
 
         with self.bar.dodging():
-            self._printError(label if isErrorClass else 'ERROR', err, test)
+            self._printError(label if isErrorClass else 'ERROR',
+                             err,
+                             test,
+                             showTraceback=not isErrorClass or isFailure)
 
     def addFailure(self, test, err):
         super(ProgressiveResult, self).addFailure(test, err)
