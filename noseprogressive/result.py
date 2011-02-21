@@ -77,7 +77,7 @@ class ProgressiveResult(TextTestResult):
         writeln = self.stream.writeln
         write = self.stream.write
         with self.bar.dodging():
-            writeln('\n' + self._codes['bold'] +
+            writeln('\n' + (self._codes['bold'] if showTraceback else '') +
                     '%s: %s' % (kind, nose_selector(test)))
 
             if showTraceback:
