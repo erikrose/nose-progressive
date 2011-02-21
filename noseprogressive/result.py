@@ -25,7 +25,6 @@ class ProgressiveResult(TextTestResult):
 
         # 1 in case test counting failed and returned 0
         self.bar = ProgressBar(stream, totalTests or 1, self._codes)
-        self.bar.stream = stream
 
         # Declare errorclass-savviness so the errorclass plugin doesn't
         # monkeypatch half my methods away:
