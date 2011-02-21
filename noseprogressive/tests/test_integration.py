@@ -35,22 +35,33 @@ class HookTests(IntegrationTestCase):
 
         return TestSuite([Failure(), Skip(), Success(), Error()])
 
-    @property
-    def _output_str(self):
-        """Return the capture output as a string."""
-        return self.output._buf
+    def _count_eq(self, text, count):
+        """Assert `text` appears `count` times in the captured output."""
+        eq_(str(self.output).count(text), count)
 
     def test_fail(self):
         """Make sure failed tests print a line."""
         # Grrr, we seem to get stdout here, not stderr.
-        eq_(self._output_str.count('FAIL: '), 1)
+        self._count_eq('FAIL: ', 1)
 
     def test_skip(self):
         """Make sure skipped tests print a line."""
-        eq_(self._output_str.count('SKIP: '), 1)
+        self._count_eq('SKIP: ', 1)
 
     def test_error(self):
-        eq_(self._output_str.count('ERROR: '), 1)
+        """Make sure uncaught errors print a line."""
+        self._count_eq('ERROR: ', 1)
+
+    # Proper handling of test successes is tested by the sum of the above, in
+    # that no more than one failure, skip, and error is shown.
+
+    def test_summary(self):
+        """Make sure summary prints.
+
+        Also incidentally test that addError() counts correctly.
+
+        """
+        assert '4 tests, 1 failure, 1 error, 1 skip in ' in self.output
 
 
 # def test_slowly():
