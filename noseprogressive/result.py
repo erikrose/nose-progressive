@@ -2,16 +2,15 @@ from collections import defaultdict
 from curses import tigetstr, setupterm, tparm
 from os import isatty
 from traceback import format_list, extract_tb, format_exception_only
-from unittest import TestResult
 
-from nose.exc import SkipTest
-from nose.util import src, test_address
+from nose.result import TextTestResult
+from nose.util import src, test_address, isclass
 
 from noseprogressive.bar import ProgressBar
 from noseprogressive.utils import nose_selector, human_path, frame_of_test
 
 
-class ProgressiveResult(TestResult):
+class ProgressiveResult(TextTestResult):
     """Test result which updates a progress bar instead of printing dots
 
     Nose's ResultProxy will wrap it, and other plugins can still print
@@ -19,18 +18,18 @@ class ProgressiveResult(TestResult):
     stderr/out wrapping.
 
     """
-    def __init__(self, cwd, totalTests, stream):
-        super(ProgressiveResult, self).__init__()
+    def __init__(self, cwd, totalTests, stream, config=None):
+        super(ProgressiveResult, self).__init__(stream, None, 0, config=config)
         self._cwd = cwd
-        self.stream = stream
         self._codes = self._terminalCodes(stream)
 
         # 1 in case test counting failed and returned 0
         self.bar = ProgressBar(stream, totalTests or 1, self._codes)
         self.bar.stream = stream
 
-        # Dammit, nose is expecting these, even though they're not part of the contract:
-        self.showAll = self.dots = False
+        # Declare errorclass-savviness so the errorclass plugin doesn't
+        # monkeypatch half my methods away:
+        self.errorClasses = {}
 
     def _terminalCodes(self, stream):
         """Return a hash of termcap codes and values for the terminal `stream`.
@@ -92,6 +91,8 @@ class ProgressiveResult(TestResult):
             write(self._codes['sgr0'])  # end bold
 
             # Traceback:
+            # TODO: Think about using self._exc_info_to_string, which does some
+            # pretty whizzy skipping of unittest frames.
             write(formatted_traceback)
 
             # Exception:
@@ -99,35 +100,58 @@ class ProgressiveResult(TestResult):
                                                 exception_value)))
 
     def addError(self, test, err):
-        super(ProgressiveResult, self).addError(test, err)
         exc, val, tb = err
+
+        # We duplicate a few lines of errorclass handling from super rather
+        # than calling it and monkeying around with flags to keep it from
+        # printing anything.
+        isErrorClass = False
+        for cls, (storage, label, isFailure) in self.errorClasses.iteritems():
+            if isclass(exc) and issubclass(exc, cls):
+                if isFailure:
+                    test.passed = False
+                storage.append((test, 'some exception info no one reads'))
+                isErrorClass = True
+
         with self.bar.dodging():
-            if isinstance(exc, SkipTest):
-                self.stream.writeln()
-                self.stream.writeln('SKIP: %s' % nose_selector(test))
-            else:
-                self._printError('ERROR', err, test)
+            self._printError(label if isErrorClass else 'ERROR', err, test)
 
     def addFailure(self, test, err):
         super(ProgressiveResult, self).addFailure(test, err)
         self._printError('FAIL', err, test)
 
-    def printErrorsForReal(self, timeTaken):
+    def printSummary(self, start, stop):
         """As a final summary, print number of tests, broken down by result."""
-        def renderResultType(type, number):
-            """Return a rendering like '2 failures', given a type like 'failure' and a number of them."""
+        def renderResultType(type, number, isFailure):
+            """Return a rendering like '2 failures'.
+
+            Args:
+                type: A singular label, like "failure"
+                number: The number of tests with a result of that type
+                isFailure: Whether that type counts as a failure.
+
+            """
+            # I'd rather hope for the best with plurals than totally punt on
+            # being Englishlike:
             ret = '%s %s%s' % (number, type, 's' if number != 1 else '')
-            if type in ['failure', 'error'] and number:
+            if isFailure and number:
                 ret = self._codes['bold'] + ret + self._codes['sgr0']
             return ret
 
-        types = ['test', 'failure', 'error']
-        values = [self.testsRun, len(self.failures), len(self.errors)]
-        if hasattr(self, 'skipped'):  # Absent if --no-skip is passed
-            types.append('skip')
-            values.append(len(self.skipped))
-        msg = (', '.join(renderResultType(t, v) for t, v in zip(types, values)) +
-               ' in %.1fs' % timeTaken)
+        # Summarize the special cases:
+        counts = [('test', self.testsRun, False),
+                  ('failure', len(self.failures), True),
+                  ('error', len(self.errors), True)]
+        # Support custom errorclasses as well as normal failures and errors.
+        # Lowercase any all-caps labels, but leave the rest alone in case there
+        # are hard-to-read camelCaseWordBreaks.
+        counts.extend([(label.lower() if label.isupper() else label,
+                        len(storage),
+                        isFailure)
+                        for (storage, label, isFailure) in
+                            self.errorClasses.itervalues() if len(storage)])
+        summary = (', '.join(renderResultType(*a) for a in counts) +
+                   ' in %.1fs' % (stop - start))
 
         # Erase progress bar. Bash doesn't clear the whole line when printing
         # the prompt, leaving a piece of the bar. Also, the prompt may not be
@@ -136,4 +160,4 @@ class ProgressiveResult(TestResult):
         self.stream.writeln()
         if self.wasSuccessful():
             self.stream.write('OK!  ')
-        self.stream.writeln(msg)
+        self.stream.writeln(summary)

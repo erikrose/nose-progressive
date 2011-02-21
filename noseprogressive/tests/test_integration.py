@@ -42,3 +42,12 @@ def test_slowly():
 
 def test_skip():
     raise SkipTest
+
+
+# def test_syntax_error():
+#     x = 1
+#     :bad
+
+
+def test_error():
+    raise NotImplementedError

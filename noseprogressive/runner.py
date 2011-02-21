@@ -17,11 +17,14 @@ class ProgressiveRunner(nose.core.TextTestRunner):
         """Return a Result that doesn't print dots.
 
         Nose's ResultProxy will wrap it, and other plugins can still print
-        stuff---but without smashing into my progress bar, care of my
-        stderr/out wrapping.
+        stuff---but without smashing into our progress bar, care of
+        ProgressivePlugin's stderr/out wrapping.
 
         """
-        return ProgressiveResult(self._cwd, self._totalTests, self.stream)
+        return ProgressiveResult(self._cwd,
+                                 self._totalTests,
+                                 self.stream,
+                                 config=self.config)
 
     def run(self, test):
         "Run the given test case or test suite...quietly."
@@ -38,7 +41,16 @@ class ProgressiveRunner(nose.core.TextTestRunner):
         startTime = time()
         test(result)
         stopTime = time()
-        timeTaken = stopTime - startTime
-        result.printErrorsForReal(timeTaken)  # TODO: Why the hell does this dispatch to _TextTestResult if I call it printErrors?!
+
+        # We don't care to hear about errors again at the end; we take care of
+        # that in result.addError(), while the tests run.
+        # result.printErrors()
+        #
+        # However, we do need to call this one useful line from
+        # nose.result.TextTestResult's implementation of printErrors() to make
+        # sure other plugins get a chance to report:
+        self.config.plugins.report(self.stream)
+
+        result.printSummary(startTime, stopTime)
         self.config.plugins.finalize(result)
         return result
