@@ -44,6 +44,20 @@ class ProgressivePlugin(Plugin):
         sys.stderr = self._stderr
         sys.stdout = self._stdout
 
+    def options(self, parser, env):
+        super(ProgressivePlugin, self).options(parser, env)
+        parser.add_option('--progressive-advisories',
+                          action='store_true',
+                          dest='showAdvisories',
+                          default=env.get('NOSE_PROGRESSIVE_ADVISORIES', False),
+                          help='Show skips and deprecation exceptions in '
+                               'addition to failures and errors.')
+
+    def configure(self, options, config):
+        super(ProgressivePlugin, self).configure(options, config)
+        if self.can_configure:
+            self._showAdvisories = options.showAdvisories
+
     def prepareTestLoader(self, loader):
         """Insert ourselves into loader calls to count tests.
 
@@ -78,6 +92,7 @@ class ProgressivePlugin(Plugin):
         return ProgressiveRunner(self._cwd,
                                  self._totalTests,
                                  runner.stream,
+                                 self._showAdvisories,
                                  verbosity=self.conf.verbosity,
                                  config=self.conf)  # So we don't get a default
                                                     # NoPlugins manager

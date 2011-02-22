@@ -35,8 +35,8 @@ Tracebacks: Realtime, Compact, and Closed-Loop
 
 nose typically waits until the bitter end to show error and failure tracebacks,
 which wastes a lot of time in large tests suites that take many minutes to
-finish. We show tracebacks as soon as they occur so you can start chasing them
-immediately.
+complete. We show tracebacks as soon as they occur so you can start chasing
+them immediately.
 
 A few other niceties further improve the debugging experience:
 
@@ -95,8 +95,8 @@ With judicious use of double- or triple-click-to-select, this can work almost
 like a hyperlink. In the future, we might add an option to print your editor
 name as part of the shortcut, obviating the need to type at all.
 
-In addition, we apply some heuristics to choosing which file and line to show for
-the above: we try to find the stack frame of your actual test, rather than
+In addition, we apply some heuristics to choosing which file and line to show
+for the above: we try to find the stack frame of your actual test, rather than
 plopping you down unhelpfully in the middle of a nose helper function like
 eq_(). Even if you create your own assertion helper functions, like
 ``xml_eq()``, we still track down your test.
@@ -106,11 +106,15 @@ Custom Error Classes
 
 nose-progressive fully supports custom error classes like Skip and
 Deprecated. We note the tests that raise them in realtime, just like normal
-errors and failures. When a tests results in an error class that does not
-represent a failure, we suppress the traceback, reasoning that it would
-typically be of limited interest::
+errors and failures::
 
-  SKIP: kitsune.apps.sumo.tests.test_readonly:ReadOnlyModeTest.test_login_error
+  TODO: kitsune.apps.sumo.tests.test_readonly:ReadOnlyModeTest.test_login_error
+
+However, when an error class is not considered a failure, we don't show it
+unless the ``--progressive-advisories`` option is used, and, even in that case,
+we don't show a traceback (since usually the important bit of information is
+*that* the test was skipped, not the line it was skipped on). This stems from
+our philosophy of prioritizing useful information.
 
 Custom error classes are summarized in the counts after the run, along with
 failures and errors::
@@ -142,8 +146,7 @@ Installation
 
 Or, to get the bleeding-edge, unreleased version::
 
-  pip install -e \
-    git://github.com/erikrose/nose-progressive.git#egg=nose-progressive
+  pip install -e git://github.com/erikrose/nose-progressive.git#egg=nose-progressive
 
 Use
 ===
@@ -156,6 +159,13 @@ My favorite way, which suppresses any noisy log messages thrown by tests unless
 they fail::
 
   nosetests --with-progressive --logging-clear-handlers
+
+Options
+=======
+
+``--progressive-advisories``
+  Show even non-failure custom errors, like Skip and Deprecated, during test
+  runs.
 
 Caveats and Known Bugs
 ======================
@@ -187,6 +197,11 @@ necessary. Thanks to Jeff Balogh for django-nose, without which I would have
 had little motivation to write this.
 
 .. _nose-nicedots: https://github.com/kumar303/nose-nicedots
+
+Author
+======
+
+Erik Rose, while waiting for tests to complete ;-)
 
 Version History
 ===============
@@ -239,7 +254,8 @@ Version History
   * Don't crash when a requested test doesn't exist.
 
 0.1.2
-  * More documentation tweaks. Package ``long_description`` now contains README.
+  * More documentation tweaks. Package ``long_description`` now contains
+    README.
 
 0.1.1
   * Add instructions for installing without git.

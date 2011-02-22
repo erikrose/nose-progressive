@@ -18,7 +18,7 @@ class ProgressiveResult(TextTestResult):
     stderr/out wrapping.
 
     """
-    def __init__(self, cwd, totalTests, stream, config=None):
+    def __init__(self, cwd, totalTests, stream, showAdvisories, config=None):
         super(ProgressiveResult, self).__init__(stream, None, 0, config=config)
         self._cwd = cwd
         self._codes = self._terminalCodes(stream)
@@ -29,6 +29,8 @@ class ProgressiveResult(TextTestResult):
         # Declare errorclass-savviness so the errorclass plugin doesn't
         # monkeypatch half my methods away:
         self.errorClasses = {}
+
+        self._showAdvisories = showAdvisories
 
     def _terminalCodes(self, stream):
         """Return a hash of termcap codes and values for the terminal `stream`.
@@ -57,7 +59,7 @@ class ProgressiveResult(TextTestResult):
         super(ProgressiveResult, self).startTest(test)
         self.bar.update(test, self.testsRun)
 
-    def _printError(self, kind, err, test, showTraceback=True):
+    def _printError(self, kind, err, test, isFailure=True):
         """Output a human-readable error report to the stream.
 
         kind -- the (string) type of incident the precipitated this call
@@ -65,41 +67,43 @@ class ProgressiveResult(TextTestResult):
         test -- the test that precipitated this call
 
         """
-        # Don't bind third item to a local var; that can create circular refs
-        # which are expensive to collect. See the sys.exc_info() docs.
-        exception_type, exception_value = err[:2]
-        extracted_tb = extract_tb(err[2])
-        formatted_traceback = ''.join(format_list(extracted_tb))
-        # TODO: Canonicalize the path to remove /kitsune/../kitsune nonsense.
-        # Don't relativize, though, as that hurts the ability to paste into
-        # running editors.
-        writeln = self.stream.writeln
-        write = self.stream.write
-        with self.bar.dodging():
-            writeln('\n' + (self._codes['bold'] if showTraceback else '') +
-                    '%s: %s' % (kind, nose_selector(test)))
+        if isFailure or self._showAdvisories:
+            # Don't bind third item to a local var; that can create circular
+            # refs which are expensive to collect. See the sys.exc_info() docs.
+            exception_type, exception_value = err[:2]
+            extracted_tb = extract_tb(err[2])
+            formatted_traceback = ''.join(format_list(extracted_tb))
+            # TODO: Canonicalize the path to remove /kitsune/../kitsune
+            # nonsense. Don't relativize, though, as that hurts the ability to
+            # paste into running editors.
+            writeln = self.stream.writeln
+            write = self.stream.write
+            with self.bar.dodging():
+                writeln('\n' + (self._codes['bold'] if isFailure else '') +
+                        '%s: %s' % (kind, nose_selector(test)))
 
-            if showTraceback:
-                # File name and line num in a format vi can take:
-                address = test_address(test)
-                if address:  # None if no such callable found. No sense trying
-                             # to find the test frame if there's no such thing.
-                    file, line = frame_of_test(address, extracted_tb)[:2]
-                    writeln(' ' * len(kind) + '  +%s %s' %
-                            (line, human_path(src(file), self._cwd)))
+                if isFailure:  # Then show traceback
+                    # File name and line num in a format vi can take:
+                    address = test_address(test)
+                    if address:  # None if no such callable found. No sense
+                                 # trying to find the test frame if there's no
+                                 # such thing.
+                        file, line = frame_of_test(address, extracted_tb)[:2]
+                        writeln(' ' * len(kind) + '  +%s %s' %
+                                (line, human_path(src(file), self._cwd)))
 
-                write(self._codes['sgr0'])  # end bold
+                    write(self._codes['sgr0'])  # end bold
 
-                # Traceback:
-                # TODO: Think about using self._exc_info_to_string, which does
-                # some pretty whizzy skipping of unittest frames.
-                write(formatted_traceback)
+                    # Traceback:
+                    # TODO: Think about using self._exc_info_to_string, which
+                    # does some pretty whizzy skipping of unittest frames.
+                    write(formatted_traceback)
 
-                # Exception:
-                write(''.join(format_exception_only(exception_type,
-                                                    exception_value)))
-            else:
-                write(self._codes['sgr0'])  # end bold
+                    # Exception:
+                    write(''.join(format_exception_only(exception_type,
+                                                        exception_value)))
+                else:
+                    write(self._codes['sgr0'])  # end bold
 
     def addError(self, test, err):
         exc, val, tb = err
@@ -124,7 +128,7 @@ class ProgressiveResult(TextTestResult):
             self._printError(label if isErrorClass else 'ERROR',
                              err,
                              test,
-                             showTraceback=not isErrorClass or isFailure)
+                             isFailure=not isErrorClass or isFailure)
 
     def addFailure(self, test, err):
         super(ProgressiveResult, self).addFailure(test, err)

@@ -12,6 +12,10 @@ class IntegrationTestCase(PluginTester, TestCase):
     activate = '--with-progressive'
     plugins = [ProgressivePlugin(), Skip()]
 
+    def _count_eq(self, text, count):
+        """Assert `text` appears `count` times in the captured output."""
+        eq_(str(self.output).count(text), count)
+
 
 class HookTests(IntegrationTestCase):
     """Tests that ensure our code is getting run when expected"""
@@ -21,10 +25,6 @@ class HookTests(IntegrationTestCase):
             def runTest(self):
                 assert False
 
-        class Skip(TestCase):
-            def runTest(self):
-                raise SkipTest
-
         class Success(TestCase):
             def runTest(self):
                 pass
@@ -33,20 +33,12 @@ class HookTests(IntegrationTestCase):
             def runTest(self):
                 raise NotImplementedError
 
-        return TestSuite([Failure(), Skip(), Success(), Error()])
-
-    def _count_eq(self, text, count):
-        """Assert `text` appears `count` times in the captured output."""
-        eq_(str(self.output).count(text), count)
+        return TestSuite([Failure(), Success(), Error()])
 
     def test_fail(self):
         """Make sure failed tests print a line."""
         # Grrr, we seem to get stdout here, not stderr.
         self._count_eq('FAIL: ', 1)
-
-    def test_skip(self):
-        """Make sure skipped tests print a line."""
-        self._count_eq('SKIP: ', 1)
 
     def test_error(self):
         """Make sure uncaught errors print a line."""
@@ -61,7 +53,32 @@ class HookTests(IntegrationTestCase):
         Also incidentally test that addError() counts correctly.
 
         """
-        assert '4 tests, 1 failure, 1 error, 1 skip in ' in self.output
+        assert '3 tests, 1 failure, 1 error in ' in self.output
+
+
+class AdvisoryShowingTests(IntegrationTestCase):
+    """Tests for --progressive-advisories option"""
+    args = ['--progressive-advisories']
+
+    def makeSuite(self):
+        class Skip(TestCase):
+            def runTest(self):
+                raise SkipTest
+
+        return TestSuite([Skip()])
+
+    def test_skip(self):
+        """Make sure skipped tests print a line."""
+        print self.output
+        self._count_eq('SKIP: ', 1)
+
+    def test_summary(self):
+        """Make sure summary prints.
+
+        Test pluralization and the listing of custom error classes.
+
+        """
+        assert '1 test, 0 failures, 0 errors, 1 skip in ' in self.output
 
 
 # def test_slowly():
