@@ -1,8 +1,8 @@
 ================
-Nose Progressive
+nose-progressive
 ================
 
-Nose Progressive is a nose_ plugin which displays progress in a stationary
+nose-progressive is a nose_ plugin which displays progress in a stationary
 progress bar, freeing the rest of the screen (as well as the scrollback buffer)
 for the compact display of test failures. It displays failures and errors as
 soon as they occur and avoids scrolling them off the screen in favor of less
@@ -11,7 +11,7 @@ the debugging process.
 
 .. _nose: http://somethingaboutorange.com/mrl/projects/nose/
 
-The governing philosophy of Nose Progressive is to get useful information onto
+The governing philosophy of nose-progressive is to get useful information onto
 the screen as soon as possible and keep it there as long as possible while
 still indicating progress.
 
@@ -157,7 +157,7 @@ they fail::
 
   nosetests --with-progressive --logging-clear-handlers
 
-Caveats and known bugs
+Caveats and Known Bugs
 ======================
 
 * Some logging handlers will smear bits of the progress bar upward if they
@@ -171,7 +171,7 @@ Having trouble? Pop over to the `issue tracker`_.
 
 .. _`issue tracker`: https://github.com/erikrose/nose-progressive/issues
 
-Future plans
+Future Plans
 ============
 
 * Commandline switches for every little thing
@@ -188,7 +188,7 @@ had little motivation to write this.
 
 .. _nose-nicedots: https://github.com/kumar303/nose-nicedots
 
-Version history
+Version History
 ===============
 
 0.6
@@ -199,7 +199,7 @@ Version history
     printed during the test run, bolded if they represent failure, and
     summarized in the counts after the run.
   * Tests which write directly to stderr or stdout no longer smear the progress
-    progress bar.
+    bar.
   * Work with tests that don't have an address() method.
 
 0.5.1
