@@ -6,7 +6,8 @@ Nose Progressive is a nose_ plugin which displays progress in a stationary
 progress bar, freeing the rest of the screen (as well as the scrollback buffer)
 for the compact display of test failures. It displays failures and errors as
 soon as they occur and avoids scrolling them off the screen in favor of less
-useful output.
+useful output. It also offers a number of other human-centric features to speed
+the debugging process.
 
 .. _nose: http://somethingaboutorange.com/mrl/projects/nose/
 
@@ -17,21 +18,120 @@ still indicating progress.
 Features
 ========
 
-* Indicate progress in a stationary progress bar rather than scrolling useful
-  tracebacks off the screen or spacing them out with dots and cruft.
-* Show tracebacks as soon as they occur rather than waiting until the bitter
-  end. Strip the "Traceback (most recent call last):" off tracebacks so they
-  take less space.
-* Identify failed tests in a format that can be fed back to nose, so it's easy
-  to re-run them.
-* Print a filesystem path complete with vi-style line number, so you can paste
-  it to the commandline and be taken straight to the bug in your editor. It
-  tries to be intelligent about choosing which file and line to choose: it does
-  its best to find the stack frame of your actual test, rather than plopping
-  you down unhelpfully in the middle of nose helper functions like eq_().
-* Work great with Django via django-nose_ (of course).
+Progress Bar
+------------
+
+nose-progressive indicates progress in a stationary progress bar at the
+bottom of the screen::
+
+  thing.tests.test_templates:TaggingTests.test_add_new         [===========-  ]
+
+It does not print dots, nor does it print anything else outside the progress
+bar unless a test goes wrong. It supports a wide variety of terminal types and
+reacts gracefully to terminal resizing.
+
+Tracebacks: Realtime, Compact, and Closed-Loop
+----------------------------------------------
+
+nose typically waits until the bitter end to show error and failure tracebacks,
+which wastes a lot of time in large tests suites that take many minutes to
+finish. We show tracebacks as soon as they occur so you can start chasing them
+immediately.
+
+A few other niceties further improve the debugging experience:
+
+* Strip the *Traceback (most recent call last)* line off tracebacks, and use
+  bold formatting rather than two lines of dividers to delimit them. This fits
+  much more in limited screen space::
+
+    FAIL: kitsune.apps.notifications.tests.test_events:MailTests.test_anonymous
+          +361 apps/notifications/tests/test_events.py
+      File "/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/unittest.py", line 279, in run
+        testMethod()
+      File "/Users/erose/Checkouts/kitsune/../kitsune/apps/notifications/tests/test_events.py", line 361, in test_anonymous
+        eq_(1, len(mail.outbox))
+      File "/Users/erose/Checkouts/kitsune/vendor/packages/nose/nose/tools.py", line 31, in eq_
+        assert a == b, msg or "%r != %r" % (a, b)
+    AssertionError: 1 != 0
+
+    ERROR: kitsune.apps.questions.tests.test_templates:TemplateTestCase.test_woo
+           +494 apps/questions/tests/test_templates.py
+      File "/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/unittest.py", line 279, in run
+        testMethod()
+      File "/Users/erose/Checkouts/kitsune/vendor/packages/mock/mock.py", line 196, in patched
+        return func(*args, **keywargs)
+      File "/Users/erose/Checkouts/kitsune/../kitsune/apps/questions/tests/test_templates.py", line 494, in test_woo
+        attrs_eq(mail.outbox[0], to=['some@bo.dy'],
+    IndexError: list index out of range
+
+  The preceding doesn't quite reflect reality; in an actual terminal, the two
+  lines after FAIL or ERROR are **bold** to aid visual chunking.
+
+* Identify failed tests in a format that can be fed back to nose, so it's
+  easy to re-run them::
+
+    FAIL: notifications.tests:MailTests.test_anonymous
+
+  To re-run the above, do this::
+
+    nosetests --with-progressive notifications.tests:MailTests.test_anonymous
+
+Editor Shortcuts
+----------------
+
+For each failure or error, nose-progressive provides an editor shortcut. This
+is a combination of a filesystem path and line number in a format understood
+by vi, emacs, the BBEdit command-line tool, and a number of other editors::
+
+  FAIL: kitsune.apps.notifications.tests.test_events:MailTests.test_anonymous
+        +361 apps/notifications/tests.py
+
+Type (for example) "vi", paste the above line after it, and you'll land
+right at the offending line in your editor::
+
+  vi +361 apps/notifications/tests.py
+
+With judicious use of double- or triple-click-to-select, this can work almost
+like a hyperlink. In the future, we might add an option to print your editor
+name as part of the shortcut, obviating the need to type at all.
+
+In addition, we apply some heuristics to choosing which file and line to show for
+the above: we try to find the stack frame of your actual test, rather than
+plopping you down unhelpfully in the middle of a nose helper function like
+eq_(). Even if you create your own assertion helper functions, like
+``xml_eq()``, we still track down your test.
+
+Custom Error Classes
+--------------------
+
+nose-progressive fully supports custom error classes like Skip and
+Deprecated. We note the tests that raise them in realtime, just like normal
+errors and failures. When a tests results in an error class that does not
+represent a failure, we suppress the traceback, reasoning that it would
+typically be of limited interest::
+
+  SKIP: kitsune.apps.sumo.tests.test_readonly:ReadOnlyModeTest.test_login_error
+
+Custom error classes are summarized in the counts after the run, along with
+failures and errors::
+
+  4 tests, 1 failure, 1 error, 1 skip in 0.0s
+           ^^^^^^ Bold ^^^^^^
+
+The non-zero counts of error classes that represent failures are bold to draw
+the eye and to correspond with the bold details up in the scrollback. Just
+follow the bold, and you'll find your bugs.
+
+Django Support
+--------------
+
+nose-progressive can run your Django tests via django-nose_. Just install
+django-nose, then run your tests like so::
+
+  ./manage.py test --with-progressive --logging-clear-handlers
 
 .. _django-nose: https://github.com/jbalogh/django-nose
+
 
 Installation
 ============
@@ -48,51 +148,26 @@ Or, to get the bleeding-edge, unreleased version::
 Use
 ===
 
-::
+The simple way::
 
   nosetests --with-progressive
 
-Example
-=======
+My favorite way, which suppresses any noisy log messages thrown by tests unless
+they fail::
 
-The following doesn't quite do it justice; in an actual terminal, the 2
-pathname lines after FAIL or ERROR are **bold** to aid visual chunking, and the
-progress bar at the bottom is bold as well::
-
-  % nosetests --with-progressive
-  
-  FAIL: kitsune.apps.notifications.tests.test_events:MailTests.test_anonymous
-        +361 apps/notifications/tests/test_events.py
-    File "/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/unittest.py", line 279, in run
-      testMethod()
-    File "/Users/erose/Checkouts/kitsune/../kitsune/apps/notifications/tests/test_events.py", line 361, in test_anonymous
-      eq_(1, len(mail.outbox))
-    File "/Users/erose/Checkouts/kitsune/vendor/packages/nose/nose/tools.py", line 31, in eq_
-      assert a == b, msg or "%r != %r" % (a, b)
-  AssertionError: 1 != 0
-
-  ERROR: kitsune.apps.questions.tests.test_templates:TemplateTestCase.test_woo
-         +494 apps/questions/tests/test_templates.py
-    File "/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/unittest.py", line 279, in run
-      testMethod()
-    File "/Users/erose/Checkouts/kitsune/vendor/packages/mock/mock.py", line 196, in patched
-      return func(*args, **keywargs)
-    File "/Users/erose/Checkouts/kitsune/../kitsune/apps/questions/tests/test_templates.py", line 494, in test_woo
-      attrs_eq(mail.outbox[0], to=['some@bo.dy'],
-  IndexError: list index out of range
-
-  kitsune.apps.questions.tests.test_templates:TaggingViewTestsAsAdmin.test_add_new_canonicalizes         [===========-  ]
+  nosetests --with-progressive --logging-clear-handlers
 
 Caveats and known bugs
 ======================
 
-* Tests which themselves write to stderr will smear bits of the progress bar
-  upward if they don't print complete lines. I hope to fix this with some
-  monkeypatching, but in the meantime, passing ``--logging-clear-handlers``
-  fixes most of these in practice.
-* I haven't tried this in anything but Python 2.6. Bug reports are welcome!
+* Some logging handlers will smear bits of the progress bar upward if they
+  don't print complete lines. I hope to fix this with some monkeypatching, but
+  in the meantime, passing ``--logging-clear-handlers`` works around this.
+* I haven't tried this in anything but Python 2.6. Bug reports are welcome. I
+  don't plan to support Python versions earlier than 2.5 unless there's
+  overwhelming demand, but I would like to support later ones.
 
-Got more? Pop over to the `issue tracker`_.
+Having trouble? Pop over to the `issue tracker`_.
 
 .. _`issue tracker`: https://github.com/erikrose/nose-progressive/issues
 
@@ -100,6 +175,7 @@ Future plans
 ============
 
 * Commandline switches for every little thing
+* Dive out of the way when pdb is active.
 
 Kudos
 =====
@@ -107,12 +183,24 @@ Kudos
 Thanks to Kumar McMillan for his nose-nicedots_ plugin, which provided
 inspiration and starting points for the path formatting. Thanks to my
 support.mozilla.com teammates for writing so many tests that this became
-necessary.
+necessary. Thanks to Jeff Balogh for django-nose, without which I would have
+had little motivation to write this.
 
 .. _nose-nicedots: https://github.com/kumar303/nose-nicedots
 
 Version history
 ===============
+
+0.6
+  * Major refactoring. nose-progressive now has its own testrunner and test
+    result class. This makes it fully compatible with the ``capture`` plugin
+    and other plugins that make output.
+  * Fully support custom error classes, like Skips and Deprecations. They are
+    printed during the test run, bolded if they represent failure, and
+    summarized in the counts after the run.
+  * Tests which write directly to stderr or stdout no longer smear the progress
+    progress bar.
+  * Work with tests that don't have an address() method.
 
 0.5.1
   * Fix a crash on error when file of a stack frame or function of a test are
