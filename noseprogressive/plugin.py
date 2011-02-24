@@ -1,10 +1,12 @@
 from functools import partial
 from os import getcwd
+import pdb
 import sys
 
 from nose.plugins import Plugin
 
 from noseprogressive.runner import ProgressiveRunner
+from noseprogressive.wrapping import cmdloop, set_trace, StreamWrapper
 
 
 class ProgressivePlugin(Plugin):
@@ -15,34 +17,28 @@ class ProgressivePlugin(Plugin):
 
     def begin(self):
         """Wrap stderr and stdout to keep other users of them from smearing our progress bar."""
-        class StreamWrapper(object):
-            def __init__(me, stream):
-                me._stream = stream
-
-            def __getattr__(me, name):
-                return getattr(me._stream, name)
-
-            def write(me, data):
-                if hasattr(self, '_bar'):
-                    with self._bar.dodging():
-                        me._stream.write(data)
-                else:
-                    # Some things write to stderr before the bar is inited.
-                    me._stream.write(data)
-
         # TODO: Do only if isatty.
-        self._stderr = sys.stderr
-        self._stdout = sys.stdout
-        sys.stderr = StreamWrapper(sys.stderr)
-        sys.stdout = StreamWrapper(sys.stdout)
+        if not isinstance(sys.stdout, StreamWrapper):
+            # Without the above check, these get double-wrapped due to our
+            # reinvocation of the whole test stack to count the tests.
+            sys.stderr = StreamWrapper(sys.stderr, self)  # TODO: Any point?
+            sys.stdout = StreamWrapper(sys.stdout, self)
+
+        self._set_trace = pdb.set_trace
+        pdb.set_trace = set_trace
+
+        self._cmdloop, pdb.Pdb.cmdloop = pdb.Pdb.cmdloop, cmdloop
 
         # nosetests changes directories to the tests dir when run from a
         # distribution dir, so save the original cwd.
         self._cwd = getcwd()
 
     def end(self):
-        sys.stderr = self._stderr
-        sys.stdout = self._stdout
+        # TODO: This doesn't seem to get called!
+        sys.stderr = sys.stderr.stream
+        sys.stdout = sys.stdout.stream
+        pdb.set_trace = self._set_trace
+        pdb.Pdb.cmdloop = self._cmdloop
 
     def options(self, parser, env):
         super(ProgressivePlugin, self).options(parser, env)
@@ -98,4 +94,4 @@ class ProgressivePlugin(Plugin):
                                                     # NoPlugins manager
 
     def prepareTestResult(self, result):
-        self._bar = result.bar
+        self.bar = result.bar

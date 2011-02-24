@@ -87,9 +87,10 @@ class ProgressBar(object):
             def __enter__(self):
                 """Erase the progress bar so bits of disembodied progress bar don't get scrolled up the terminal."""
                 # My terminal has no status line, so we make one manually.
-                if not bar._is_dodging:
+                bar._is_dodging += 1  # Increment before calling erase(), which
+                                      # calls dodging() again.
+                if bar._is_dodging <= 1:  # It *was* 0.
                     bar.erase()
-                bar._is_dodging += 1
 
             def __exit__(self, type, value, tb):
                 """Redraw the last saved state of the progress bar."""

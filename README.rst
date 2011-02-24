@@ -185,7 +185,6 @@ Future Plans
 ============
 
 * Commandline switches for every little thing
-* Dive out of the way when pdb is active.
 
 Kudos
 =====

@@ -69,7 +69,6 @@ class AdvisoryShowingTests(IntegrationTestCase):
 
     def test_skip(self):
         """Make sure skipped tests print a line."""
-        print self.output
         self._count_eq('SKIP: ', 1)
 
     def test_summary(self):
