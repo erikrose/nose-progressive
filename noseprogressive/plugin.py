@@ -9,13 +9,6 @@ from noseprogressive.runner import ProgressiveRunner
 from noseprogressive.wrapping import cmdloop, set_trace, StreamWrapper
 
 
-# The number of times we've been asked to wrap globals. Keeps us from
-# re-patching things over and over and then being surprised when
-# successive unwraps fail. Some of the reentrancy is probably from our
-# reinvocation of the whole test stack to count the tests.
-_wrapCount = 0
-
-
 class ProgressivePlugin(Plugin):
     """Nose plugin which prioritizes the important information"""
     name = 'progressive'
@@ -38,7 +31,10 @@ class ProgressivePlugin(Plugin):
         the debugger.
 
         """
-        # The calls to begin/finalize end up like this: a call to begin() on instance A of the plugin, then a paired begin/finalize for each test on instance B, then a final call to finalize() on instance A.
+        # The calls to begin/finalize end up like this: a call to begin() on
+        # instance A of the plugin, then a paired begin/finalize for each test
+        # on instance B, then a final call to finalize() on instance A.
+
         # TODO: Do only if isatty.
         self._stderr.append(sys.stderr)
         sys.stderr = StreamWrapper(sys.stderr, self)  # TODO: Any point?
