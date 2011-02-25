@@ -9,36 +9,59 @@ from noseprogressive.runner import ProgressiveRunner
 from noseprogressive.wrapping import cmdloop, set_trace, StreamWrapper
 
 
+# The number of times we've been asked to wrap globals. Keeps us from
+# re-patching things over and over and then being surprised when
+# successive unwraps fail. Some of the reentrancy is probably from our
+# reinvocation of the whole test stack to count the tests.
+_wrapCount = 0
+
+
 class ProgressivePlugin(Plugin):
     """Nose plugin which prioritizes the important information"""
     name = 'progressive'
     _totalTests = 0
     score = 10000  # Grab stdout and stderr before the capture plugin.
 
-    def begin(self):
-        """Wrap stderr and stdout to keep other users of them from smearing our progress bar."""
-        # TODO: Do only if isatty.
-        if not isinstance(sys.stdout, StreamWrapper):
-            # Without the above check, these get double-wrapped due to our
-            # reinvocation of the whole test stack to count the tests.
-            sys.stderr = StreamWrapper(sys.stderr, self)  # TODO: Any point?
-            sys.stdout = StreamWrapper(sys.stdout, self)
+    def __init__(self, *args, **kwargs):
+        super(ProgressivePlugin, self).__init__(*args, **kwargs)
+        # Same wrapping pattern as the built-in capture plugin. The lists
+        # shouldn't be necessary, but they don't cost much, and I have to
+        # wonder why capture uses them.
+        self._stderr, self._stdout, self._set_trace, self._cmdloop = \
+            [], [], [], []
 
-        self._set_trace = pdb.set_trace
+    def begin(self):
+        """Make some monkeypatches to dodge progress bar.
+
+        Wrap stderr and stdout to keep other users of them from smearing the
+        progress bar. Wrap some pdb routines to stop showing the bar while in
+        the debugger.
+
+        """
+        # The calls to begin/finalize end up like this: a call to begin() on instance A of the plugin, then a paired begin/finalize for each test on instance B, then a final call to finalize() on instance A.
+        # TODO: Do only if isatty.
+        self._stderr.append(sys.stderr)
+        sys.stderr = StreamWrapper(sys.stderr, self)  # TODO: Any point?
+
+        self._stdout.append(sys.stdout)
+        sys.stdout = StreamWrapper(sys.stdout, self)
+
+        self._set_trace.append(pdb.set_trace)
         pdb.set_trace = set_trace
 
-        self._cmdloop, pdb.Pdb.cmdloop = pdb.Pdb.cmdloop, cmdloop
+        self._cmdloop.append(pdb.Pdb.cmdloop)
+        pdb.Pdb.cmdloop = cmdloop
 
         # nosetests changes directories to the tests dir when run from a
         # distribution dir, so save the original cwd.
         self._cwd = getcwd()
 
-    def end(self):
-        # TODO: This doesn't seem to get called!
-        sys.stderr = sys.stderr.stream
-        sys.stdout = sys.stdout.stream
-        pdb.set_trace = self._set_trace
-        pdb.Pdb.cmdloop = self._cmdloop
+    def finalize(self, result):
+        """Put monkeypatches back as we found them."""
+        sys.stderr = self._stderr.pop()
+        sys.stdout = self._stdout.pop()
+        pdb.set_trace = self._set_trace.pop()
+        pdb.Pdb.cmdloop = self._cmdloop.pop()
 
     def options(self, parser, env):
         super(ProgressivePlugin, self).options(parser, env)

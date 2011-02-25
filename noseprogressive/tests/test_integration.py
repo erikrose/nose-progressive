@@ -81,6 +81,7 @@ class AdvisoryShowingTests(IntegrationTestCase):
 
 
 # def test_slowly():
+#     """Slow down so we can visually inspect the progress bar."""
 #     def failer(y):
 #         print "booga"
 #         if y == 1:

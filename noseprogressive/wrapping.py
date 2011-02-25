@@ -29,7 +29,9 @@ def cmdloop(self, *args, **kwargs):
         return ret
 
     orig_raw_input = raw_input
-    __builtin__.raw_input = unwrapping_raw_input
+    if hasattr(sys.stdout, 'stream'):
+        __builtin__.raw_input = unwrapping_raw_input
+    # else if capture plugin has replaced it with a StringIO, don't bother.
     try:
         # Interesting things happen when you try to not reference the
         # superclass explicitly.
@@ -45,7 +47,9 @@ def set_trace(*args, **kwargs):
     This is so we don't keep drawing progress bars over debugger output.
 
     """
-    debugger = pdb.Pdb(*args, stdout=sys.stdout.stream, **kwargs)
+    # There's no stream attr if capture plugin is enabled:
+    out = sys.stdout.stream if hasattr(sys.stdout, 'stream') else None
+    debugger = pdb.Pdb(*args, stdout=out, **kwargs)
 
     # Ordinarily (and in a silly fashion), pdb refuses to use raw_input() if
     # you pass it a stream on instantiation. Fix that:
