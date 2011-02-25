@@ -1,5 +1,6 @@
 from os.path import abspath, realpath
 
+from nose.tools import nottest
 from nose.util import test_address
 
 
@@ -54,28 +55,31 @@ class OneTrackMind(object):
         return self
 
 
+@nottest
 def frame_of_test((test_file, test_module, test_call), extracted_tb):
     """Return the frame of a traceback that represents the given result of test_address().
 
     Sometimes this is hard. It takes its best guess.
 
     """
-    test_file_path = realpath(test_file)
     # OneTrackMind helps us favor the latest frame, even if there's more than
     # one match of equal confidence.
     knower = OneTrackMind().know(extracted_tb[-1], 1)
 
-    # TODO: Perfect. Right now, I'm just comparing by function name within a
-    # module. This should break only if you have two identically-named
-    # functions from a single module in the call stack when your test fails.
-    # However, it bothers me. I'd rather be finding the actual callables and
-    # comparing them directly.
-    for frame in reversed(extracted_tb):
-        file, line, function, text = frame
-        if file is not None and test_file_path == realpath(file):
-            knower.know(frame, 2)
-            if (hasattr(test_call, 'rsplit') and  # test_call can be None
-                function == test_call.rsplit('.')[-1]):
-                knower.know(frame, 3)
-                break
+    if isinstance(test_file, basestring):
+        test_file_path = realpath(test_file)
+
+        # TODO: Perfect. Right now, I'm just comparing by function name within
+        # a module. This should break only if you have two identically-named
+        # functions from a single module in the call stack when your test
+        # fails. However, it bothers me. I'd rather be finding the actual
+        # callables and comparing them directly.
+        for frame in reversed(extracted_tb):
+            file, line, function, text = frame
+            if file is not None and test_file_path == realpath(file):
+                knower.know(frame, 2)
+                if (hasattr(test_call, 'rsplit') and  # test_call can be None
+                    function == test_call.rsplit('.')[-1]):
+                    knower.know(frame, 3)
+                    break
     return knower.best

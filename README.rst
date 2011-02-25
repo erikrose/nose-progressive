@@ -215,6 +215,8 @@ Version History
   * Tests which write directly to stderr or stdout no longer smear the progress
     bar.
   * Work with tests that don't have an address() method.
+  * With with tests that return a null filename from test_address().
+  * Don't pave over pdb prompts (anymore?).
 
 0.5.1
   * Fix a crash on error when file of a stack frame or function of a test are
