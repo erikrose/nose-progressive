@@ -89,7 +89,7 @@ class ProgressiveResult(TextTestResult):
                                  # trying to find the test frame if there's no
                                  # such thing.
                         file, line = frame_of_test(address, extracted_tb)[:2]
-                        writeln(' ' * len(kind) + '  +%s %s' %
+                        writeln(' ' * len(kind) + '  $EDITOR +%s %s' %
                                 (line, human_path(src(file), self._cwd)))
 
                     write(self._codes['sgr0'])  # end bold

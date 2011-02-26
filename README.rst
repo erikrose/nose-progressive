@@ -26,9 +26,8 @@ bottom of the screen::
 
   thing.tests.test_templates:TaggingTests.test_add_new         [===========-  ]
 
-It does not print dots, nor does it print anything else outside the progress
-bar unless a test goes wrong. It supports a wide variety of terminal types and
-reacts gracefully to terminal resizing.
+It is glorious. It supports a wide variety of terminal types and reacts to
+terminal resizing with all the grace it can muster.
 
 Tracebacks: Realtime, Compact, and Closed-Loop
 ----------------------------------------------
@@ -45,7 +44,7 @@ A few other niceties further improve the debugging experience:
   much more in limited screen space::
 
     FAIL: kitsune.apps.notifications.tests.test_events:MailTests.test_anonymous
-          +361 apps/notifications/tests/test_events.py
+          $EDITOR +361 apps/notifications/tests/test_events.py
       File "/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/unittest.py", line 279, in run
         testMethod()
       File "/Users/erose/Checkouts/kitsune/../kitsune/apps/notifications/tests/test_events.py", line 361, in test_anonymous
@@ -55,7 +54,7 @@ A few other niceties further improve the debugging experience:
     AssertionError: 1 != 0
 
     ERROR: kitsune.apps.questions.tests.test_templates:TemplateTestCase.test_woo
-           +494 apps/questions/tests/test_templates.py
+           $EDITOR +494 apps/questions/tests/test_templates.py
       File "/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/unittest.py", line 279, in run
         testMethod()
       File "/Users/erose/Checkouts/kitsune/vendor/packages/mock/mock.py", line 196, in patched
@@ -84,16 +83,12 @@ is a combination of a filesystem path and line number in a format understood
 by vi, emacs, the BBEdit command-line tool, and a number of other editors::
 
   FAIL: kitsune.apps.notifications.tests.test_events:MailTests.test_anonymous
-        +361 apps/notifications/tests.py
+        $EDITOR +361 apps/notifications/tests.py
 
-Type (for example) "vi", paste the above line after it, and you'll land
-right at the offending line in your editor::
-
-  vi +361 apps/notifications/tests.py
-
-With judicious use of double- or triple-click-to-select, this can work almost
-like a hyperlink. In the future, we might add an option to print your editor
-name as part of the shortcut, obviating the need to type at all.
+Just triple-click (or what have you) to select the second line above, and copy
+and paste it onto the command line. You'll land right at the offending line in
+your editor! Just make sure the ``$EDITOR`` environment variable is set
+properly first.
 
 In addition, we apply some heuristics to choosing which file and line to show
 for the above: we try to find the stack frame of your actual test, rather than
@@ -214,8 +209,9 @@ Version History
     summarized in the counts after the run.
   * Tests which write directly to stderr or stdout no longer smear the progress
     bar.
+  * Add $EDITOR to editor shortcut: no more typing!
   * Work with tests that don't have an address() method.
-  * With with tests that return a null filename from test_address().
+  * Work with tests that return a null filename from test_address().
   * Don't pave over pdb prompts (anymore?).
 
 0.5.1
