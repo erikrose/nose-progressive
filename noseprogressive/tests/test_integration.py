@@ -1,8 +1,10 @@
 from unittest import TestCase, TestSuite
+import sys
 
 from nose import SkipTest
 from nose.plugins import PluginTester
 from nose.plugins.skip import Skip
+from nose.plugins.capture import Capture
 from nose.tools import eq_
 
 from noseprogressive import ProgressivePlugin
@@ -78,6 +80,40 @@ class AdvisoryShowingTests(IntegrationTestCase):
 
         """
         assert '1 test, 0 failures, 0 errors, 1 skip in ' in self.output
+
+
+# Gah. You have to run these with nosetests -s (and no progressive) to get everybody else to quit patching things.
+class PatchTestsWithCapture(IntegrationTestCase):
+    """Make sure the monkeypatches get restored when using capture plugin."""
+    # Turn off Capture plugin, which does its own stdout patching. You have to
+    # load the Capture plugin to turn it off:
+    plugins = [ProgressivePlugin(), Capture()]
+    args = ['--nocapture']
+    
+    def makeSuite(self):
+        class Test(TestCase):
+            def runTest(self):
+                pass
+
+        class AnotherTest(TestCase):
+            def runTest(self):
+                pass
+
+        return TestSuite([Test(), AnotherTest()])
+
+    def test_stdout(self):
+        """Assert stdout is the original version."""
+        eq_(type(sys.stdout), file)
+        eq_(sys.stdout.fileno(), 1)
+
+    def test_stderr(self):
+        """Assert stdout is the original version."""
+        eq_(type(sys.stderr), file)
+        eq_(sys.stderr.fileno(), 2)
+# 
+#     def test_set_trace(self):
+#         """Assert our set_trace patch gets reversed."""
+#         eq_(pdb.set_trace 
 
 
 # def test_slowly():
