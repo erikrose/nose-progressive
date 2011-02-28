@@ -4,10 +4,11 @@ from os import isatty
 from traceback import format_list, extract_tb, format_exception_only
 
 from nose.result import TextTestResult
-from nose.util import src, test_address, isclass
+from nose.util import src, isclass
 
 from noseprogressive.bar import ProgressBar
-from noseprogressive.utils import nose_selector, human_path, frame_of_test
+from noseprogressive.utils import (nose_selector, human_path, frame_of_test,
+                                   test_address)
 
 
 class ProgressiveResult(TextTestResult):

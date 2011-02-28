@@ -1,16 +1,21 @@
 from os.path import abspath, realpath
 
 from nose.tools import nottest
-from nose.util import test_address
+import nose.util
 
 
-def nose_selector(test):
-    """Return the string you can pass to nose to run `test`."""
+@nottest
+def test_address(test):
     try:
-        address = test_address(test)
+        address = nose.util.test_address(test)
     except TypeError:  # Explodes if the function passed to @with_setup applied
                        # to a test generator has an error.
         address = None
+    
+
+def nose_selector(test):
+    """Return the string you can pass to nose to run `test`."""
+    address = test_address(test)
     if not address:
         return 'Unknown test'
     file, module, rest = address

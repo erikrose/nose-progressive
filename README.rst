@@ -213,6 +213,8 @@ Version History
   * Work with tests that don't have an address() method.
   * Work with tests that return a null filename from test_address().
   * Don't pave over pdb prompts (anymore?).
+  * Don't obscure the traceback when the @with_setup decorator on a test
+    generator fails.
 
 0.5.1
   * Fix a crash on error when file of a stack frame or function of a test are
