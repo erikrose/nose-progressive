@@ -84,7 +84,12 @@ class ProgressiveResult(TextTestResult):
 
                 if isFailure:  # Then show traceback
                     # File name and line num in a format vi can take:
-                    address = test_address(test)
+                    try:
+                        address = test_address(test)
+                    except TypeError:
+                        # Explodes if the function passed to @with_setup
+                        # applied to a test generator has an error.
+                        address = None
                     if address:  # None if no such callable found. No sense
                                  # trying to find the test frame if there's no
                                  # such thing.

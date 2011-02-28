@@ -6,7 +6,11 @@ from nose.util import test_address
 
 def nose_selector(test):
     """Return the string you can pass to nose to run `test`."""
-    address = test_address(test)
+    try:
+        address = test_address(test)
+    except TypeError:  # Explodes if the function passed to @with_setup applied
+                       # to a test generator has an error.
+        address = None
     if not address:
         return 'Unknown test'
     file, module, rest = address
