@@ -6,11 +6,12 @@ import nose.util
 
 @nottest
 def test_address(test):
+    """Return the result of nose's test_address(), None if it's stumped."""
     try:
-        address = nose.util.test_address(test)
+        return nose.util.test_address(test)
     except TypeError:  # Explodes if the function passed to @with_setup applied
                        # to a test generator has an error.
-        address = None
+        pass
     
 
 def nose_selector(test):
