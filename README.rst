@@ -143,6 +143,16 @@ Or, to get the bleeding-edge, unreleased version::
 
   pip install -e git://github.com/erikrose/nose-progressive.git#egg=nose-progressive
 
+
+Upgrading
+=========
+
+To upgrade from an older version of nose-progressive, assuming you didn't
+install it from git::
+
+  pip install --upgrade nose-progressive
+
+
 Use
 ===
 
