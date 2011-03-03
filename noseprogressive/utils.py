@@ -12,19 +12,24 @@ def test_address(test):
     except TypeError:  # Explodes if the function passed to @with_setup applied
                        # to a test generator has an error.
         pass
-    
+
 
 def nose_selector(test):
-    """Return the string you can pass to nose to run `test`."""
-    address = test_address(test)
-    if not address:
-        return 'Unknown test'
-    file, module, rest = address
+    """Return the string you can pass to nose to run `test`.
 
-    if rest:
-        return '%s:%s' % (module, rest)
-    else:
-        return module
+    Return "Unknown test" if it can't construct a decent path.
+
+    """
+    address = test_address(test)
+    if address:
+        file, module, rest = address
+
+        if module:
+            if rest:
+                return '%s:%s' % (module, rest)
+            else:
+                return module
+    return 'Unknown test'
 
 
 def human_path(path, cwd):

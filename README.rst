@@ -210,6 +210,10 @@ Erik Rose, while waiting for tests to complete ;-)
 Version History
 ===============
 
+0.6.1
+  * Fix a crash triggered by a test having no defined module. --failed should
+    always work now.
+
 0.6
   * Major refactoring. nose-progressive now has its own testrunner and test
     result class. This makes it fully compatible with the ``capture`` plugin
