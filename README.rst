@@ -44,7 +44,7 @@ A few other niceties further improve the debugging experience:
   much more in limited screen space::
 
     FAIL: kitsune.apps.notifications.tests.test_events:MailTests.test_anonymous
-          $EDITOR +361 apps/notifications/tests/test_events.py
+          vi +361 apps/notifications/tests/test_events.py
       File "/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/unittest.py", line 279, in run
         testMethod()
       File "/Users/erose/Checkouts/kitsune/../kitsune/apps/notifications/tests/test_events.py", line 361, in test_anonymous
@@ -54,7 +54,7 @@ A few other niceties further improve the debugging experience:
     AssertionError: 1 != 0
 
     ERROR: kitsune.apps.questions.tests.test_templates:TemplateTestCase.test_woo
-           $EDITOR +494 apps/questions/tests/test_templates.py
+           vi +494 apps/questions/tests/test_templates.py
       File "/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/unittest.py", line 279, in run
         testMethod()
       File "/Users/erose/Checkouts/kitsune/vendor/packages/mock/mock.py", line 196, in patched
@@ -83,12 +83,11 @@ is a combination of a filesystem path and line number in a format understood
 by vi, emacs, the BBEdit command-line tool, and a number of other editors::
 
   FAIL: kitsune.apps.notifications.tests.test_events:MailTests.test_anonymous
-        $EDITOR +361 apps/notifications/tests.py
+        vi +361 apps/notifications/tests.py
 
 Just triple-click (or what have you) to select the second line above, and copy
 and paste it onto the command line. You'll land right at the offending line in
-your editor! Just make sure the ``$EDITOR`` environment variable is set
-properly first.
+your editor of choice, determined by the ``$EDITOR`` environment variable.
 
 In addition, we apply some heuristics to choosing which file and line to show
 for the above: we try to find the stack frame of your actual test, rather than
@@ -209,6 +208,10 @@ Erik Rose, while waiting for tests to complete ;-)
 
 Version History
 ===============
+
+0.7
+  * Show the actual value of the $EDITOR env var rather than just "$EDITOR".
+    I'm hoping it makes it a little more obvious what to do with it.
 
 0.6.1
   * Fix a crash triggered by a test having no defined module. --failed should
