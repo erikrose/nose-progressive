@@ -17,6 +17,7 @@ class UtilsTests(TestCase):
     def test_frame_of_test_null_file(self):
         """Make sure frame_of_test() doesn't crash when test_file is None."""
         try:
-            frame_of_test((None, None, None), [('file', 333)])
+            frame_of_test((None, None, None), NotImplementedError,
+                          NotImplementedError(), [('file', 333)])
         except AttributeError:
             self.fail('frame_of_test() raised AttributeError.')
