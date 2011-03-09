@@ -214,7 +214,8 @@ Version History
     handle syntax errors specially, since they don't make it into the traceback
     proper.
   * Show the actual value of the $EDITOR env var rather than just "$EDITOR".
-    I'm hoping it makes it a little more obvious what to do with it.
+    I'm hoping it makes it a little more obvious what to do with it, plus it
+    gives a working default if $EDITOR is not set.
 
 0.6.1
   * Fix a crash triggered by a test having no defined module. --failed should
