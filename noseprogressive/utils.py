@@ -71,12 +71,32 @@ class OneTrackMind(object):
 
 
 @nottest
-def frame_of_test((test_file, test_module, test_call), extracted_tb):
-    """Return the frame of a traceback that represents the given result of test_address().
+def frame_of_test(test_address_result, exception_type, exception_value,
+                  extracted_tb):
+    """Return the frame of a traceback that points to the test that failed.
+
+    If exception_type is SyntaxError, may return None for the frame's function
+    name and exception text.
 
     Sometimes this is hard. It takes its best guess.
 
+    Args:
+        test_address_result: The result of a call to test_address(), indicating
+            which test failed
+        exception_type, exception_value: Needed in case this is a SyntaxError
+            and therefore doesn't have the whole story in extracted_tb
+        extracted_tb: The traceback, after having been passed through
+            extract_tb()
+
     """
+    # SyntaxErrors don't make it into the extracted traceback. Catch them
+    # separately:
+    if (exception_type is SyntaxError and
+        exception_value.filename != '<string>'):  # Tolerate eval() and input()
+        return exception_value.filename, exception_value.lineno, None, None
+
+    test_file, _, test_call = test_address_result
+
     # OneTrackMind helps us favor the latest frame, even if there's more than
     # one match of equal confidence.
     knower = OneTrackMind().know(extracted_tb[-1], 1)

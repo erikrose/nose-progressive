@@ -95,7 +95,10 @@ class ProgressiveResult(TextTestResult):
                     if address:  # None if no such callable found. No sense
                                  # trying to find the test frame if there's no
                                  # such thing.
-                        file, line = frame_of_test(address, extracted_tb)[:2]
+                        file, line = frame_of_test(address,
+                                                   exception_type,
+                                                   exception_value,
+                                                   extracted_tb)[:2]
                         writeln(' ' * len(kind) + '  %s +%s %s' %
                                 (os.environ.get('EDITOR', 'vi'), line,
                                  human_path(src(file), self._cwd)))

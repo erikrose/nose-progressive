@@ -210,6 +210,9 @@ Version History
 ===============
 
 0.7
+  * Pick the correct stack frame for editor shortcuts to syntax errors. Had to
+    handle syntax errors specially, since they don't make it into the traceback
+    proper.
   * Show the actual value of the $EDITOR env var rather than just "$EDITOR".
     I'm hoping it makes it a little more obvious what to do with it.
 
