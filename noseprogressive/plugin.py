@@ -113,4 +113,5 @@ class ProgressivePlugin(Plugin):
                                                     # NoPlugins manager
 
     def prepareTestResult(self, result):
+        """Hang onto the progress bar so the StreamWrappers can grab it."""
         self.bar = result.bar
