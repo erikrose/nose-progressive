@@ -215,7 +215,8 @@ Version History
     proper.
   * Show the actual value of the $EDITOR env var rather than just "$EDITOR".
     I'm hoping it makes it a little more obvious what to do with it, plus it
-    gives a working default if $EDITOR is not set.
+    gives a working default if $EDITOR is not set. Plus plus it doesn't explode
+    if you have flags in your $EDITOR, e.g. ``bbedit -w``.
 
 0.6.1
   * Fix a crash triggered by a test having no defined module. --failed should
