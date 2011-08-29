@@ -39,6 +39,7 @@ def human_path(path, cwd):
     it to a relative path to shorten it. Otherwise, return the absolute path.
 
     """
+    # TODO: Canonicalize the path to remove /kitsune/../kitsune nonsense.
     path = abspath(path)
     if path.startswith(cwd):
         path = path[len(cwd) + 1:]  # Make path relative. Remove leading slash.
@@ -70,19 +71,16 @@ class OneTrackMind(object):
         return self
 
 
-@nottest
-def frame_of_test(test_address_result, exception_type, exception_value,
-                  extracted_tb):
-    """Return the frame of a traceback that points to the test that failed.
+@nottest  # still needed?
+def index_of_test_frame(extracted_tb, exception_type, exception_value, test):
+    """Return the index of the frame that points to the failed test or None.
 
-    If exception_type is SyntaxError, may return None for the frame's function
-    name and exception text.
-
-    Sometimes this is hard. It takes its best guess.
+    Sometimes this is hard. It takes its best guess. If exception_type is
+    SyntaxError or it has no idea, it returns None.
 
     Args:
-        test_address_result: The result of a call to test_address(), indicating
-            which test failed
+        address: The result of a call to test_address(), indicating which test
+            failed
         exception_type, exception_value: Needed in case this is a SyntaxError
             and therefore doesn't have the whole story in extracted_tb
         extracted_tb: The traceback, after having been passed through
@@ -93,28 +91,41 @@ def frame_of_test(test_address_result, exception_type, exception_value,
     # separately:
     if (exception_type is SyntaxError and
         exception_value.filename != '<string>'):  # Tolerate eval() and input()
-        return exception_value.filename, exception_value.lineno, None, None
+        return exception_value.filename, exception_value.lineno, None, None  # XXX
 
-    test_file, _, test_call = test_address_result
+    try:
+        address = test_address(test)
+    except TypeError:
+        # Explodes if the function passed to @with_setup
+        # applied to a test generator has an error.
+        address = None
+
+    # address is None if the test callable couldn't be found. No sense trying
+    # to find the test frame if there's no such thing:
+    if address is None:
+        return None
+
+    test_file, _, test_call = address
 
     # OneTrackMind helps us favor the latest frame, even if there's more than
     # one match of equal confidence.
-    knower = OneTrackMind().know(extracted_tb[-1], 1)
+    knower = OneTrackMind()
 
-    if isinstance(test_file, basestring):
+    if isinstance(test_file, basestring):  # Sometimes it's None.
         test_file_path = realpath(test_file)
 
         # TODO: Perfect. Right now, I'm just comparing by function name within
         # a module. This should break only if you have two identically-named
         # functions from a single module in the call stack when your test
         # fails. However, it bothers me. I'd rather be finding the actual
-        # callables and comparing them directly.
-        for frame in reversed(extracted_tb):
+        # callables and comparing them directly, but that might not work with
+        # test generators.
+        for i, frame in reversed(list(enumerate(extracted_tb))):
             file, line, function, text = frame
             if file is not None and test_file_path == realpath(file):
-                knower.know(frame, 2)
+                knower.know(i, 2)
                 if (hasattr(test_call, 'rsplit') and  # test_call can be None
                     function == test_call.rsplit('.')[-1]):
-                    knower.know(frame, 3)
+                    knower.know(i, 3)
                     break
     return knower.best

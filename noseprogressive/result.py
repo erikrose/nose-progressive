@@ -6,8 +6,8 @@ from nose.util import src, isclass
 
 from noseprogressive.bar import ProgressBar
 from noseprogressive.terminal import Terminal
-from noseprogressive.utils import (nose_selector, human_path, frame_of_test,
-                                   test_address)
+from noseprogressive.utils import (nose_selector, human_path,
+                                   index_of_test_frame, test_address)
 
 
 class ProgressiveResult(TextTestResult):
@@ -37,6 +37,43 @@ class ProgressiveResult(TextTestResult):
         super(ProgressiveResult, self).startTest(test)
         self.bar.update(test, self.testsRun)
 
+    def _format_traceback(self, extracted_tb, exception_type, exception_value, test):
+        """Return an iterable of formatted traceback frames, rather like traceback.format_list().
+
+        Format things more compactly than the stock formatter, and make every line
+        an editor shortcut. Embolden the line representing the stack frame of the
+        test, if we can figure that out based on `address`.
+
+        """
+        # TODO: Relativize paths by default, but provide a flag to keep them
+        # absolute for pasting into editors and other terminal windows.
+        # TODO: Test with SyntaxErrors in the test frame. Make sure the test
+        # frame gets emboldened.
+
+        # Shorten file paths:
+        for i, (file, line, function, text) in enumerate(extracted_tb):
+            extracted_tb[i] = human_path(src(file), self._cwd), line, function, text
+
+        # Column widths:
+        line_width = len(str(max(the_line for _, the_line, _, _ in extracted_tb)))
+        file_width = max(len(f) for f, _, _, _ in extracted_tb)
+
+        template = '  %s +%%-%ss %%-%ss  # %%s%%s%%s\n    %%s\n' % \
+                   (os.environ.get('EDITOR', 'vi'), line_width, file_width)
+
+        test_frame_index = index_of_test_frame(extracted_tb,
+                                               exception_type,
+                                               exception_value,
+                                               test)
+
+        for i, (file, line, function, text) in enumerate(extracted_tb):
+            if i == test_frame_index:
+                bold, unbold = self._term.bold, self._term.normal
+            else:
+                bold, unbold = '', ''
+
+            yield template % (line, file, bold, function, unbold, text or '')
+    
     def _printError(self, kind, err, test, isFailure=True):
         """Output a human-readable error report to the stream.
 
@@ -50,36 +87,22 @@ class ProgressiveResult(TextTestResult):
             # refs which are expensive to collect. See the sys.exc_info() docs.
             exception_type, exception_value = err[:2]
             extracted_tb = extract_tb(err[2])
-            formatted_traceback = ''.join(format_list(extracted_tb))
-            # TODO: Canonicalize the path to remove /kitsune/../kitsune
-            # nonsense. Don't relativize, though, as that hurts the ability to
-            # paste into running editors.
+            
             writeln = self.stream.writeln
             write = self.stream.write
             with self.bar.dodging():
-                writeln('\n' + (self._term.bold if isFailure else '') +
-                        '%s: %s' % (kind, nose_selector(test)))
+                writeln('\n' +
+                        (self._term.bold if isFailure else '') +
+                        '%s: %s' % (kind, nose_selector(test)) +
+                        (self._term.normal if isFailure else ''))  # end bold
 
                 if isFailure:  # Then show traceback
                     # File name and line num in a format vi can take:
-                    try:
-                        address = test_address(test)
-                    except TypeError:
-                        # Explodes if the function passed to @with_setup
-                        # applied to a test generator has an error.
-                        address = None
-                    if address:  # None if no such callable found. No sense
-                                 # trying to find the test frame if there's no
-                                 # such thing.
-                        file, line = frame_of_test(address,
+                    formatted_traceback = ''.join(
+                            self._format_traceback(extracted_tb,
                                                    exception_type,
                                                    exception_value,
-                                                   extracted_tb)[:2]
-                        writeln(' ' * len(kind) + '  %s +%s %s' %
-                                (os.environ.get('EDITOR', 'vi'), line,
-                                 human_path(src(file), self._cwd)))
-
-                    write(self._term.sgr0)  # end bold
+                                                   test))
 
                     # Traceback:
                     # TODO: Think about using self._exc_info_to_string, which
@@ -89,8 +112,6 @@ class ProgressiveResult(TextTestResult):
                     # Exception:
                     write(''.join(format_exception_only(exception_type,
                                                         exception_value)))
-                else:
-                    write(self._term.sgr0)  # end bold
 
     def addError(self, test, err):
         exc, val, tb = err

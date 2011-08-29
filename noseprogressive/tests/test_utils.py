@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from nose.tools import eq_
 
-from noseprogressive.utils import human_path, frame_of_test
+from noseprogressive.utils import human_path, index_of_test_frame
 
 
 class UtilsTests(TestCase):
@@ -14,10 +14,10 @@ class UtilsTests(TestCase):
         chdir(dirname(__file__))
         eq_(human_path(__file__, getcwd()), basename(__file__))
 
-    def test_frame_of_test_null_file(self):
-        """Make sure frame_of_test() doesn't crash when test_file is None."""
+    def test_index_of_test_frame_null_file(self):
+        """Make sure index_of_test_frame() doesn't crash when test_file is None."""
         try:
-            frame_of_test((None, None, None), NotImplementedError,
-                          NotImplementedError(), [('file', 333)])
+            index_of_test_frame([('file', 333)], NotImplementedError,
+                                NotImplementedError(), 'kersmoo')
         except AttributeError:
             self.fail('frame_of_test() raised AttributeError.')
