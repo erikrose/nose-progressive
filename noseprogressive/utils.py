@@ -1,4 +1,7 @@
+from fcntl import ioctl
 from os.path import abspath, realpath
+import struct
+from termios import TIOCGWINSZ
 
 from nose.tools import nottest
 import nose.util
@@ -129,3 +132,8 @@ def index_of_test_frame(extracted_tb, exception_type, exception_value, test):
                     knower.know(i, 3)
                     break
     return knower.best
+
+
+def terminal_height_and_width():
+    """Return a tuple of (terminal height, terminal width)."""
+    return struct.unpack('hhhh', ioctl(0, TIOCGWINSZ, '\000' * 8))[0:2]
