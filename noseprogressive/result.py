@@ -136,7 +136,7 @@ class ProgressiveResult(TextTestResult):
             # being Englishlike:
             ret = '%s %s%s' % (number, type, 's' if number != 1 else '')
             if isFailure and number:
-                ret = self._term.bold + ret + self._term.sgr0
+                ret = self._term.bold + ret + self._term.normal
             return ret
 
         # Summarize the special cases:

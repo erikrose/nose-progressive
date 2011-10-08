@@ -22,7 +22,7 @@ class Terminal(object):
             value of the TERM environment variable.
         :arg stream: A file-like object representing the terminal. Defaults to
             the original value of stdout, like ``curses.initscr()`` does.
-        
+
         If ``stream`` is not a tty, I will default to returning '' for all
         capability values, so things like piping your output to a file will
         work nicely.
@@ -44,10 +44,10 @@ class Terminal(object):
     def __getattr__(self, attr):
         """Return parametrized terminal capabilities, like bold.
 
-        For example, you can say ``some_term.bold`` to get the string that turns
-        on bold formatting and ``some_term.sgr0`` to get the string that turns it
-        off again. For a parametrized capability like ``cup``, pass the parameter
-        too: ``some_term.cup(line, column)``.
+        For example, you can say ``some_term.bold`` to get the string that
+        turns on bold formatting and ``some_term.sgr0`` to get the string that
+        turns it off again. For a parametrized capability like ``cup``, pass
+        the parameter too: ``some_term.cup(line, column)``.
 
         ``man terminfo`` for a complete list of capabilities.
 
@@ -55,6 +55,29 @@ class Terminal(object):
         if attr not in self._codes:
             self._codes[attr] = tigetstr(attr)
         return CallableString(self._codes[attr])
+
+    # Sugary names for commonly-used capabilities, intended to help avoid trips
+    # to the terminfo man page:
+
+    @property
+    def save(self):
+        return self.sc
+
+    @property
+    def restore(self):
+        return self.rc
+
+    @property
+    def normal(self):
+        return self.sgr0
+
+    @property
+    def clear_eol(self):
+        return self.el
+
+    @property
+    def position(self):
+        return self.cup
 
 
 class CallableString(str):

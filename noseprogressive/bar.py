@@ -61,14 +61,14 @@ class ProgressBar(object):
             test_path += ' ' * (cols_for_path - len(test_path))
 
         # Put them together, and let simmer:
-        self.last = self._term.bold + test_path + '  ' + graph + self._term.sgr0
+        self.last = self._term.bold + test_path + '  ' + graph + self._term.normal
         with self._at_last_line():
             self.stream.write(self.last)
 
     def erase(self):
         """White out the progress bar."""
         with self._at_last_line():
-            self.stream.write(self._term.el)
+            self.stream.write(self._term.clear_eol)
         self.stream.flush()
 
     def _at_last_line(self):
@@ -117,8 +117,8 @@ class AtLine(object):
 
     def __enter__(self):
         """Save position and move to progress bar, col 1."""
-        self.stream.write(self._term.sc)  # save position
-        self.stream.write(self._term.cup(self.line, 0))
+        self.stream.write(self._term.save)  # save position
+        self.stream.write(self._term.position(self.line, 0))
 
     def __exit__(self, type, value, tb):
-        self.stream.write(self._term.rc)  # restore position
+        self.stream.write(self._term.restore)  # restore position
