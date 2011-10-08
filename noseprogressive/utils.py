@@ -1,7 +1,4 @@
-from fcntl import ioctl
 from os.path import abspath, realpath
-import struct
-from termios import TIOCGWINSZ
 
 from nose.tools import nottest
 import nose.util
@@ -33,20 +30,6 @@ def nose_selector(test):
             else:
                 return module
     return 'Unknown test'
-
-
-def human_path(path, cwd):
-    """Return the most human-readable representation of the given path.
-
-    If an absolute path is given that's within the current directory, convert
-    it to a relative path to shorten it. Otherwise, return the absolute path.
-
-    """
-    # TODO: Canonicalize the path to remove /kitsune/../kitsune nonsense.
-    path = abspath(path)
-    if path.startswith(cwd):
-        path = path[len(cwd) + 1:]  # Make path relative. Remove leading slash.
-    return path
 
 
 class OneTrackMind(object):
@@ -134,6 +117,15 @@ def index_of_test_frame(extracted_tb, exception_type, exception_value, test):
     return knower.best
 
 
-def terminal_height_and_width():
-    """Return a tuple of (terminal height, terminal width)."""
-    return struct.unpack('hhhh', ioctl(0, TIOCGWINSZ, '\000' * 8))[0:2]
+def human_path(path, cwd):
+    """Return the most human-readable representation of the given path.
+
+    If an absolute path is given that's within the current directory, convert
+    it to a relative path to shorten it. Otherwise, return the absolute path.
+
+    """
+    # TODO: Canonicalize the path to remove /kitsune/../kitsune nonsense.
+    path = abspath(path)
+    if cwd and path.startswith(cwd):
+        path = path[len(cwd) + 1:]  # Make path relative. Remove leading slash.
+    return path

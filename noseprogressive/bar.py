@@ -1,7 +1,8 @@
 from itertools import cycle
 from signal import signal, SIGWINCH
 
-from noseprogressive.utils import nose_selector, terminal_height_and_width
+from noseprogressive.terminal import height_and_width
+from noseprogressive.utils import nose_selector
 
 
 class ProgressBar(object):
@@ -19,7 +20,7 @@ class ProgressBar(object):
         signal(SIGWINCH, self._handle_winch)
 
     def _measure_terminal(self):
-        self.lines, self.cols = terminal_height_and_width()
+        self.lines, self.cols = height_and_width()
 
     def _handle_winch(self, *args):
         #self.erase()  # Doesn't seem to help.

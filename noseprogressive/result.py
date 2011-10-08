@@ -1,11 +1,12 @@
 import os
-from traceback import format_list, extract_tb, format_exception_only
+from traceback import extract_tb, format_exception_only
 
 from nose.result import TextTestResult
-from nose.util import src, isclass
+from nose.util import isclass
 
 from noseprogressive.bar import ProgressBar
-from noseprogressive.terminal import Terminal
+from noseprogressive.terminal import Terminal, height_and_width
+from noseprogressive.tracebacks import format_traceback
 from noseprogressive.utils import (nose_selector, human_path,
                                    index_of_test_frame, test_address)
 
@@ -37,43 +38,6 @@ class ProgressiveResult(TextTestResult):
         super(ProgressiveResult, self).startTest(test)
         self.bar.update(test, self.testsRun)
 
-    def _format_traceback(self, extracted_tb, exception_type, exception_value, test):
-        """Return an iterable of formatted traceback frames, rather like traceback.format_list().
-
-        Format things more compactly than the stock formatter, and make every line
-        an editor shortcut. Embolden the line representing the stack frame of the
-        test, if we can figure that out based on `address`.
-
-        """
-        # TODO: Relativize paths by default, but provide a flag to keep them
-        # absolute for pasting into editors and other terminal windows.
-        # TODO: Test with SyntaxErrors in the test frame. Make sure the test
-        # frame gets emboldened.
-
-        # Shorten file paths:
-        for i, (file, line, function, text) in enumerate(extracted_tb):
-            extracted_tb[i] = human_path(src(file), self._cwd), line, function, text
-
-        # Column widths:
-        line_width = len(str(max(the_line for _, the_line, _, _ in extracted_tb)))
-        file_width = max(len(f) for f, _, _, _ in extracted_tb)
-
-        template = '  %s +%%-%ss %%-%ss  # %%s%%s%%s\n    %%s\n' % \
-                   (os.environ.get('EDITOR', 'vi'), line_width, file_width)
-
-        test_frame_index = index_of_test_frame(extracted_tb,
-                                               exception_type,
-                                               exception_value,
-                                               test)
-
-        for i, (file, line, function, text) in enumerate(extracted_tb):
-            if i == test_frame_index:
-                bold, unbold = self._term.bold, self._term.normal
-            else:
-                bold, unbold = '', ''
-
-            yield template % (line, file, bold, function, unbold, text or '')
-    
     def _printError(self, kind, err, test, isFailure=True):
         """Output a human-readable error report to the stream.
 
@@ -99,10 +63,14 @@ class ProgressiveResult(TextTestResult):
                 if isFailure:  # Then show traceback
                     # File name and line num in a format vi can take:
                     formatted_traceback = ''.join(
-                            self._format_traceback(extracted_tb,
-                                                   exception_type,
-                                                   exception_value,
-                                                   test))
+                            format_traceback(extracted_tb,
+                                             self._cwd,
+                                             index_of_test_frame(
+                                                 extracted_tb,
+                                                 exception_type,
+                                                 exception_value,
+                                                 test),
+                                             self._term))
 
                     # Traceback:
                     # TODO: Think about using self._exc_info_to_string, which
