@@ -12,7 +12,7 @@ class Terminal(object):
     """An abstraction around terminal capabilities
 
     Unlike curses, this doesn't require clearing the screen before doing
-    anything.
+    anything, and it's a little friendlier to use.
 
     """
     def __init__(self, kind=None, stream=None):
@@ -41,6 +41,15 @@ class Terminal(object):
         else:
             self._codes = NullDict(lambda: '')
 
+    # Sugary names for commonly-used capabilities, intended to help avoid trips
+    # to the terminfo man page:
+    _sugar = dict(save='sc',
+                  restore='rc',
+                  normal='sgr0',
+                  clear_eol='el',
+                  position='cup',
+                  color='setaf')
+
     def __getattr__(self, attr):
         """Return parametrized terminal capabilities, like bold.
 
@@ -53,31 +62,9 @@ class Terminal(object):
 
         """
         if attr not in self._codes:
-            self._codes[attr] = tigetstr(attr)
+            # Store sugary names under the sugary keys to save a hash lookup:
+            self._codes[attr] = tigetstr(self._sugar.get(attr, attr))
         return CallableString(self._codes[attr])
-
-    # Sugary names for commonly-used capabilities, intended to help avoid trips
-    # to the terminfo man page:
-
-    @property
-    def save(self):
-        return self.sc
-
-    @property
-    def restore(self):
-        return self.rc
-
-    @property
-    def normal(self):
-        return self.sgr0
-
-    @property
-    def clear_eol(self):
-        return self.el
-
-    @property
-    def position(self):
-        return self.cup
 
 
 class CallableString(str):
