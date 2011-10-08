@@ -11,11 +11,11 @@ class ProgressBar(object):
     SPINNER_CHARS = r'/-\|'
     _is_dodging = 0  # Like a semaphore
 
-    def __init__(self, stream, max, codes):
+    def __init__(self, stream, max, term):
         """max is the highest value I will attain. Must be >0."""
         self.stream = stream
         self.max = max
-        self._codes = codes
+        self._term = term
         self.last = ''  # The contents of the previous progress line printed
         self._spinner = cycle(self.SPINNER_CHARS)
         self._measure_terminal()
@@ -61,19 +61,19 @@ class ProgressBar(object):
             test_path += ' ' * (cols_for_path - len(test_path))
 
         # Put them together, and let simmer:
-        self.last = self._codes['bold'] + test_path + '  ' + graph + self._codes['sgr0']
+        self.last = self._term.bold + test_path + '  ' + graph + self._term.sgr0
         with self._at_last_line():
             self.stream.write(self.last)
 
     def erase(self):
         """White out the progress bar."""
         with self._at_last_line():
-            self.stream.write(self._codes['el'])
+            self.stream.write(self._term.el)
         self.stream.flush()
 
     def _at_last_line(self):
         """Return a context manager that positions the cursor at the last line, lets you write things, and then returns it to its previous position."""
-        return AtLine(self.stream, self.lines, self._codes)
+        return AtLine(self.stream, self.lines, self._term)
 
     def dodging(bar):
         """Return a context manager which erases the bar, lets you output things, and then redraws the bar.
@@ -110,15 +110,15 @@ class ProgressBar(object):
 class AtLine(object):
     """Context manager which moves the cursor to a certain line on entry and goes back to where it was on exit"""
 
-    def __init__(self, stream, line, codes):
+    def __init__(self, stream, line, term):
         self.stream = stream
         self.line = line
-        self._codes = codes
+        self._term = term
 
     def __enter__(self):
         """Save position and move to progress bar, col 1."""
-        self.stream.write(self._codes['sc'])  # save position
-        self.stream.write(self._codes['cup'](self.line, 0))
+        self.stream.write(self._term.sc)  # save position
+        self.stream.write(self._term.cup(self.line, 0))
 
     def __exit__(self, type, value, tb):
-        self.stream.write(self._codes['rc'])  # restore position
+        self.stream.write(self._term.rc)  # restore position

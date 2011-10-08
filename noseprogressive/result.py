@@ -1,13 +1,11 @@
-from collections import defaultdict
-from curses import tigetstr, setupterm, tparm
 import os
-from os import isatty
 from traceback import format_list, extract_tb, format_exception_only
 
 from nose.result import TextTestResult
 from nose.util import src, isclass
 
 from noseprogressive.bar import ProgressBar
+from noseprogressive.terminal import Terminal
 from noseprogressive.utils import (nose_selector, human_path, frame_of_test,
                                    test_address)
 
@@ -23,38 +21,16 @@ class ProgressiveResult(TextTestResult):
     def __init__(self, cwd, totalTests, stream, showAdvisories, config=None):
         super(ProgressiveResult, self).__init__(stream, None, 0, config=config)
         self._cwd = cwd
-        self._codes = self._terminalCodes(stream)
+        self._term = Terminal(stream=stream)
 
         # 1 in case test counting failed and returned 0
-        self.bar = ProgressBar(stream, totalTests or 1, self._codes)
+        self.bar = ProgressBar(stream, totalTests or 1, self._term)
 
         # Declare errorclass-savviness so the errorclass plugin doesn't
         # monkeypatch half my methods away:
         self.errorClasses = {}
 
         self._showAdvisories = showAdvisories
-
-    def _terminalCodes(self, stream):
-        """Return a hash of termcap codes and values for the terminal `stream`.
-
-        If `stream` is not a terminal, return empty values so you can pipe this
-        to a file without making a mess of it. (I'm not sure why you would want
-        to do that; this is mostly in place to make the Progressive's test
-        suite run.)
-
-        """
-        capabilities = ['bold', 'sc', 'rc', 'sgr0', 'el']
-        if hasattr(stream, 'fileno') and isatty(stream.fileno()):
-            # Explicit args make setupterm() work even when -s is passed:
-            setupterm(None, stream.fileno())  # so things like tigetstr() work
-            codes = dict((x, tigetstr(x)) for x in capabilities)
-            cup = tigetstr('cup')
-            codes['cup'] = lambda line, column: tparm(cup, line, column)
-        else:
-            # If you're crazy enough to pipe this to a file or something, don't
-            # output terminal codes:
-            codes = defaultdict(lambda: '', cup=lambda line, column: '')
-        return codes
 
     def startTest(self, test):
         """Update the progress bar."""
@@ -81,7 +57,7 @@ class ProgressiveResult(TextTestResult):
             writeln = self.stream.writeln
             write = self.stream.write
             with self.bar.dodging():
-                writeln('\n' + (self._codes['bold'] if isFailure else '') +
+                writeln('\n' + (self._term.bold if isFailure else '') +
                         '%s: %s' % (kind, nose_selector(test)))
 
                 if isFailure:  # Then show traceback
@@ -103,7 +79,7 @@ class ProgressiveResult(TextTestResult):
                                 (os.environ.get('EDITOR', 'vi'), line,
                                  human_path(src(file), self._cwd)))
 
-                    write(self._codes['sgr0'])  # end bold
+                    write(self._term.sgr0)  # end bold
 
                     # Traceback:
                     # TODO: Think about using self._exc_info_to_string, which
@@ -114,7 +90,7 @@ class ProgressiveResult(TextTestResult):
                     write(''.join(format_exception_only(exception_type,
                                                         exception_value)))
                 else:
-                    write(self._codes['sgr0'])  # end bold
+                    write(self._term.sgr0)  # end bold
 
     def addError(self, test, err):
         exc, val, tb = err
@@ -160,7 +136,7 @@ class ProgressiveResult(TextTestResult):
             # being Englishlike:
             ret = '%s %s%s' % (number, type, 's' if number != 1 else '')
             if isFailure and number:
-                ret = self._codes['bold'] + ret + self._codes['sgr0']
+                ret = self._term.bold + ret + self._term.sgr0
             return ret
 
         # Summarize the special cases:
