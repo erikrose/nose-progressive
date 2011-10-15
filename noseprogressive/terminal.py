@@ -79,6 +79,9 @@ class Terminal(object):
 class CallableString(str):
     """A string which can be called to parametrize it as a terminal capability"""
     def __call__(self, *args):
+        # TODO: This complains "must call (at least) setupterm() first" when
+        # running simply `nosetests` (without progressive) on nose-progressive.
+        # Perhaps the terminal has gone away, and it doesn't like it.
         return tparm(self, *args)
 
 

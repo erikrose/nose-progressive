@@ -6,7 +6,7 @@ from nose.util import isclass
 
 from noseprogressive.bar import ProgressBar
 from noseprogressive.terminal import Terminal, height_and_width
-from noseprogressive.tracebacks import format_traceback
+from noseprogressive.tracebacks import format_traceback, format_shortcut
 from noseprogressive.utils import (nose_selector, human_path,
                                    index_of_test_frame, test_address)
 
@@ -46,12 +46,24 @@ class ProgressiveResult(TextTestResult):
         test -- the test that precipitated this call
 
         """
+        def format_syntax_error(err):
+            """Format a syntaxError to look like our other traceback lines.
+
+            SyntaxErrors have a format different from other errors and include
+            a file path which looks out of place in our newly highlit,
+            editor-shortcutted world.
+
+            """
+            regular_formatting = format_exception_only(SyntaxError, err)
+            return [format_shortcut(self._term, err.filename, err.lineno)] + \
+                    regular_formatting[1:]
+
         if isFailure or self._showAdvisories:
             # Don't bind third item to a local var; that can create circular
             # refs which are expensive to collect. See the sys.exc_info() docs.
             exception_type, exception_value = err[:2]
             extracted_tb = extract_tb(err[2])
-            
+
             writeln = self.stream.writeln
             write = self.stream.write
             with self.bar.dodging():
@@ -78,8 +90,12 @@ class ProgressiveResult(TextTestResult):
                     write(formatted_traceback)
 
                     # Exception:
-                    write(''.join(format_exception_only(exception_type,
-                                                        exception_value)))
+                    if exception_type is SyntaxError:
+                        lines = format_syntax_error(exception_value)
+                    else:
+                        lines = format_exception_only(exception_type,
+                                                      exception_value)
+                    write(''.join(lines))
 
     def addError(self, test, err):
         exc, val, tb = err
