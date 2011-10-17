@@ -9,7 +9,15 @@ from noseprogressive.terminal import height_and_width, Terminal
 from noseprogressive.utils import human_path
 
 
-def format_traceback(extracted_tb, exc_type, exc_value, cwd='', frame_to_emphasize=None, term=None):
+def format_traceback(extracted_tb,
+                     exc_type,
+                     exc_value,
+                     cwd='',
+                     frame_to_emphasize=None,
+                     term=None,
+                     highlight_color=15,
+                     function_color=12,
+                     dim_color=8):
     """Return an iterable of formatted traceback frames, rather like traceback.format_list().
 
     Also include a pseudo-frame at the end representing the exception itself.
@@ -27,9 +35,12 @@ def format_traceback(extracted_tb, exc_type, exc_value, cwd='', frame_to_emphasi
                                function=('  # ' + function) if function else '',
                                emph=emphasizer,
                                deemph=deemphasizer,
-                               funcemph=term.color(12),  # Underline is also nice and doesn't make us worry about appearance on different background colors.
+                               funcemph=term.color(function_color),
+                               # Underline is also nice and doesn't make us
+                               # worry about appearance on different background
+                               # colors.
                                plain=term.normal,
-                               fade=term.color(8) + term.bold)
+                               fade=term.color(dim_color) + term.bold)
 
     if not term:
         term = Terminal()
@@ -53,7 +64,7 @@ def format_traceback(extracted_tb, exc_type, exc_value, cwd='', frame_to_emphasi
     # Stack frames:
     for i, (file, line, function, text) in enumerate(extracted_tb):
         if i == frame_to_emphasize:
-            emph, deemph = term.bg_color(15), term.normal
+            emph, deemph = term.bg_color(highlight_color), term.normal
         else:
             emph, deemph = '', ''
         yield (format_shortcut(editor, file, line, function, emph, deemph) +

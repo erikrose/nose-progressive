@@ -19,7 +19,7 @@ class ProgressiveResult(TextTestResult):
     stderr/out wrapping.
 
     """
-    def __init__(self, cwd, totalTests, stream, showAdvisories, config=None):
+    def __init__(self, cwd, totalTests, stream, config=None):
         super(ProgressiveResult, self).__init__(stream, None, 0, config=config)
         self._cwd = cwd
         self._term = Terminal(stream=stream)
@@ -31,7 +31,7 @@ class ProgressiveResult(TextTestResult):
         # monkeypatch half my methods away:
         self.errorClasses = {}
 
-        self._showAdvisories = showAdvisories
+        self._options = config.options
 
     def startTest(self, test):
         """Update the progress bar."""
@@ -46,7 +46,7 @@ class ProgressiveResult(TextTestResult):
         test -- the test that precipitated this call
 
         """
-        if isFailure or self._showAdvisories:
+        if isFailure or self._options.show_advisories:
             # Don't bind third item to a local var; that can create circular
             # refs which are expensive to collect. See the sys.exc_info() docs.
             exception_type, exception_value = err[:2]
@@ -72,7 +72,10 @@ class ProgressiveResult(TextTestResult):
                                                  exception_type,
                                                  exception_value,
                                                  test),
-                                             self._term))
+                                             self._term,
+                                             self._options.highlight_color,
+                                             self._options.function_color,
+                                             self._options.dim_color))
 
                     # Traceback:
                     # TODO: Think about using self._exc_info_to_string, which
