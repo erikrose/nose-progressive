@@ -6,7 +6,7 @@ from nose.util import isclass
 
 from noseprogressive.bar import ProgressBar
 from noseprogressive.terminal import Terminal, height_and_width
-from noseprogressive.tracebacks import format_traceback, format_shortcut
+from noseprogressive.tracebacks import format_traceback
 from noseprogressive.utils import (nose_selector, human_path,
                                    index_of_test_frame, test_address)
 
@@ -46,18 +46,6 @@ class ProgressiveResult(TextTestResult):
         test -- the test that precipitated this call
 
         """
-        def format_syntax_error(err):
-            """Format a syntaxError to look like our other traceback lines.
-
-            SyntaxErrors have a format different from other errors and include
-            a file path which looks out of place in our newly highlit,
-            editor-shortcutted world.
-
-            """
-            regular_formatting = format_exception_only(SyntaxError, err)
-            return [format_shortcut(self._term, err.filename, err.lineno)] + \
-                    regular_formatting[1:]
-
         if isFailure or self._showAdvisories:
             # Don't bind third item to a local var; that can create circular
             # refs which are expensive to collect. See the sys.exc_info() docs.
@@ -76,6 +64,8 @@ class ProgressiveResult(TextTestResult):
                     # File name and line num in a format vi can take:
                     formatted_traceback = ''.join(
                             format_traceback(extracted_tb,
+                                             exception_type,
+                                             exception_value,
                                              self._cwd,
                                              index_of_test_frame(
                                                  extracted_tb,
@@ -88,14 +78,6 @@ class ProgressiveResult(TextTestResult):
                     # TODO: Think about using self._exc_info_to_string, which
                     # does some pretty whizzy skipping of unittest frames.
                     write(formatted_traceback)
-
-                    # Exception:
-                    if exception_type is SyntaxError:
-                        lines = format_syntax_error(exception_value)
-                    else:
-                        lines = format_exception_only(exception_type,
-                                                      exception_value)
-                    write(''.join(lines))
 
     def addError(self, test, err):
         exc, val, tb = err
