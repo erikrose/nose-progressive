@@ -61,7 +61,6 @@ class ProgressiveResult(TextTestResult):
                         (self._term.normal if isFailure else ''))  # end bold
 
                 if isFailure:  # Then show traceback
-                    # File name and line num in a format vi can take:
                     formatted_traceback = ''.join(
                             format_traceback(extracted_tb,
                                              exception_type,
@@ -77,7 +76,6 @@ class ProgressiveResult(TextTestResult):
                                              self._options.function_color,
                                              self._options.dim_color))
 
-                    # Traceback:
                     # TODO: Think about using self._exc_info_to_string, which
                     # does some pretty whizzy skipping of unittest frames.
                     write(formatted_traceback)

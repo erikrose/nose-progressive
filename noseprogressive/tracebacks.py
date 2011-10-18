@@ -50,8 +50,6 @@ def format_traceback(extracted_tb,
     if not term:
         term = Terminal()
 
-    # TODO: Relativize paths by default, but provide a flag to keep them
-    # absolute for pasting into editors and other terminal windows.
     # TODO: Test with SyntaxErrors in the test frame. Make sure the test
     # frame gets emboldened.
 
