@@ -1,7 +1,7 @@
 """Fancy traceback formatting"""
 
 import os
-from traceback import format_exception_only
+from traceback import extract_tb, format_exception_only
 
 from nose.util import src
 
@@ -84,3 +84,33 @@ def format_traceback(extracted_tb,
     else:
         exc_lines = format_exception_only(exc_type, exc_value)
     yield ''.join(exc_lines)
+
+
+# Adapted from unittest:
+
+def extract_relevant_tb(tb, exctype, is_test_failure):
+    """Return extracted traceback frames that aren't unittest ones.
+
+    This used to be _exc_info_to_string().
+
+    """
+    # Skip test runner traceback levels:
+    while tb and _is_relevant_tb_level(tb):
+        tb = tb.tb_next
+    if is_test_failure:
+        # Skip assert*() traceback levels:
+        length = _count_relevant_tb_levels(tb)
+        return extract_tb(tb, length)
+    return extract_tb(tb)
+
+
+def _is_relevant_tb_level(tb):
+    return '__unittest' in tb.tb_frame.f_globals
+
+
+def _count_relevant_tb_levels(tb):
+    length = 0
+    while tb and not _is_relevant_tb_level(tb):
+        length += 1
+        tb = tb.tb_next
+    return length

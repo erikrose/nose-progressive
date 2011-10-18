@@ -80,6 +80,26 @@ class AdvisoryShowingTests(IntegrationTestCase):
         assert '1 test, 0 failures, 0 errors, 1 skip in ' in self.output
 
 
+class UnitTestFrameSkippingTests(IntegrationTestCase):
+    """Tests for the skipping of (uninteresting) unittest frames"""
+
+    def makeSuite(self):
+        class Failure(TestCase):
+            def runTest(self):
+                # Tack a unittest frame onto the end of the traceback. There's
+                # already implicitly one on the beginning.
+                self.fail()
+
+        return TestSuite([Failure()])
+
+    def test_skipping(self):
+        """Make sure no unittest frames make it into the traceback."""
+        # Assert *some* traceback printed...
+        assert 'self.fail()' in self.output
+        # ...but not any unittest frames:
+        assert 'unittest' not in self.output
+
+
 # def test_slowly():
 #     """Slow down so we can visually inspect the progress bar."""
 #     def failer(y):

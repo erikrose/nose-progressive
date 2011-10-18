@@ -1,12 +1,11 @@
 import os
-from traceback import extract_tb, format_exception_only
 
 from nose.result import TextTestResult
 from nose.util import isclass
 
 from noseprogressive.bar import ProgressBar
 from noseprogressive.terminal import Terminal, height_and_width
-from noseprogressive.tracebacks import format_traceback
+from noseprogressive.tracebacks import format_traceback, extract_relevant_tb
 from noseprogressive.utils import (nose_selector, human_path,
                                    index_of_test_frame, test_address)
 
@@ -50,7 +49,10 @@ class ProgressiveResult(TextTestResult):
             # Don't bind third item to a local var; that can create circular
             # refs which are expensive to collect. See the sys.exc_info() docs.
             exception_type, exception_value = err[:2]
-            extracted_tb = extract_tb(err[2])
+            extracted_tb = extract_relevant_tb(
+                err[2],
+                exception_type,
+                exception_type is test.failureException)
 
             writeln = self.stream.writeln
             write = self.stream.write
@@ -75,9 +77,6 @@ class ProgressiveResult(TextTestResult):
                                              self._options.highlight_color,
                                              self._options.function_color,
                                              self._options.dim_color))
-
-                    # TODO: Think about using self._exc_info_to_string, which
-                    # does some pretty whizzy skipping of unittest frames.
                     write(formatted_traceback)
 
     def addError(self, test, err):

@@ -208,6 +208,8 @@ Version History
   * Reformat tracebacks for great justice. Subtle coloring guides the eye down
     the list of function names, and a slight background color calls out the
     test frame.
+  * Hide unittest-internal stack frames when printing tracebacks. Fewer frames
+    = less noise onscreen = win!
   * Add an option to use absolute paths in tracebacks.
 
 0.7
