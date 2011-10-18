@@ -1,13 +1,10 @@
-import os
-
 from nose.result import TextTestResult
 from nose.util import isclass
 
 from noseprogressive.bar import ProgressBar
-from noseprogressive.terminal import Terminal, height_and_width
+from noseprogressive.terminal import Terminal
 from noseprogressive.tracebacks import format_traceback, extract_relevant_tb
-from noseprogressive.utils import (nose_selector, human_path,
-                                   index_of_test_frame, test_address)
+from noseprogressive.utils import nose_selector, index_of_test_frame
 
 
 class ProgressiveResult(TextTestResult):

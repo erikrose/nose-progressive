@@ -3,8 +3,6 @@
 At the moment, we test only that it doesn't crash.
 
 """
-from unittest import TestCase
-
 from noseprogressive.tracebacks import format_traceback
 
 
@@ -48,6 +46,7 @@ attr_error_tb = ([
 def test_syntax_error():
     """Exercise special handling of syntax errors."""
     ''.join(format_traceback(*syntax_error_tb))
+
 
 def test_non_syntax_error():
     """Exercise typical error formatting."""

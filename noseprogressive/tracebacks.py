@@ -5,7 +5,7 @@ from traceback import extract_tb, format_exception_only
 
 from nose.util import src
 
-from noseprogressive.terminal import height_and_width, Terminal
+from noseprogressive.terminal import Terminal
 from noseprogressive.utils import human_path
 
 
