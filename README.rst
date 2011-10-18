@@ -27,8 +27,8 @@ bottom of the screen::
   thing.tests.test_templates:TaggingTests.test_add_new         [===========-  ]
 
 It is glorious. It supports a wide variety of terminal types and reacts to
-terminal resizing with all the grace it can muster. Unlike with the standard
-dot-strewing testrunner, you can always see what test is running, too.
+terminal resizing with all the grace it can muster. And unlike with the
+standard dot-strewing testrunner, you can always see what test is running.
 
 Fast, Pretty, Useful Tracebacks
 -------------------------------
@@ -40,14 +40,14 @@ them immediately, and we format them much better:
 
 .. image:: https://github.com/erikrose/nose-progressive/raw/master/in_progress.png
 
-Some of the improvements:
+Some of the formatting improvements:
 
 * Judicious use of color and other formatting makes the traceback easy to scan.
   It's especially easy to slide down the list of function names to keep your
   place while debugging.
 * Omitting the *Traceback (most recent call last)* line and making many other
   small tweaks fits much more in limited screen space.
-* Identifying failed tests in a format that can be fed back to nose, so it's
+* Identifying failed tests in a format that can be fed back to nose, makes it
   easy to re-run them::
 
     FAIL: kitsune.apps.wiki.tests.test_parser:TestWikiVideo.test_video_english
@@ -55,8 +55,8 @@ Some of the improvements:
   To re-run the above, do this::
 
     nosetests --with-progressive kitsune.apps.wiki.tests.test_parser:TestWikiVideo.test_video_english
-* Editor shortcuts (see below) which let you jump right to any problem line in
-  your editor.
+* Editor shortcuts (see below) let you jump right to any problem line in your
+  editor.
 
 Editor Shortcuts
 ----------------
@@ -70,7 +70,7 @@ by vi, emacs, the BBEdit command-line tool, and a number of other editors::
 Just triple-click (or what have you) to select the second line above, and copy
 and paste it onto the command line. You'll land right at the offending line in
 your editor of choice, determined by the ``$EDITOR`` environment variable. As a
-bonus, the editor shortcut is more compact than the stock formatting.
+bonus, the editor shortcut is more compact than the stock traceback formatting.
 
 In addition, we highlight the stack frame of the test itself, where the problem
 often lies. Don't worry; you won't confuse it by using helper functions like
@@ -148,21 +148,22 @@ Options
 ``--progressive-abs``
   Display paths in traceback as absolute, rather than relative to the current
   working directory. This lets you copy and paste it to a shell in a different
-  cwd or to another program entirely.
+  cwd or to another program entirely. Equivalent environment variable:
+  ``NOSE_PROGRESSIVE_ABSOLUTE_PATHS``.
 ``--progressive-advisories``
   Show even non-failure custom errors, like Skip and Deprecated, during test
-  runs. Equivalent environment variable: NOSE_PROGRESSIVE_ADVISORIES.
+  runs. Equivalent environment variable: ``NOSE_PROGRESSIVE_ADVISORIES``.
 ``--progressive-highlight-color=<0..15>``
   Background color used to highlight the stack frame of the test. An ANSI color
   expressed as a number: 0-15. Equivalent environment variable:
-  NOSE_PROGRESSIVE_HIGHLIGHT_COLOR.
+  ``NOSE_PROGRESSIVE_HIGHLIGHT_COLOR``.
 ``--progressive-function-color=<0..15>``
   Color of function names in tracebacks. An ANSI color expressed as a number
   0-15. Equivalent environment variable: NOSE_PROGRESSIVE_FUNCTION_COLOR.
 ``--progressive-dim-color=<0..15>``
   Color of de-emphasized text (like editor shortcuts) in tracebacks. An ANSI
   color expressed as a number 0-15. Equivalent environment variable:
-  NOSE_PROGRESSIVE_DIM_COLOR.
+  ``NOSE_PROGRESSIVE_DIM_COLOR``.
 
 Caveats and Known Bugs
 ======================
