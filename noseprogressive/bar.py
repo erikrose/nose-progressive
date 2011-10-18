@@ -1,9 +1,7 @@
-from fcntl import ioctl
 from itertools import cycle
 from signal import signal, SIGWINCH
-import struct
-from termios import TIOCGWINSZ
 
+from noseprogressive.terminal import height_and_width
 from noseprogressive.utils import nose_selector
 
 
@@ -22,8 +20,7 @@ class ProgressBar(object):
         signal(SIGWINCH, self._handle_winch)
 
     def _measure_terminal(self):
-        self.lines, self.cols = \
-            struct.unpack('hhhh', ioctl(0, TIOCGWINSZ, '\000' * 8))[0:2]
+        self.lines, self.cols = height_and_width()
 
     def _handle_winch(self, *args):
         #self.erase()  # Doesn't seem to help.

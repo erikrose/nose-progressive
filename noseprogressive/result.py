@@ -1,13 +1,14 @@
 import os
-from traceback import format_list, extract_tb, format_exception_only
+from traceback import extract_tb, format_exception_only
 
 from nose.result import TextTestResult
-from nose.util import src, isclass
+from nose.util import isclass
 
 from noseprogressive.bar import ProgressBar
-from noseprogressive.terminal import Terminal
-from noseprogressive.utils import (nose_selector, human_path, frame_of_test,
-                                   test_address)
+from noseprogressive.terminal import Terminal, height_and_width
+from noseprogressive.tracebacks import format_traceback
+from noseprogressive.utils import (nose_selector, human_path,
+                                   index_of_test_frame, test_address)
 
 
 class ProgressiveResult(TextTestResult):
@@ -18,7 +19,7 @@ class ProgressiveResult(TextTestResult):
     stderr/out wrapping.
 
     """
-    def __init__(self, cwd, totalTests, stream, showAdvisories, config=None):
+    def __init__(self, cwd, totalTests, stream, config=None):
         super(ProgressiveResult, self).__init__(stream, None, 0, config=config)
         self._cwd = cwd
         self._term = Terminal(stream=stream)
@@ -30,7 +31,7 @@ class ProgressiveResult(TextTestResult):
         # monkeypatch half my methods away:
         self.errorClasses = {}
 
-        self._showAdvisories = showAdvisories
+        self._options = config.options
 
     def startTest(self, test):
         """Update the progress bar."""
@@ -45,52 +46,41 @@ class ProgressiveResult(TextTestResult):
         test -- the test that precipitated this call
 
         """
-        if isFailure or self._showAdvisories:
+        if isFailure or self._options.show_advisories:
             # Don't bind third item to a local var; that can create circular
             # refs which are expensive to collect. See the sys.exc_info() docs.
             exception_type, exception_value = err[:2]
             extracted_tb = extract_tb(err[2])
-            formatted_traceback = ''.join(format_list(extracted_tb))
-            # TODO: Canonicalize the path to remove /kitsune/../kitsune
-            # nonsense. Don't relativize, though, as that hurts the ability to
-            # paste into running editors.
+
             writeln = self.stream.writeln
             write = self.stream.write
             with self.bar.dodging():
-                writeln('\n' + (self._term.bold if isFailure else '') +
-                        '%s: %s' % (kind, nose_selector(test)))
+                writeln('\n' +
+                        (self._term.bold if isFailure else '') +
+                        '%s: %s' % (kind, nose_selector(test)) +
+                        (self._term.normal if isFailure else ''))  # end bold
 
                 if isFailure:  # Then show traceback
                     # File name and line num in a format vi can take:
-                    try:
-                        address = test_address(test)
-                    except TypeError:
-                        # Explodes if the function passed to @with_setup
-                        # applied to a test generator has an error.
-                        address = None
-                    if address:  # None if no such callable found. No sense
-                                 # trying to find the test frame if there's no
-                                 # such thing.
-                        file, line = frame_of_test(address,
-                                                   exception_type,
-                                                   exception_value,
-                                                   extracted_tb)[:2]
-                        writeln(' ' * len(kind) + '  %s +%s %s' %
-                                (os.environ.get('EDITOR', 'vi'), line,
-                                 human_path(src(file), self._cwd)))
-
-                    write(self._term.sgr0)  # end bold
+                    formatted_traceback = ''.join(
+                            format_traceback(extracted_tb,
+                                             exception_type,
+                                             exception_value,
+                                             self._cwd,
+                                             index_of_test_frame(
+                                                 extracted_tb,
+                                                 exception_type,
+                                                 exception_value,
+                                                 test),
+                                             self._term,
+                                             self._options.highlight_color,
+                                             self._options.function_color,
+                                             self._options.dim_color))
 
                     # Traceback:
                     # TODO: Think about using self._exc_info_to_string, which
                     # does some pretty whizzy skipping of unittest frames.
                     write(formatted_traceback)
-
-                    # Exception:
-                    write(''.join(format_exception_only(exception_type,
-                                                        exception_value)))
-                else:
-                    write(self._term.sgr0)  # end bold
 
     def addError(self, test, err):
         exc, val, tb = err

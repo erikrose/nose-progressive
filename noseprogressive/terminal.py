@@ -1,8 +1,11 @@
+from fcntl import ioctl
 from collections import defaultdict
 from curses import tigetstr, setupterm, tparm
 import os
 from os import isatty
+import struct
 import sys
+from termios import TIOCGWINSZ
 
 
 __all__ = ['Terminal']
@@ -12,7 +15,9 @@ class Terminal(object):
     """An abstraction around terminal capabilities
 
     Unlike curses, this doesn't require clearing the screen before doing
-    anything, and it's a little friendlier to use.
+    anything, and it's a little friendlier to use. It keeps the endless calls
+    to tigetstr() and tparm() out of your code, and it acts intelligently when
+    somebody pipes your output to a non-terminal.
 
     """
     def __init__(self, kind=None, stream=None):
@@ -48,7 +53,10 @@ class Terminal(object):
                   normal='sgr0',
                   clear_eol='el',
                   position='cup',
-                  color='setaf')
+                  color='setaf',
+                  bg_color='setab',
+                  underline='smul',
+                  no_underline='rmul')
 
     def __getattr__(self, attr):
         """Return parametrized terminal capabilities, like bold.
@@ -62,14 +70,18 @@ class Terminal(object):
 
         """
         if attr not in self._codes:
-            # Store sugary names under the sugary keys to save a hash lookup:
-            self._codes[attr] = tigetstr(self._sugar.get(attr, attr))
+            # Store sugary names under the sugary keys to save a hash lookup.
+            # Fall back to '' for codes not supported by this terminal.
+            self._codes[attr] = tigetstr(self._sugar.get(attr, attr)) or ''
         return CallableString(self._codes[attr])
 
 
 class CallableString(str):
     """A string which can be called to parametrize it as a terminal capability"""
     def __call__(self, *args):
+        # TODO: This complains "must call (at least) setupterm() first" when
+        # running simply `nosetests` (without progressive) on nose-progressive.
+        # Perhaps the terminal has gone away, and it doesn't like it.
         return tparm(self, *args)
 
 
@@ -77,3 +89,8 @@ class NullDict(defaultdict):
     """A ``defaultdict`` that pretends to contain all keys"""
     def __contains__(self, key):
         return True
+
+
+def height_and_width():
+    """Return a tuple of (terminal height, terminal width)."""
+    return struct.unpack('hhhh', ioctl(0, TIOCGWINSZ, '\000' * 8))[0:2]

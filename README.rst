@@ -4,10 +4,10 @@ nose-progressive
 
 nose-progressive is a nose_ plugin which displays progress in a stationary
 progress bar, freeing the rest of the screen (as well as the scrollback buffer)
-for the compact display of test failures. It displays failures and errors as
-soon as they occur and avoids scrolling them off the screen in favor of less
-useful output. It also offers a number of other human-centric features to speed
-the debugging process.
+for the compact display of test failures, which it formats beautifully and
+usefully. It displays failures and errors as soon as they occur and avoids
+scrolling them off the screen in favor of less useful output. It also offers a
+number of other human-centric features to speed the debugging process.
 
 .. _nose: http://somethingaboutorange.com/mrl/projects/nose/
 
@@ -27,73 +27,54 @@ bottom of the screen::
   thing.tests.test_templates:TaggingTests.test_add_new         [===========-  ]
 
 It is glorious. It supports a wide variety of terminal types and reacts to
-terminal resizing with all the grace it can muster.
+terminal resizing with all the grace it can muster. Unlike with the standard
+dot-strewing testrunner, you can always see what test is running, too.
 
-Tracebacks: Realtime, Compact, and Closed-Loop
-----------------------------------------------
+Fast, Pretty, Useful Tracebacks
+-------------------------------
 
 nose typically waits until the bitter end to show error and failure tracebacks,
 which wastes a lot of time in large tests suites that take many minutes to
 complete. We show tracebacks as soon as they occur so you can start chasing
-them immediately.
+them immediately, and we format them much better:
 
-A few other niceties further improve the debugging experience:
+.. image:: https://github.com/erikrose/nose-progressive/raw/master/in_progress.png
 
-* Strip the *Traceback (most recent call last)* line off tracebacks, and use
-  bold formatting rather than two lines of dividers to delimit them. This fits
-  much more in limited screen space::
+Some of the improvements:
 
-    FAIL: kitsune.apps.notifications.tests.test_events:MailTests.test_anonymous
-          vi +361 apps/notifications/tests/test_events.py
-      File "/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/unittest.py", line 279, in run
-        testMethod()
-      File "/Users/erose/Checkouts/kitsune/../kitsune/apps/notifications/tests/test_events.py", line 361, in test_anonymous
-        eq_(1, len(mail.outbox))
-      File "/Users/erose/Checkouts/kitsune/vendor/packages/nose/nose/tools.py", line 31, in eq_
-        assert a == b, msg or "%r != %r" % (a, b)
-    AssertionError: 1 != 0
-
-    ERROR: kitsune.apps.questions.tests.test_templates:TemplateTestCase.test_woo
-           vi +494 apps/questions/tests/test_templates.py
-      File "/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/unittest.py", line 279, in run
-        testMethod()
-      File "/Users/erose/Checkouts/kitsune/vendor/packages/mock/mock.py", line 196, in patched
-        return func(*args, **keywargs)
-      File "/Users/erose/Checkouts/kitsune/../kitsune/apps/questions/tests/test_templates.py", line 494, in test_woo
-        attrs_eq(mail.outbox[0], to=['some@bo.dy'],
-    IndexError: list index out of range
-
-  The preceding doesn't quite reflect reality; in an actual terminal, the two
-  lines after FAIL or ERROR are **bold** to aid visual chunking.
-
-* Identify failed tests in a format that can be fed back to nose, so it's
+* Judicious use of color and other formatting makes the traceback easy to scan.
+  It's especially easy to slide down the list of function names to keep your
+  place while debugging.
+* Omitting the *Traceback (most recent call last)* line and making many other
+  small tweaks fits much more in limited screen space.
+* Identifying failed tests in a format that can be fed back to nose, so it's
   easy to re-run them::
 
-    FAIL: notifications.tests:MailTests.test_anonymous
+    FAIL: kitsune.apps.wiki.tests.test_parser:TestWikiVideo.test_video_english
 
   To re-run the above, do this::
 
-    nosetests --with-progressive notifications.tests:MailTests.test_anonymous
+    nosetests --with-progressive kitsune.apps.wiki.tests.test_parser:TestWikiVideo.test_video_english
+* Editor shortcuts (see below) which let you jump right to any problem line in
+  your editor.
 
 Editor Shortcuts
 ----------------
 
-For each failure or error, nose-progressive provides an editor shortcut. This
+For each frame of a traceback, nose-progressive provides an editor shortcut. This
 is a combination of a filesystem path and line number in a format understood
 by vi, emacs, the BBEdit command-line tool, and a number of other editors::
 
-  FAIL: kitsune.apps.notifications.tests.test_events:MailTests.test_anonymous
-        vi +361 apps/notifications/tests.py
+  vi +361 apps/notifications/tests.py  # test_notification_completeness
 
 Just triple-click (or what have you) to select the second line above, and copy
 and paste it onto the command line. You'll land right at the offending line in
-your editor of choice, determined by the ``$EDITOR`` environment variable.
+your editor of choice, determined by the ``$EDITOR`` environment variable. As a
+bonus, the editor shortcut is more compact than the stock formatting.
 
-In addition, we apply some heuristics to choosing which file and line to show
-for the above: we try to find the stack frame of your actual test, rather than
-plopping you down unhelpfully in the middle of a nose helper function like
-eq_(). Even if you create your own assertion helper functions, like
-``xml_eq()``, we still track down your test.
+In addition, we highlight the stack frame of the test itself, where the problem
+often lies. Don't worry; you won't confuse it by using helper functions like
+``eq_()`` or even writing your own.
 
 Custom Error Classes
 --------------------
@@ -130,7 +111,6 @@ django-nose, then run your tests like so::
 
 .. _django-nose: https://github.com/jbalogh/django-nose
 
-
 Installation
 ============
 
@@ -142,7 +122,6 @@ Or, to get the bleeding-edge, unreleased version::
 
   pip install -e git://github.com/erikrose/nose-progressive.git#egg=nose-progressive
 
-
 Upgrading
 =========
 
@@ -150,7 +129,6 @@ To upgrade from an older version of nose-progressive, assuming you didn't
 install it from git::
 
   pip install --upgrade nose-progressive
-
 
 Use
 ===
@@ -169,7 +147,18 @@ Options
 
 ``--progressive-advisories``
   Show even non-failure custom errors, like Skip and Deprecated, during test
-  runs.
+  runs. Equivalent environment variable: NOSE_PROGRESSIVE_ADVISORIES.
+``--progressive-highlight-color=<0..15>``
+  Background color used to highlight the stack frame of the test. An ANSI color
+  expressed as a number: 0-15. Equivalent environment variable:
+  NOSE_PROGRESSIVE_HIGHLIGHT_COLOR.
+``--progressive-function-color=<0..15>``
+  Color of function names in tracebacks. An ANSI color expressed as a number
+  0-15. Equivalent environment variable: NOSE_PROGRESSIVE_FUNCTION_COLOR.
+``--progressive-dim-color=<0..15>``
+  Color of de-emphasized text (like editor shortcuts) in tracebacks. An ANSI
+  color expressed as a number 0-15. Equivalent environment variable:
+  NOSE_PROGRESSIVE_DIM_COLOR.
 
 Caveats and Known Bugs
 ======================
@@ -208,6 +197,13 @@ Erik Rose, while waiting for tests to complete ;-)
 
 Version History
 ===============
+
+1.0
+  * Every stack frame is now an editor shortcut. Not only does this make it
+    easier to navigate, but it's shorter in both height and width.
+  * Reformat tracebacks for great justice. Subtle coloring guides the eye down
+    the list of function names, and a slight background color calls out the
+    test frame.
 
 0.7
   * Pick the correct stack frame for editor shortcuts to syntax errors. Had to

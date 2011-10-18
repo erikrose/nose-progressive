@@ -2,13 +2,14 @@ import sys
 
 from setuptools import setup, find_packages
 
+
 extra_setup = {}
 if sys.version_info >= (3,):
     extra_setup['use_2to3'] = True
 
 setup(
     name='nose-progressive',
-    version='0.7',
+    version='1.0',
     description='Nose plugin to show progress bar and tracebacks during tests',
     long_description=open('README.rst').read(),
     author='Erik Rose',

@@ -61,17 +61,32 @@ class ProgressivePlugin(Plugin):
 
     def options(self, parser, env):
         super(ProgressivePlugin, self).options(parser, env)
+        parser.add_option('--progressive-highlight-color',
+                          type='int',
+                          dest='highlight_color',
+                          default=env.get('NOSE_PROGRESSIVE_HIGHLIGHT_COLOR', 15),
+                          help='Background color used to highlight the stack '
+                               'frame of the test. An ANSI color expressed as '
+                               'a number: 0-15.')
+        parser.add_option('--progressive-function-color',
+                          type='int',
+                          dest='function_color',
+                          default=env.get('NOSE_PROGRESSIVE_FUNCTION_COLOR', 12),
+                          help='Color of function names in tracebacks. An '
+                               'ANSI color expressed as a number 0-15.')
+        parser.add_option('--progressive-dim-color',
+                          type='int',
+                          dest='dim_color',
+                          default=env.get('NOSE_PROGRESSIVE_DIM_COLOR', 8),
+                          help='Color of de-emphasized text (like editor '
+                               'shortcuts) in tracebacks. An ANSI color '
+                               'expressed as a number 0-15.')
         parser.add_option('--progressive-advisories',
                           action='store_true',
-                          dest='showAdvisories',
+                          dest='show_advisories',
                           default=env.get('NOSE_PROGRESSIVE_ADVISORIES', False),
                           help='Show skips and deprecation exceptions in '
                                'addition to failures and errors.')
-
-    def configure(self, options, config):
-        super(ProgressivePlugin, self).configure(options, config)
-        if self.can_configure:
-            self._showAdvisories = options.showAdvisories
 
     def prepareTestLoader(self, loader):
         """Insert ourselves into loader calls to count tests.
@@ -107,7 +122,6 @@ class ProgressivePlugin(Plugin):
         return ProgressiveRunner(self._cwd,
                                  self._totalTests,
                                  runner.stream,
-                                 self._showAdvisories,
                                  verbosity=self.conf.verbosity,
                                  config=self.conf)  # So we don't get a default
                                                     # NoPlugins manager
