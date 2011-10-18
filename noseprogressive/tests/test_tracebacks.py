@@ -1,16 +1,15 @@
-import random
-from random import randint
-import string
+"""Tests for traceback formatting.
+
+At the moment, we test only that it doesn't crash.
+
+"""
 from unittest import TestCase
 
-from nose.tools import eq_
-
-from noseprogressive.terminal import Terminal
 from noseprogressive.tracebacks import format_traceback
 
 
-tbs = [
-    [("setup.py", 79, '?', """classifiers = ["""),
+syntax_error_tb = ([
+     ("setup.py", 79, '?', """classifiers = ["""),
      ("/usr/lib64/python2.4/distutils/core.py", 149, 'setup', """dist.run_commands()"""),
      ("/usr/lib64/python2.4/distutils/dist.py", 946, 'run_commands', """self.run_command(cmd)"""),
      ("/usr/lib64/python2.4/distutils/dist.py", 966, 'run_command', """cmd_obj.run()"""),
@@ -36,33 +35,20 @@ tbs = [
      ("/usr/lib64/python2.4/urllib2.py", 337, '_call_chain', """result = func(*args)"""),
      ("/usr/lib64/python2.4/urllib2.py", 573, '<lambda>', """lambda r, proxy=url, type=type, meth=self.proxy_open: \\"""),
      ("/usr/lib64/python2.4/urllib2.py", 580, 'proxy_open', """if '@' in host:""")
-     # TypeError: iterable argument required
-    ],
-    [("/usr/share/PackageKit/helpers/yum/yumBackend.py", 2926, 'install_signature', """self.yumbase.getKeyForPackage(pkg, askcb = lambda x, y, z: True)"""),
+     # Was originally TypeError: iterable argument required
+    ], SyntaxError, SyntaxError('invalid syntax', ('/Users/erose/Checkouts/nose-progress/noseprogressive/tests/test_integration.py', 97, 5, '    :bad\n')))
+attr_error_tb = ([
+     ("/usr/share/PackageKit/helpers/yum/yumBackend.py", 2926, 'install_signature', """self.yumbase.getKeyForPackage(pkg, askcb = lambda x, y, z: True)"""),
      ("/usr/lib/python2.6/site-packages/yum/__init__.py", 4309, 'getKeyForPackage', """result = ts.pgpImportPubkey(misc.procgpgkey(info['raw_key']))"""),
      ("/usr/lib/python2.6/site-packages/rpmUtils/transaction.py", 59, '__getattr__', """return self.getMethod(attr)"""),
      ("/usr/lib/python2.6/site-packages/rpmUtils/transaction.py", 69, 'getMethod', """return getattr(self.ts, method)""")
-     # AttributeError: 'NoneType' object has no attribute 'pgpImportPubkey'
-    ]
-]
+    ], AttributeError, AttributeError("'NoneType' object has no attribute 'pgpImportPubkey'"))
 
 
+def test_syntax_error():
+    """Exercise special handling of syntax errors."""
+    ''.join(format_traceback(*syntax_error_tb))
 
-def about(low, high, mode):
-    """Return a rounded-off triangular random int."""
-    return int(round(random.triangular(low, high, mode)))
-
-
-def random_traceback(seed=None):
-    random.seed(seed)
-    return tbs[0]
-
-
-class TracebackTests(TestCase):
-    """Tests for traceback formatting"""
-
-    def test_random(self):
-        tb = random_traceback()
-        t = Terminal()
-        print t.bold + 'ERROR: kitsune.apps.dashboards.tests.test_cron:TopUnhelpfulArticlesTests.test_old_articles' + t.normal
-        print ''.join(format_traceback(tb, frame_to_emphasize=3))
+def test_non_syntax_error():
+    """Exercise typical error formatting."""
+    ''.join(format_traceback(*attr_error_tb))
