@@ -18,7 +18,7 @@ def format_traceback(extracted_tb,
                      highlight_color=15,
                      function_color=12,
                      dim_color=8):
-    """Return an iterable of formatted traceback frames, rather like traceback.format_list().
+    """Return an iterable of formatted traceback frames.
 
     Also include a pseudo-frame at the end representing the exception itself.
 
@@ -27,7 +27,12 @@ def format_traceback(extracted_tb,
     of the test, if you pass in the index of that frameHoly.
 
     """
-    def format_shortcut(editor, file, line, function=None, emphasizer='', deemphasizer=''):
+    def format_shortcut(editor,
+                        file,
+                        line,
+                        function=None,
+                        emphasizer='',
+                        deemphasizer=''):
         """Return a pretty-printed editor shortcut."""
         return template % dict(editor=editor,
                                line=line,

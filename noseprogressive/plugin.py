@@ -49,8 +49,8 @@ class ProgressivePlugin(Plugin):
         pdb.Pdb.cmdloop = cmdloop
 
         # nosetests changes directories to the tests dir when run from a
-        # distribution dir, so save the original cwd.
-        self._cwd = getcwd()
+        # distribution dir, so save the original cwd for relativizing paths.
+        self._cwd = '' if self.conf.options.absolute_paths else getcwd()
 
     def finalize(self, result):
         """Put monkeypatches back as we found them."""
@@ -87,6 +87,13 @@ class ProgressivePlugin(Plugin):
                           default=env.get('NOSE_PROGRESSIVE_ADVISORIES', False),
                           help='Show skips and deprecation exceptions in '
                                'addition to failures and errors.')
+        parser.add_option('--progressive-abs',
+                          action='store_true',
+                          dest='absolute_paths',
+                          default=env.get('NOSE_PROGRESSIVE_ABSOLUTE_PATHS', False),
+                          help='Display paths in traceback as absolute, '
+                               'rather than relative to the current working '
+                               'directory.')
 
     def prepareTestLoader(self, loader):
         """Insert ourselves into loader calls to count tests.

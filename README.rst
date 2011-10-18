@@ -145,6 +145,10 @@ they fail::
 Options
 =======
 
+``--progressive-abs``
+  Display paths in traceback as absolute, rather than relative to the current
+  working directory. This lets you copy and paste it to a shell in a different
+  cwd or to another program entirely.
 ``--progressive-advisories``
   Show even non-failure custom errors, like Skip and Deprecated, during test
   runs. Equivalent environment variable: NOSE_PROGRESSIVE_ADVISORIES.
@@ -204,6 +208,7 @@ Version History
   * Reformat tracebacks for great justice. Subtle coloring guides the eye down
     the list of function names, and a slight background color calls out the
     test frame.
+  * Add an option to use absolute paths in tracebacks.
 
 0.7
   * Pick the correct stack frame for editor shortcuts to syntax errors. Had to
