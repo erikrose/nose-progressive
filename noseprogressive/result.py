@@ -63,20 +63,27 @@ class ProgressiveResult(TextTestResult):
                         (self._term.normal if isFailure else ''))  # end bold
 
                 if isFailure:  # Then show traceback
+                    test_frame_index = index_of_test_frame(
+                        extracted_tb,
+                        exception_type,
+                        exception_value,
+                        test)
                     formatted_traceback = ''.join(
-                            format_traceback(extracted_tb,
-                                             exception_type,
-                                             exception_value,
-                                             self._cwd,
-                                             index_of_test_frame(
-                                                 extracted_tb,
-                                                 exception_type,
-                                                 exception_value,
-                                                 test),
-                                             self._term,
-                                             self._options.highlight_color,
-                                             self._options.function_color,
-                                             self._options.dim_color))
+                        format_traceback(
+                            extracted_tb,
+                            exception_type,
+                            exception_value,
+                            self._cwd,
+                            # Don't bother highlighting the test frame if it's
+                            # the first one. Due to unittest-frame-skipping,
+                            # this will be so an overwhelming majority of the
+                            # time, so it's just noise. Highlight it only if
+                            # the frame-skipping doesn't apply:
+                            None if test_frame_index == 0 else test_frame_index,
+                            self._term,
+                            self._options.highlight_color,
+                            self._options.function_color,
+                            self._options.dim_color))
                     write(formatted_traceback)
 
     def addError(self, test, err):
