@@ -43,14 +43,6 @@ class ProgressiveResult(TextTestResult):
 
         """
         if isFailure or self._options.show_advisories:
-            # Don't bind third item to a local var; that can create circular
-            # refs which are expensive to collect. See the sys.exc_info() docs.
-            exception_type, exception_value = err[:2]
-            extracted_tb = extract_relevant_tb(
-                err[2],
-                exception_type,
-                exception_type is test.failureException)
-
             writeln = self.stream.writeln
             write = self.stream.write
             with self.bar.dodging():
@@ -60,23 +52,31 @@ class ProgressiveResult(TextTestResult):
                         (self._term.normal if isFailure else ''))  # end bold
 
                 if isFailure:  # Then show traceback
+                    # Don't bind third item to a local var; that can create
+                    # circular refs which are expensive to collect. See the
+                    # sys.exc_info() docs.
+                    exception_type, exception_value = err[:2]
+                    extracted_tb = extract_relevant_tb(
+                        err[2],
+                        exception_type,
+                        exception_type is test.failureException)
                     test_frame_index = index_of_test_frame(
                         extracted_tb,
                         exception_type,
                         exception_value,
                         test)
+                    if test_frame_index:
+                        # We have a good guess at which frame is the test, so
+                        # trim everything until that. We don't care to see test
+                        # framework frames.
+                        extracted_tb = extracted_tb[test_frame_index:]
+
                     formatted_traceback = ''.join(
                         format_traceback(
                             extracted_tb,
                             exception_type,
                             exception_value,
                             self._cwd,
-                            # Don't bother highlighting the test frame if it's
-                            # the first one. Due to unittest-frame-skipping,
-                            # this will be so an overwhelming majority of the
-                            # time, so it's just noise. Highlight it only if
-                            # the frame-skipping doesn't apply:
-                            None if test_frame_index == 0 else test_frame_index,
                             self._term,
                             self._options.highlight_color,
                             self._options.function_color,

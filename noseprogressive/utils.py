@@ -106,7 +106,7 @@ def index_of_test_frame(extracted_tb, exception_type, exception_value, test):
         # fails. However, it bothers me. I'd rather be finding the actual
         # callables and comparing them directly, but that might not work with
         # test generators.
-        for i, frame in reversed(list(enumerate(extracted_tb))):
+        for i, frame in enumerate(extracted_tb):
             file, line, function, text = frame
             if file is not None and test_file_path == realpath(file):
                 knower.know(i, 2)

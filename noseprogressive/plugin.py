@@ -10,7 +10,7 @@ from noseprogressive.wrapping import cmdloop, set_trace, StreamWrapper
 
 
 class ProgressivePlugin(Plugin):
-    """Nose plugin which prioritizes the important information"""
+    """A nose plugin which has a progress bar and formats tracebacks for humans"""
     name = 'progressive'
     _totalTests = 0
     score = 10000  # Grab stdout and stderr before the capture plugin.

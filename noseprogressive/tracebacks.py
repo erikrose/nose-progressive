@@ -13,7 +13,6 @@ def format_traceback(extracted_tb,
                      exc_type,
                      exc_value,
                      cwd='',
-                     frame_to_emphasize=None,
                      term=None,
                      highlight_color=15,
                      function_color=12,
@@ -30,16 +29,12 @@ def format_traceback(extracted_tb,
     def format_shortcut(editor,
                         file,
                         line,
-                        function=None,
-                        emphasizer='',
-                        deemphasizer=''):
+                        function=None):
         """Return a pretty-printed editor shortcut."""
         return template % dict(editor=editor,
                                line=line,
                                file=file,
                                function=('  # ' + function) if function else '',
-                               emph=emphasizer,
-                               deemph=deemphasizer,
                                funcemph=term.color(function_color),
                                # Underline is also nice and doesn't make us
                                # worry about appearance on different background
@@ -60,17 +55,13 @@ def format_traceback(extracted_tb,
     line_width = len(str(max(the_line for _, the_line, _, _ in extracted_tb)))
     editor = os.environ.get('EDITOR', 'vi')
 
-    template = ('  %(fade)s%(emph)s%(editor)s +%(line)-{line_width}s '
-                '%(file)s%(plain)s%(emph)s'
-                '%(funcemph)s%(function)s%(plain)s%(emph)s%(deemph)s\n').format(line_width=line_width)
+    template = ('  %(fade)s%(editor)s +%(line)-{line_width}s '
+                '%(file)s%(plain)s'
+                '%(funcemph)s%(function)s%(plain)s\n').format(line_width=line_width)
 
     # Stack frames:
     for i, (file, line, function, text) in enumerate(extracted_tb):
-        if i == frame_to_emphasize:
-            emph, deemph = term.bg_color(highlight_color), term.normal
-        else:
-            emph, deemph = '', ''
-        yield (format_shortcut(editor, file, line, function, emph, deemph) +
+        yield (format_shortcut(editor, file, line, function) +
                ('    %s\n' % (text or '')))
 
     # Exception:

@@ -46,8 +46,8 @@ Some of the formatting improvements:
   It's especially easy to slide down the list of function names to keep your
   place while debugging.
 * Omitting the *Traceback (most recent call last)* line and making many other
-  small tweaks fits much more in limited screen space.
-* Identifying failed tests in a format that can be fed back to nose, makes it
+  tweaks fits much more in limited screen space.
+* Identifying failed tests in a format that can be fed back to nose makes it
   easy to re-run them::
 
     FAIL: kitsune.apps.wiki.tests.test_parser:TestWikiVideo.test_video_english
@@ -55,6 +55,10 @@ Some of the formatting improvements:
   To re-run the above, do this::
 
     nosetests --with-progressive kitsune.apps.wiki.tests.test_parser:TestWikiVideo.test_video_english
+* Hiding test harness frames--frames from unittest, nose itself, or anything
+  before your test runs--keeps your concentration where it counts. Also, like
+  unittest itself, we hide any frames that descend into trivial comparison
+  helpers like ``eq_()`` or ``assertRaises()``.
 * Editor shortcuts (see below) let you jump right to any problem line in your
   editor.
 
@@ -71,10 +75,6 @@ Just triple-click (or what have you) to select the second line above, and copy
 and paste it onto the command line. You'll land right at the offending line in
 your editor of choice, determined by the ``$EDITOR`` environment variable. As a
 bonus, the editor shortcut is more compact than the stock traceback formatting.
-
-In addition, we highlight the stack frame of the test itself, where the problem
-often lies. Don't worry; you won't confuse it by using helper functions like
-``eq_()`` or even writing your own.
 
 Custom Error Classes
 --------------------
@@ -209,8 +209,8 @@ Version History
   * Reformat tracebacks for great justice. Subtle coloring guides the eye down
     the list of function names, and a slight background color calls out the
     test frame.
-  * Hide unittest-internal stack frames when printing tracebacks. Fewer frames
-    = less noise onscreen = win!
+  * Hide unittest-internal and other pre-test stack frames when printing
+    tracebacks. Fewer frames = less noise onscreen = less thinking = win!
   * Add an option to use absolute paths in tracebacks.
 
 0.7
