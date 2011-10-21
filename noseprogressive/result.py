@@ -78,7 +78,6 @@ class ProgressiveResult(TextTestResult):
                             exception_value,
                             self._cwd,
                             self._term,
-                            self._options.highlight_color,
                             self._options.function_color,
                             self._options.dim_color))
                     write(formatted_traceback)

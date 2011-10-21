@@ -14,7 +14,6 @@ def format_traceback(extracted_tb,
                      exc_value,
                      cwd='',
                      term=None,
-                     highlight_color=15,
                      function_color=12,
                      dim_color=8):
     """Return an iterable of formatted traceback frames.

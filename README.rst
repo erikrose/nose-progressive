@@ -70,9 +70,10 @@ Some of the formatting improvements:
 Editor Shortcuts
 ----------------
 
-For each frame of a traceback, nose-progressive provides an editor shortcut. This
-is a combination of a filesystem path and line number in a format understood
-by vi, emacs, the BBEdit command-line tool, and a number of other editors::
+For each frame of a traceback, nose-progressive provides an editor shortcut.
+This is a combination of a filesystem path and line number in a format
+understood by vi, emacs, the BBEdit command-line tool, and a number of other
+editors::
 
   vi +361 apps/notifications/tests.py  # test_notification_completeness
 
@@ -158,10 +159,6 @@ Options
 ``--progressive-advisories``
   Show even non-failure custom errors, like Skip and Deprecated, during test
   runs. Equivalent environment variable: ``NOSE_PROGRESSIVE_ADVISORIES``.
-``--progressive-highlight-color=<0..15>``
-  Background color used to highlight the stack frame of the test. An ANSI color
-  expressed as a number: 0-15. Equivalent environment variable:
-  ``NOSE_PROGRESSIVE_HIGHLIGHT_COLOR``.
 ``--progressive-function-color=<0..15>``
   Color of function names in tracebacks. An ANSI color expressed as a number
   0-15. Equivalent environment variable: NOSE_PROGRESSIVE_FUNCTION_COLOR.

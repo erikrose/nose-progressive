@@ -61,13 +61,6 @@ class ProgressivePlugin(Plugin):
 
     def options(self, parser, env):
         super(ProgressivePlugin, self).options(parser, env)
-        parser.add_option('--progressive-highlight-color',
-                          type='int',
-                          dest='highlight_color',
-                          default=env.get('NOSE_PROGRESSIVE_HIGHLIGHT_COLOR', 15),
-                          help='Background color used to highlight the stack '
-                               'frame of the test. An ANSI color expressed as '
-                               'a number: 0-15.')
         parser.add_option('--progressive-function-color',
                           type='int',
                           dest='function_color',
