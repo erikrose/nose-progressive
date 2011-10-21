@@ -86,7 +86,7 @@ def extract_relevant_tb(tb, exctype, is_test_failure):
 
     """
     # Skip test runner traceback levels:
-    while tb and _is_relevant_tb_level(tb):
+    while tb and _is_unittest_frame(tb):
         tb = tb.tb_next
     if is_test_failure:
         # Skip assert*() traceback levels:
@@ -95,13 +95,25 @@ def extract_relevant_tb(tb, exctype, is_test_failure):
     return extract_tb(tb)
 
 
-def _is_relevant_tb_level(tb):
+def _is_unittest_frame(tb):
+    """Return whether the given frame is something other than a unittest one."""
     return '__unittest' in tb.tb_frame.f_globals
 
 
 def _count_relevant_tb_levels(tb):
-    length = 0
-    while tb and not _is_relevant_tb_level(tb):
+    """Return the number of frames in ``tb`` before all that's left is unittest frames.
+
+    Unlike its namesake in unittest, this doesn't bail out as soon as it hits a
+    unittest frame, which means we don't bail out as soon as somebody uses the
+    mock library, which defines ``__unittest``.
+
+    """
+    length = contiguous_unittest_frames = 0
+    while tb:
         length += 1
+        if _is_unittest_frame(tb):
+            contiguous_unittest_frames += 1
+        else:
+            contiguous_unittest_frames = 0
         tb = tb.tb_next
-    return length
+    return length - contiguous_unittest_frames

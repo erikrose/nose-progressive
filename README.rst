@@ -59,6 +59,11 @@ Some of the formatting improvements:
   before your test runs--keeps your concentration where it counts. Also, like
   unittest itself, we hide any frames that descend into trivial comparison
   helpers like ``eq_()`` or ``assertRaises()``.
+
+  (Aside: unlike unittest, we don't just start hiding frames at the first
+  unittest one after the test; we snip off only the last contiguous run of
+  unittest frames. This lets you wrap your test in the decorators from the mock
+  library (which masquerades as unittest) and still see your tracebacks.)
 * Editor shortcuts (see below) let you jump right to any problem line in your
   editor.
 
