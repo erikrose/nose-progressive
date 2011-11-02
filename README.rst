@@ -45,8 +45,9 @@ Some of the formatting improvements:
 * Judicious use of color and other formatting makes the traceback easy to scan.
   It's especially easy to slide down the list of function names to keep your
   place while debugging.
-* Omitting the *Traceback (most recent call last)* line and making many other
-  tweaks fits much more in limited screen space.
+* Omitting the *Traceback (most recent call last)* line, using relative paths
+  (optional), and making many other tweaks fits much more in limited screen
+  space.
 * Identifying failed tests in a format that can be fed back to nose makes it
   easy to re-run them::
 
