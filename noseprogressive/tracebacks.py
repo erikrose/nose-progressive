@@ -15,7 +15,8 @@ def format_traceback(extracted_tb,
                      cwd='',
                      term=None,
                      function_color=12,
-                     dim_color=8):
+                     dim_color=8,
+                     editor='vi'):
     """Return an iterable of formatted traceback frames.
 
     Also include a pseudo-frame at the end representing the exception itself.
@@ -52,8 +53,6 @@ def format_traceback(extracted_tb,
         extracted_tb[i] = human_path(src(file), cwd), line, function, text
 
     line_width = len(str(max(the_line for _, the_line, _, _ in extracted_tb)))
-    editor = os.environ.get('EDITOR', 'vi')
-
     template = ('  %(fade)s%(editor)s +%(line)-{line_width}s '
                 '%(file)s%(plain)s'
                 '%(funcemph)s%(function)s%(plain)s\n').format(line_width=line_width)

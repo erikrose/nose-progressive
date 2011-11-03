@@ -81,8 +81,15 @@ editors::
 
 Just triple-click (or what have you) to select the line, and copy and paste it
 onto the command line. You'll land right at the offending line in your editor
-of choice, determined by the ``$EDITOR`` environment variable. As a bonus, the
-editor shortcut is more compact than the stock traceback formatting.
+of choice. As a bonus, the editor shortcut is more compact than the stock
+traceback formatting.
+
+You can set which editor to use by setting any of these, which nose-progressive
+checks in order:
+
+* The ``--progressive-editor`` commandline option
+* The ``NOSE_PROGRESSIVE_EDITOR`` environment variable
+* The ``$EDITOR`` environment variable
 
 Custom Error Classes
 --------------------
@@ -153,6 +160,10 @@ they fail::
 Options
 =======
 
+``--progressive-editor``
+  The editor to use for the shortcuts in tracebacks. Defaults to the value of
+  ``$EDITOR`` and then "vi". Equivalent environment variable:
+  ``NOSE_PROGRESSIVE_EDITOR``.
 ``--progressive-abs``
   Display paths in traceback as absolute, rather than relative to the current
   working directory. This lets you copy and paste it to a shell in a different
@@ -206,6 +217,10 @@ Erik Rose, while waiting for tests to complete ;-)
 
 Version History
 ===============
+
+1.1
+  * You can now set the editor nose-progressive uses separately from the
+    ``$EDITOR`` shell variable.
 
 1.0
   * Every stack frame is now an editor shortcut. Not only does this make it

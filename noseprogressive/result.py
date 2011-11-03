@@ -79,7 +79,8 @@ class ProgressiveResult(TextTestResult):
                             self._cwd,
                             self._term,
                             self._options.function_color,
-                            self._options.dim_color))
+                            self._options.dim_color,
+                            self._options.editor))
                     write(formatted_traceback)
 
     def addError(self, test, err):

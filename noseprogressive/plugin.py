@@ -87,6 +87,15 @@ class ProgressivePlugin(Plugin):
                           help='Display paths in traceback as absolute, '
                                'rather than relative to the current working '
                                'directory.')
+        parser.add_option('--progressive-editor',
+                          type='string',
+                          action='store',
+                          dest='editor',
+                          default=env.get('NOSE_PROGRESSIVE_EDITOR',
+                                          env.get('EDITOR', 'vi')),
+                          help='The editor to use for the shortcuts in '
+                               'tracebacks. Defaults to the value of $EDITOR '
+                               'and then "vi".')
 
     def prepareTestLoader(self, loader):
         """Insert ourselves into loader calls to count tests.
