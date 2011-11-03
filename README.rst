@@ -56,15 +56,16 @@ Some of the formatting improvements:
   To re-run the above, do this::
 
     nosetests --with-progressive kitsune.apps.wiki.tests.test_parser:TestWikiVideo.test_video_english
-* Hiding test harness frames--frames from unittest, nose itself, or anything
-  before your test runs--keeps your concentration where it counts. Also, like
-  unittest itself, we hide any frames that descend into trivial comparison
-  helpers like ``assertEquals()`` or ``assertRaises()``.
+* The frame of the test itself always comes first; we skip any setup frames
+  from test harnesses and such. This keeps your concentration where it counts.
+  Also, like unittest itself, we hide any frames that descend into trivial
+  comparison helpers like ``assertEquals()`` or ``assertRaises()``.
 
-  (Aside: unlike unittest, we don't just start hiding frames at the first
-  unittest one after the test; we snip off only the last contiguous run of
-  unittest frames. This lets you wrap your test in the decorators from the mock
-  library, which masquerades as unittest, and still see your tracebacks.)
+  (Aside: We're actually better at it than unittest. We don't just start hiding
+  frames at the first unittest one after the test; we snip off only the last
+  contiguous run of unittest frames. This lets you wrap your test in the
+  decorators from the mock library, which masquerades as unittest, and still
+  see your tracebacks.)
 * Editor shortcuts (see below) let you jump right to any problem line in your
   editor.
 
@@ -78,10 +79,10 @@ editors::
 
   vi +361 apps/notifications/tests.py  # test_notification_completeness
 
-Just triple-click (or what have you) to select the second line above, and copy
-and paste it onto the command line. You'll land right at the offending line in
-your editor of choice, determined by the ``$EDITOR`` environment variable. As a
-bonus, the editor shortcut is more compact than the stock traceback formatting.
+Just triple-click (or what have you) to select the line, and copy and paste it
+onto the command line. You'll land right at the offending line in your editor
+of choice, determined by the ``$EDITOR`` environment variable. As a bonus, the
+editor shortcut is more compact than the stock traceback formatting.
 
 Custom Error Classes
 --------------------
@@ -162,7 +163,7 @@ Options
   runs. Equivalent environment variable: ``NOSE_PROGRESSIVE_ADVISORIES``.
 ``--progressive-function-color=<0..15>``
   Color of function names in tracebacks. An ANSI color expressed as a number
-  0-15. Equivalent environment variable: NOSE_PROGRESSIVE_FUNCTION_COLOR.
+  0-15. Equivalent environment variable: ``NOSE_PROGRESSIVE_FUNCTION_COLOR``.
 ``--progressive-dim-color=<0..15>``
   Color of de-emphasized text (like editor shortcuts) in tracebacks. An ANSI
   color expressed as a number 0-15. Equivalent environment variable:
@@ -210,8 +211,7 @@ Version History
   * Every stack frame is now an editor shortcut. Not only does this make it
     easier to navigate, but it's shorter in both height and width.
   * Reformat tracebacks for great justice. Subtle coloring guides the eye down
-    the list of function names, and a slight background color calls out the
-    test frame.
+    the list of function names.
   * Hide unittest-internal and other pre-test stack frames when printing
     tracebacks. Fewer frames = less noise onscreen = less thinking = win!
   * Add an option to use absolute paths in tracebacks.
