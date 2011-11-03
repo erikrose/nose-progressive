@@ -66,27 +66,30 @@ class ProgressivePlugin(Plugin):
                           dest='function_color',
                           default=env.get('NOSE_PROGRESSIVE_FUNCTION_COLOR', 12),
                           help='Color of function names in tracebacks. An '
-                               'ANSI color expressed as a number 0-15.')
+                               'ANSI color expressed as a number 0-15. '
+                               '[NOSE_PROGRESSIVE_FUNCTION_COLOR]')
         parser.add_option('--progressive-dim-color',
                           type='int',
                           dest='dim_color',
                           default=env.get('NOSE_PROGRESSIVE_DIM_COLOR', 8),
                           help='Color of de-emphasized text (like editor '
                                'shortcuts) in tracebacks. An ANSI color '
-                               'expressed as a number 0-15.')
+                               'expressed as a number 0-15. '
+                               '[NOSE_PROGRESSIVE_DIM_COLOR]')
         parser.add_option('--progressive-advisories',
                           action='store_true',
                           dest='show_advisories',
                           default=env.get('NOSE_PROGRESSIVE_ADVISORIES', False),
                           help='Show skips and deprecation exceptions in '
-                               'addition to failures and errors.')
+                               'addition to failures and errors. '
+                               '[NOSE_PROGRESSIVE_ADVISORIES]')
         parser.add_option('--progressive-abs',
                           action='store_true',
                           dest='absolute_paths',
                           default=env.get('NOSE_PROGRESSIVE_ABSOLUTE_PATHS', False),
                           help='Display paths in traceback as absolute, '
                                'rather than relative to the current working '
-                               'directory.')
+                               'directory. [NOSE_PROGRESSIVE_ABSOLUTE_PATHS]')
         parser.add_option('--progressive-editor',
                           type='string',
                           action='store',
@@ -95,7 +98,7 @@ class ProgressivePlugin(Plugin):
                                           env.get('EDITOR', 'vi')),
                           help='The editor to use for the shortcuts in '
                                'tracebacks. Defaults to the value of $EDITOR '
-                               'and then "vi".')
+                               'and then "vi". [NOSE_PROGRESSIVE_EDITOR]')
 
     def prepareTestLoader(self, loader):
         """Insert ourselves into loader calls to count tests.
