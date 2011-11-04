@@ -71,7 +71,7 @@ class ProgressiveResult(TextTestResult):
                         # framework frames.
                         extracted_tb = extracted_tb[test_frame_index:]
 
-                    formatted_traceback = ''.join(
+                    write(''.join(
                         format_traceback(
                             extracted_tb,
                             exception_type,
@@ -80,8 +80,7 @@ class ProgressiveResult(TextTestResult):
                             self._term,
                             self._options.function_color,
                             self._options.dim_color,
-                            self._options.editor))
-                    write(formatted_traceback)
+                            self._options.editor)))
 
     def addError(self, test, err):
         exc, val, tb = err
@@ -102,11 +101,10 @@ class ProgressiveResult(TextTestResult):
             self.errors.append((test, excInfo))
             test.passed = False
 
-        with self.bar.dodging():
-            self._printError(label if isErrorClass else 'ERROR',
-                             err,
-                             test,
-                             isFailure=not isErrorClass or isFailure)
+        self._printError(label if isErrorClass else 'ERROR',
+                         err,
+                         test,
+                         isFailure=not isErrorClass or isFailure)
 
     def addFailure(self, test, err):
         super(ProgressiveResult, self).addFailure(test, err)
