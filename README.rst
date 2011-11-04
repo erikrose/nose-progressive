@@ -194,11 +194,6 @@ Having trouble? Pop over to the `issue tracker`_.
 
 .. _`issue tracker`: https://github.com/erikrose/nose-progressive/issues
 
-Future Plans
-============
-
-* Commandline switches for every little thing
-
 Kudos
 =====
 
@@ -217,6 +212,9 @@ Erik Rose, while waiting for tests to complete ;-)
 
 Version History
 ===============
+
+1.1.1
+  * Fix a bug that would cause the formatter to crash on many SyntaxErrors.
 
 1.1
   * You can now set the editor nose-progressive uses separately from the
