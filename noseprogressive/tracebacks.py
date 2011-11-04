@@ -45,9 +45,6 @@ def format_traceback(extracted_tb,
     if not term:
         term = Terminal()
 
-    # TODO: Test with SyntaxErrors in the test frame. Make sure the test
-    # frame gets emboldened.
-
     # Shorten file paths:
     for i, (file, line, function, text) in enumerate(extracted_tb):
         extracted_tb[i] = human_path(src(file), cwd), line, function, text

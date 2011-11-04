@@ -75,9 +75,8 @@ def index_of_test_frame(extracted_tb, exception_type, exception_value, test):
     """
     # SyntaxErrors don't make it into the extracted traceback. Catch them
     # separately:
-    if (exception_type is SyntaxError and
-        exception_value.filename != '<string>'):  # Tolerate eval() and input()
-        return exception_value.filename, exception_value.lineno, None, None  # XXX
+    if exception_type is SyntaxError:
+        return None
 
     try:
         address = test_address(test)
