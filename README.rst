@@ -215,6 +215,9 @@ Version History
 
 1.1.1
   * Fix a bug that would cause the formatter to crash on many SyntaxErrors.
+    This also improves the heuristics for identifying the test frame when
+    there's a SyntaxError: we can now find it as long as the error happens at a
+    frame below that of the test.
 
 1.1
   * You can now set the editor nose-progressive uses separately from the

@@ -73,11 +73,6 @@ def index_of_test_frame(extracted_tb, exception_type, exception_value, test):
             extract_tb()
 
     """
-    # SyntaxErrors don't make it into the extracted traceback. Catch them
-    # separately:
-    if exception_type is SyntaxError:
-        return None
-
     try:
         address = test_address(test)
     except TypeError:
@@ -108,6 +103,9 @@ def index_of_test_frame(extracted_tb, exception_type, exception_value, test):
         for i, frame in enumerate(extracted_tb):
             file, line, function, text = frame
             if file is not None and test_file_path == realpath(file):
+                # TODO: Now that we're eliding until the test frame, is it
+                # desirable to have this confidence-2 guess when just the file
+                # path is matched?
                 knower.know(i, 2)
                 if (hasattr(test_call, 'rsplit') and  # test_call can be None
                     function == test_call.rsplit('.')[-1]):
