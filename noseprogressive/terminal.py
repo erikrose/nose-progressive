@@ -2,8 +2,7 @@ from fcntl import ioctl
 from collections import defaultdict
 import curses
 from curses import tigetstr, setupterm, tparm
-import os
-from os import isatty
+from os import isatty, environ
 import struct
 import sys
 from termios import TIOCGWINSZ
@@ -39,7 +38,7 @@ class Terminal(object):
         if hasattr(stream, 'fileno') and isatty(stream.fileno()):
             # Make things like tigetstr() work:
             # (Explicit args make setupterm() work even when -s is passed.)
-            setupterm(kind or os.environ.get('TERM', 'unknown'),
+            setupterm(kind or environ.get('TERM', 'unknown'),
                       stream.fileno())
             # Cache capability codes, because IIRC tigetstr requires a
             # conversation with the terminal. [Now I can't find any evidence of
@@ -56,14 +55,19 @@ class Terminal(object):
         self.stream = stream
 
     # Sugary names for commonly-used capabilities, intended to help avoid trips
-    # to the terminfo man page:
+    # to the terminfo man page and comments in your code:
     _sugar = dict(save='sc',
                   restore='rc',
-                  normal='sgr0',
+
                   clear_eol='el',
                   position='cup',
+
                   color='setaf',
                   bg_color='setab',
+
+                  normal='sgr0',
+                  reverse='rev',
+                  # 'bold' is just 'bold'.
                   underline='smul',
                   no_underline='rmul')
 
@@ -112,8 +116,8 @@ def height_and_width():
 class Position(object):
     """Context manager for temporarily moving the cursor
 
-    I move the cursor to a certain position on entry and return it to where it
-    was on exit. Use it like this::
+    I move the cursor to a certain position on entry, let you print stuff
+    there, then return the cursor to its original position::
 
         with Position(2, 5):
             print 'Hello, world!'
