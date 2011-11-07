@@ -50,7 +50,8 @@ def set_trace(*args, **kwargs):
     """
     # There's no stream attr if capture plugin is enabled:
     out = sys.stdout.stream if hasattr(sys.stdout, 'stream') else None
-    debugger = pdb.Pdb(*args, stdout=out, **kwargs)
+    kwargs['stdout'] = sys.stdout
+    debugger = pdb.Pdb(*args, **kwargs)
 
     # Ordinarily (and in a silly fashion), pdb refuses to use raw_input() if
     # you pass it a stream on instantiation. Fix that:
