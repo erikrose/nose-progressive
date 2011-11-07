@@ -1,6 +1,6 @@
+from blessings import Terminal
 from nose.result import TextTestResult
 from nose.util import isclass
-from terminator import Terminal
 
 from noseprogressive.bar import ProgressBar
 from noseprogressive.tracebacks import format_traceback, extract_relevant_tb
