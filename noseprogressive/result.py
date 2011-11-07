@@ -1,8 +1,8 @@
 from nose.result import TextTestResult
 from nose.util import isclass
+from terminator import Terminal
 
 from noseprogressive.bar import ProgressBar
-from noseprogressive.terminal import Terminal
 from noseprogressive.tracebacks import format_traceback, extract_relevant_tb
 from noseprogressive.utils import nose_selector, index_of_test_frame
 

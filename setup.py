@@ -9,14 +9,14 @@ if sys.version_info >= (3,):
 
 setup(
     name='nose-progressive',
-    version='1.1.1',
+    version='1.2',
     description='Nose plugin to show progress bar and tracebacks during tests',
     long_description=open('README.rst').read(),
     author='Erik Rose',
     author_email='erikrose@grinchcentral.com',
     license='GPL',
     packages=find_packages(exclude=['ez_setup']),
-    install_requires=['Nose'],
+    install_requires=['Nose', 'terminator'],
     url='',
     include_package_data=True,
     entry_points="""
