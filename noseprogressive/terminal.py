@@ -1,5 +1,6 @@
 from fcntl import ioctl
 from collections import defaultdict
+import curses
 from curses import tigetstr, setupterm, tparm
 import os
 from os import isatty
@@ -8,7 +9,7 @@ import sys
 from termios import TIOCGWINSZ
 
 
-__all__ = ['Terminal']
+__all__ = ['Terminal', 'Position', 'height_and_width']
 
 
 class Terminal(object):
@@ -41,10 +42,18 @@ class Terminal(object):
             setupterm(kind or os.environ.get('TERM', 'unknown'),
                       stream.fileno())
             # Cache capability codes, because IIRC tigetstr requires a
-            # conversation with the terminal.
+            # conversation with the terminal. [Now I can't find any evidence of
+            # that.]
             self._codes = {}
         else:
             self._codes = NullDict(lambda: '')
+
+        # Though it's not used internally, it's convenient to pass the stream
+        # around with the terminal; it's almost always needed when the terminal
+        # is and saves sticking lots of extra args on things in practice. For
+        # example, we need only pass a Terminal to Position, where otherwise
+        # we'd need a stream also.
+        self.stream = stream
 
     # Sugary names for commonly-used capabilities, intended to help avoid trips
     # to the terminfo man page:
@@ -79,10 +88,14 @@ class Terminal(object):
 class CallableString(str):
     """A string which can be called to parametrize it as a terminal capability"""
     def __call__(self, *args):
-        # TODO: This complains "must call (at least) setupterm() first" when
-        # running simply `nosetests` (without progressive) on nose-progressive.
-        # Perhaps the terminal has gone away, and it doesn't like it.
-        return tparm(self, *args)
+        try:
+            return tparm(self, *args)
+        except curses.error:
+            # Catch "must call (at least) setupterm() first" errors, as when
+            # running simply `nosetests` (without progressive) on nose-
+            # progressive. Perhaps the terminal has gone away between calling
+            # tigetstr and calling tparm.
+            return ''
 
 
 class NullDict(defaultdict):
@@ -94,3 +107,28 @@ class NullDict(defaultdict):
 def height_and_width():
     """Return a tuple of (terminal height, terminal width)."""
     return struct.unpack('hhhh', ioctl(0, TIOCGWINSZ, '\000' * 8))[0:2]
+
+
+class Position(object):
+    """Context manager for temporarily moving the cursor
+
+    I move the cursor to a certain position on entry and return it to where it
+    was on exit. Use it like this::
+
+        with Position(2, 5):
+            print 'Hello, world!'
+            for x in xrange(10):
+                print 'I can do it %i times!' % x
+
+    """
+    def __init__(self, x, y, term=None):
+        self.x, self.y = x, y
+        self.term = term or Terminal()
+
+    def __enter__(self):
+        """Save position and move to progress bar, col 1."""
+        self.term.stream.write(self.term.save)  # save position
+        self.term.stream.write(self.term.position(self.y, self.x))
+
+    def __exit__(self, type, value, tb):
+        self.term.stream.write(self.term.restore)  # restore position

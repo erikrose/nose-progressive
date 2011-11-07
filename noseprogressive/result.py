@@ -21,7 +21,7 @@ class ProgressiveResult(TextTestResult):
         self._term = Terminal(stream=stream)
 
         # 1 in case test counting failed and returned 0
-        self.bar = ProgressBar(stream, totalTests or 1, self._term)
+        self.bar = ProgressBar(totalTests or 1, self._term)
 
         # Declare errorclass-savviness so the errorclass plugin doesn't
         # monkeypatch half my methods away:

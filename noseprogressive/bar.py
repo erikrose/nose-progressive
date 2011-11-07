@@ -1,7 +1,7 @@
 from itertools import cycle
 from signal import signal, SIGWINCH
 
-from noseprogressive.terminal import height_and_width
+from noseprogressive.terminal import height_and_width, Position
 from noseprogressive.utils import nose_selector
 
 
@@ -9,9 +9,9 @@ class ProgressBar(object):
     SPINNER_CHARS = r'/-\|'
     _is_dodging = 0  # Like a semaphore
 
-    def __init__(self, stream, max, term):
+    def __init__(self, max, term):
         """max is the highest value I will attain. Must be >0."""
-        self.stream = stream
+        self.stream = term.stream
         self.max = max
         self._term = term
         self.last = ''  # The contents of the previous progress line printed
@@ -70,7 +70,7 @@ class ProgressBar(object):
 
     def _at_last_line(self):
         """Return a context manager that positions the cursor at the last line, lets you write things, and then returns it to its previous position."""
-        return AtLine(self.stream, self.lines, self._term)
+        return Position(self.lines, 0, self._term)
 
     def dodging(bar):
         """Return a context manager which erases the bar, lets you output things, and then redraws the bar.
@@ -102,20 +102,3 @@ class ProgressBar(object):
                 bar._is_dodging -= 1
 
         return ShyProgressBar()
-
-
-class AtLine(object):
-    """Context manager which moves the cursor to a certain line on entry and goes back to where it was on exit"""
-
-    def __init__(self, stream, line, term):
-        self.stream = stream
-        self.line = line
-        self._term = term
-
-    def __enter__(self):
-        """Save position and move to progress bar, col 1."""
-        self.stream.write(self._term.save)  # save position
-        self.stream.write(self._term.position(self.line, 0))
-
-    def __exit__(self, type, value, tb):
-        self.stream.write(self._term.restore)  # restore position
