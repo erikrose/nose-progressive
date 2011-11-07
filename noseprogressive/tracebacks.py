@@ -50,9 +50,10 @@ def format_traceback(extracted_tb,
         extracted_tb[i] = human_path(src(file), cwd), line, function, text
 
     line_width = len(str(max(the_line for _, the_line, _, _ in extracted_tb)))
-    template = ('  %(fade)s%(editor)s +%(line)-{line_width}s '
-                '%(file)s%(plain)s'
-                '%(funcemph)s%(function)s%(plain)s\n').format(line_width=line_width)
+    template = ('  %%(fade)s%%(editor)s +%%(line)d-{line_width}s '
+                '%%(file)s%%(plain)s'
+                '%%(funcemph)s%%(function)s%%(plain)s\n' % {'line_width':
+                                                            line_width})
 
     # Stack frames:
     for i, (file, line, function, text) in enumerate(extracted_tb):

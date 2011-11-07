@@ -1,3 +1,4 @@
+from __future__ import with_statement
 from nose.result import TextTestResult
 from nose.util import isclass
 from terminator import Terminal
