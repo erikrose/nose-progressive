@@ -1,14 +1,14 @@
-from fcntl import ioctl
 from collections import defaultdict
 import curses
 from curses import tigetstr, setupterm, tparm
+from fcntl import ioctl
 from os import isatty, environ
 import struct
 import sys
 from termios import TIOCGWINSZ
 
 
-__all__ = ['Terminal', 'Position', 'height_and_width']
+__all__ = ['Terminal']
 
 
 class Terminal(object):
@@ -47,11 +47,9 @@ class Terminal(object):
         else:
             self._codes = NullDict(lambda: '')
 
-        # Though it's not used internally, it's convenient to pass the stream
-        # around with the terminal; it's almost always needed when the terminal
-        # is and saves sticking lots of extra args on things in practice. For
-        # example, we need only pass a Terminal to Position, where otherwise
-        # we'd need a stream also.
+        # It's convenient to pass the stream around with the terminal; it's
+        # almost always needed when the terminal is and saves sticking lots of
+        # extra args on things in practice.
         self.stream = stream
 
     # Sugary names for commonly-used capabilities, intended to help avoid trips
@@ -62,7 +60,9 @@ class Terminal(object):
                   clear_eol='el',
                   position='cup',
 
+                  # TODO: Make this perhaps try setf first then fall back to setaf:
                   color='setaf',
+                  # TODO: Perhaps see if setb is true, then fall back to setab.
                   bg_color='setab',
 
                   normal='sgr0',
@@ -88,6 +88,29 @@ class Terminal(object):
             self._codes[attr] = tigetstr(self._sugar.get(attr, attr)) or ''
         return CallableString(self._codes[attr])
 
+    @property
+    def height(self):
+        return height_and_width()[0]
+
+    @property
+    def width(self):
+        return height_and_width()[1]
+
+    def location(self, x, y):
+        """Return a context manager for temporarily moving the cursor
+
+        Move the cursor to a certain position on entry, let you print stuff
+        there, then return the cursor to its original position::
+
+            term = Terminal()
+            with term.position(2, 5):
+                print 'Hello, world!'
+                for x in xrange(10):
+                    print 'I can do it %i times!' % x
+
+        """
+        return Location(x, y, self)
+
 
 class CallableString(str):
     """A string which can be called to parametrize it as a terminal capability"""
@@ -110,24 +133,16 @@ class NullDict(defaultdict):
 
 def height_and_width():
     """Return a tuple of (terminal height, terminal width)."""
+    # tigetnum('lines') and tigetnum('cols') apparently don't update while
+    # nose-progressive's progress bar is running.
     return struct.unpack('hhhh', ioctl(0, TIOCGWINSZ, '\000' * 8))[0:2]
 
 
-class Position(object):
-    """Context manager for temporarily moving the cursor
-
-    I move the cursor to a certain position on entry, let you print stuff
-    there, then return the cursor to its original position::
-
-        with Position(2, 5):
-            print 'Hello, world!'
-            for x in xrange(10):
-                print 'I can do it %i times!' % x
-
-    """
-    def __init__(self, x, y, term=None):
+class Location(object):
+    """Context manager for temporarily moving the cursor"""
+    def __init__(self, x, y, term):
         self.x, self.y = x, y
-        self.term = term or Terminal()
+        self.term = term
 
     def __enter__(self):
         """Save position and move to progress bar, col 1."""

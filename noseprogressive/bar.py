@@ -1,7 +1,6 @@
 from itertools import cycle
 from signal import signal, SIGWINCH
 
-from noseprogressive.terminal import height_and_width, Position
 from noseprogressive.utils import nose_selector
 
 
@@ -20,7 +19,7 @@ class ProgressBar(object):
         signal(SIGWINCH, self._handle_winch)
 
     def _measure_terminal(self):
-        self.lines, self.cols = height_and_width()
+        self.lines, self.cols = self._term.height, self._term.width
 
     def _handle_winch(self, *args):
         #self.erase()  # Doesn't seem to help.
@@ -70,7 +69,7 @@ class ProgressBar(object):
 
     def _at_last_line(self):
         """Return a context manager that positions the cursor at the last line, lets you write things, and then returns it to its previous position."""
-        return Position(self.lines, 0, self._term)
+        return self._term.location(0, self.lines)
 
     def dodging(bar):
         """Return a context manager which erases the bar, lets you output things, and then redraws the bar.

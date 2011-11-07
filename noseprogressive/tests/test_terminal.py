@@ -35,9 +35,9 @@ def test_parametrization():
 
 def height_and_width():
     """Assert that ``height_and_width()`` returns ints."""
-    h, w = height_and_width()
-    assert isinstance(int, h)
-    assert isinstance(int, w)
+    t = Terminal()
+    assert isinstance(int, t.height)
+    assert isinstance(int, t.width)
 
 
 def test_stream_attr():
@@ -45,15 +45,15 @@ def test_stream_attr():
     eq_(Terminal().stream, sys.__stdout__)
 
 
-def test_position():
-    """Make sure ``Position`` does what it claims."""
+def test_location():
+    """Make sure ``location()`` does what it claims."""
     # Let the Terminal grab the actual tty and call setupterm() so things work:
     t = Terminal()
 
     # Then rip it away, replacing it with something we can check later:
     output = t.stream = StringIO()
     
-    with Position(3, 4, term=t):
+    with t.location(3, 4):
         output.write('hi')
 
     eq_(output.getvalue(), tigetstr('sc') +
