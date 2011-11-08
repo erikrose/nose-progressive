@@ -1,5 +1,6 @@
 """Facilities for wrapping stderr and stdout and dealing with the fallout"""
 
+from __future__ import with_statement
 import __builtin__
 import cmd
 import pdb
@@ -49,7 +50,11 @@ def set_trace(*args, **kwargs):
     """
     # There's no stream attr if capture plugin is enabled:
     out = sys.stdout.stream if hasattr(sys.stdout, 'stream') else None
-    debugger = pdb.Pdb(*args, stdout=out, **kwargs)
+
+    # Python 2.5 can't put an explicit kwarg and **kwargs in the same function
+    # call.
+    kwargs['stdout'] = sys.stdout
+    debugger = pdb.Pdb(*args, **kwargs)
 
     # Ordinarily (and in a silly fashion), pdb refuses to use raw_input() if
     # you pass it a stream on instantiation. Fix that:

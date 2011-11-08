@@ -1,3 +1,4 @@
+from __future__ import with_statement
 from itertools import cycle
 from signal import signal, SIGWINCH
 
