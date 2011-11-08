@@ -16,7 +16,7 @@ setup(
     author_email='erikrose@grinchcentral.com',
     license='GPL',
     packages=find_packages(exclude=['ez_setup']),
-    install_requires=['Nose', 'blessings'],
+    install_requires=['Nose>=0.11.0', 'blessings'],
     url='',
     include_package_data=True,
     entry_points="""
