@@ -53,7 +53,7 @@ def set_trace(*args, **kwargs):
 
     # Python 2.5 can't put an explicit kwarg and **kwargs in the same function
     # call.
-    kwargs['stdout'] = sys.stdout
+    kwargs['stdout'] = out
     debugger = pdb.Pdb(*args, **kwargs)
 
     # Ordinarily (and in a silly fashion), pdb refuses to use raw_input() if
