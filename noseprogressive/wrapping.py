@@ -50,6 +50,9 @@ def set_trace(*args, **kwargs):
     """
     # There's no stream attr if capture plugin is enabled:
     out = sys.stdout.stream if hasattr(sys.stdout, 'stream') else None
+
+    # Python 2.5 can't put an explicit kwarg and **kwargs in the same function
+    # call.
     kwargs['stdout'] = sys.stdout
     debugger = pdb.Pdb(*args, **kwargs)
 
