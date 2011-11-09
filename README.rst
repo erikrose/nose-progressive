@@ -215,8 +215,9 @@ Version History
 
 1.1.2
   * Fix Python 2.5 support. (Thanks, David Warde-Farley!)
-  * Require nose 0.11.0 or greater. Before that, test counting didn't work.
-    (Thanks again, David Warde-Farley!)
+  * Require nose 0.11.0 or greater. Before that, test counting didn't work
+    sometimes when test generators were involved. (Thanks again, David
+    Warde-Farley!)
 
 1.1.1
   * Fix a bug that would cause the formatter to crash on many SyntaxErrors.
