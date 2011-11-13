@@ -186,9 +186,7 @@ Caveats and Known Bugs
 * Some logging handlers will smear bits of the progress bar upward if they
   don't print complete lines. I hope to fix this with some monkeypatching, but
   in the meantime, passing ``--logging-clear-handlers`` works around this.
-* I haven't tried this in anything but Python 2.6. Bug reports are welcome. I
-  don't plan to support Python versions earlier than 2.5 unless there's
-  overwhelming demand, but I would like to support later ones.
+* Requires Python 2.5 or greater and doesn't support Python 3 yet.
 
 Having trouble? Pop over to the `issue tracker`_.
 
@@ -213,11 +211,15 @@ Erik Rose, while waiting for tests to complete ;-)
 Version History
 ===============
 
-1.1.2
-  * Fix Python 2.5 support. (Thanks, David Warde-Farley!)
+1.2
+  * Fix Python 2.5 support. (David Warde-Farley)
+  * Fix display of skipped tests in Python 2.7.
   * Require nose 0.11.0 or greater. Before that, test counting didn't work
-    sometimes when test generators were involved. (Thanks again, David
-    Warde-Farley!)
+    sometimes when test generators were involved. (David Warde-Farley)
+  * Factor out the terminal formatting library into `its own package`_.
+  * Start using tox for testing under multiple versions of Python.
+
+.. _`its own package`: http://pypi.python.org/pypi/blessings/
 
 1.1.1
   * Fix a bug that would cause the formatter to crash on many SyntaxErrors.

@@ -1,6 +1,7 @@
 from __future__ import with_statement
 
 from blessings import Terminal
+from nose.plugins.skip import SkipTest
 from nose.result import TextTestResult
 from nose.util import isclass
 
@@ -17,16 +18,16 @@ class ProgressiveResult(TextTestResult):
     stderr/out wrapping.
 
     """
-    def __init__(self, cwd, totalTests, stream, config=None):
+    def __init__(self, cwd, total_tests, stream, config=None):
         super(ProgressiveResult, self).__init__(stream, None, 0, config=config)
         self._cwd = cwd
         self._term = Terminal(stream=stream)
 
         # 1 in case test counting failed and returned 0
-        self.bar = ProgressBar(totalTests or 1, self._term)
+        self.bar = ProgressBar(total_tests or 1, self._term)
 
-        # Declare errorclass-savviness so the errorclass plugin doesn't
-        # monkeypatch half my methods away:
+        # Declare errorclass-savviness so ErrorClassPlugins don't monkeypatch
+        # half my methods away:
         self.errorClasses = {}
 
         self._options = config.options
@@ -36,97 +37,132 @@ class ProgressiveResult(TextTestResult):
         super(ProgressiveResult, self).startTest(test)
         self.bar.update(test, self.testsRun)
 
-    def _printError(self, kind, err, test, isFailure=True):
-        """Output a human-readable error report to the stream.
+    def _printTraceback(self, test, err):
+        """Print a nicely formatted traceback.
 
-        kind -- the (string) type of incident the precipitated this call
-        err -- exc_info()-style traceback triple
-        test -- the test that precipitated this call
+        :arg err: exc_info()-style traceback triple
+        :arg test: the test that precipitated this call
 
         """
-        if isFailure or self._options.show_advisories:
-            writeln = self.stream.writeln
-            write = self.stream.write
+        # Don't bind third item to a local var; that can create
+        # circular refs which are expensive to collect. See the
+        # sys.exc_info() docs.
+        exception_type, exception_value = err[:2]
+        extracted_tb = extract_relevant_tb(
+            err[2],
+            exception_type,
+            exception_type is test.failureException)
+        test_frame_index = index_of_test_frame(
+            extracted_tb,
+            exception_type,
+            exception_value,
+            test)
+        if test_frame_index:
+            # We have a good guess at which frame is the test, so
+            # trim everything until that. We don't care to see test
+            # framework frames.
+            extracted_tb = extracted_tb[test_frame_index:]
+
+        with self.bar.dodging():
+            self.stream.write(''.join(
+                format_traceback(
+                    extracted_tb,
+                    exception_type,
+                    exception_value,
+                    self._cwd,
+                    self._term,
+                    self._options.function_color,
+                    self._options.dim_color,
+                    self._options.editor)))
+
+    def _printHeadline(self, kind, test, is_failure=True):
+        """Output a 1-line error summary to the stream if appropriate.
+
+        The line contains the kind of error and the pathname of the test.
+
+        :arg kind: The (string) type of incident the precipitated this call
+        :arg test: The test that precipitated this call
+
+        """
+        if is_failure or self._options.show_advisories:
             with self.bar.dodging():
-                writeln('\n' +
-                        (self._term.bold if isFailure else '') +
+                self.stream.writeln(
+                        '\n' +
+                        (self._term.bold if is_failure else '') +
                         '%s: %s' % (kind, nose_selector(test)) +
-                        (self._term.normal if isFailure else ''))  # end bold
+                        (self._term.normal if is_failure else ''))  # end bold
 
-                if isFailure:  # Then show traceback
-                    # Don't bind third item to a local var; that can create
-                    # circular refs which are expensive to collect. See the
-                    # sys.exc_info() docs.
-                    exception_type, exception_value = err[:2]
-                    extracted_tb = extract_relevant_tb(
-                        err[2],
-                        exception_type,
-                        exception_type is test.failureException)
-                    test_frame_index = index_of_test_frame(
-                        extracted_tb,
-                        exception_type,
-                        exception_value,
-                        test)
-                    if test_frame_index:
-                        # We have a good guess at which frame is the test, so
-                        # trim everything until that. We don't care to see test
-                        # framework frames.
-                        extracted_tb = extracted_tb[test_frame_index:]
+    def _recordAndPrintHeadline(self, test, error_class, artifact):
+        """Record that an error-like thing occurred, and print a summary.
 
-                    write(''.join(
-                        format_traceback(
-                            extracted_tb,
-                            exception_type,
-                            exception_value,
-                            self._cwd,
-                            self._term,
-                            self._options.function_color,
-                            self._options.dim_color,
-                            self._options.editor)))
+        Store ``artifact`` with the record.
+
+        Return whether the test result is any sort of failure.
+
+        """
+        # We duplicate the errorclass handling from super rather than calling
+        # it and monkeying around with showAll flags to keep it from printing
+        # anything.
+        is_error_class = False
+        for cls, (storage, label, is_failure) in self.errorClasses.iteritems():
+            if isclass(error_class) and issubclass(error_class, cls):
+                if is_failure:
+                    test.passed = False
+                storage.append((test, artifact))
+                is_error_class = True
+        if not is_error_class:
+            self.errors.append((test, artifact))
+            test.passed = False
+
+        is_any_failure = not is_error_class or is_failure
+        self._printHeadline(label if is_error_class else 'ERROR',
+                            test,
+                            is_failure=is_any_failure)
+        return is_any_failure
+
+    def addSkip(self, test, reason):
+        """Catch skipped tests in Python 2.7 and above.
+
+        Though ``addSkip()`` is deprecated in the nose plugin API, it is very
+        much not deprecated as a Python 2.7 ``TestResult`` method. In Python
+        2.7, this will get called instead of ``addError()`` for skips.
+
+        :arg reason: Text describing why the test was skipped
+
+        """
+        self._recordAndPrintHeadline(test, SkipTest, reason)
+        # Python 2.7 users get a little bonus: the reason the test was skipped.
+        if reason and self._options.show_advisories:
+            with self.bar.dodging():
+                self.stream.writeln(reason)
 
     def addError(self, test, err):
-        exc, val, tb = err
         # We don't read this, but some other plugin might conceivably expect it
         # to be there:
         excInfo = self._exc_info_to_string(err, test)
-
-        # We duplicate the errorclass handling from super rather than calling
-        # it and monkeying around with flags to keep it from printing anything.
-        isErrorClass = False
-        for cls, (storage, label, isFailure) in self.errorClasses.iteritems():
-            if isclass(exc) and issubclass(exc, cls):
-                if isFailure:
-                    test.passed = False
-                storage.append((test, excInfo))
-                isErrorClass = True
-        if not isErrorClass:
-            self.errors.append((test, excInfo))
-            test.passed = False
-
-        self._printError(label if isErrorClass else 'ERROR',
-                         err,
-                         test,
-                         isFailure=not isErrorClass or isFailure)
+        is_failure = self._recordAndPrintHeadline(test, err[0], excInfo)
+        if is_failure:
+            self._printTraceback(test, err)
 
     def addFailure(self, test, err):
         super(ProgressiveResult, self).addFailure(test, err)
-        self._printError('FAIL', err, test)
+        self._printHeadline('FAIL', test)
+        self._printTraceback(test, err)
 
     def printSummary(self, start, stop):
         """As a final summary, print number of tests, broken down by result."""
-        def renderResultType(type, number, isFailure):
+        def renderResultType(type, number, is_failure):
             """Return a rendering like '2 failures'.
 
-            Args:
-                type: A singular label, like "failure"
-                number: The number of tests with a result of that type
-                isFailure: Whether that type counts as a failure.
+            :arg type: A singular label, like "failure"
+            :arg number: The number of tests with a result of that type
+            :arg is_failure: Whether that type counts as a failure
 
             """
             # I'd rather hope for the best with plurals than totally punt on
             # being Englishlike:
             ret = '%s %s%s' % (number, type, 's' if number != 1 else '')
-            if isFailure and number:
+            if is_failure and number:
                 ret = self._term.bold + ret + self._term.normal
             return ret
 
@@ -139,8 +175,8 @@ class ProgressiveResult(TextTestResult):
         # are hard-to-read camelCaseWordBreaks.
         counts.extend([(label.lower() if label.isupper() else label,
                         len(storage),
-                        isFailure)
-                        for (storage, label, isFailure) in
+                        is_failure)
+                        for (storage, label, is_failure) in
                             self.errorClasses.itervalues() if len(storage)])
         summary = (', '.join(renderResultType(*a) for a in counts) +
                    ' in %.1fs' % (stop - start))

@@ -19,7 +19,6 @@ class IntegrationTestCase(PluginTester, TestCase):
 
 class HookTests(IntegrationTestCase):
     """Tests that ensure our code is getting run when expected"""
-
     def makeSuite(self):
         class Failure(TestCase):
             def runTest(self):
@@ -80,9 +79,22 @@ class AdvisoryShowingTests(IntegrationTestCase):
         assert '1 test, 0 failures, 0 errors, 1 skip in ' in self.output
 
 
+class SkipHidingTests(IntegrationTestCase):
+    """Tests for the eliding of skips by default"""
+    def makeSuite(self):
+        class Skip(TestCase):
+            def runTest(self):
+                raise SkipTest
+
+        return TestSuite([Skip()])
+
+    def test_skip_invisible(self):
+        """Make sure skipped tests don't show up in the output."""
+        self._count_eq('SkipTest', 0)
+
+
 class UnitTestFrameSkippingTests(IntegrationTestCase):
     """Tests for the skipping of (uninteresting) unittest frames"""
-
     def makeSuite(self):
         class Failure(TestCase):
             def runTest(self):
