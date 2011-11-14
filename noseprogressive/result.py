@@ -5,7 +5,7 @@ from nose.plugins.skip import SkipTest
 from nose.result import TextTestResult
 from nose.util import isclass
 
-from noseprogressive.bar import ProgressBar
+from noseprogressive.bar import ProgressBar, NullProgressBar
 from noseprogressive.tracebacks import format_traceback, extract_relevant_tb
 from noseprogressive.utils import nose_selector, index_of_test_frame
 
@@ -21,17 +21,19 @@ class ProgressiveResult(TextTestResult):
     def __init__(self, cwd, total_tests, stream, config=None):
         super(ProgressiveResult, self).__init__(stream, None, 0, config=config)
         self._cwd = cwd
+        self._options = config.options
         self._term = Terminal(stream=stream,
                               force_styling=config.options.with_styling)
 
-        # 1 in case test counting failed and returned 0
-        self.bar = ProgressBar(total_tests or 1, self._term)
+        if self._term.is_a_tty or self._options.with_bar:
+            # 1 in case test counting failed and returned 0
+            self.bar = ProgressBar(total_tests or 1, self._term)
+        else:
+            self.bar = NullProgressBar()
 
         # Declare errorclass-savviness so ErrorClassPlugins don't monkeypatch
         # half my methods away:
         self.errorClasses = {}
-
-        self._options = config.options
 
     def startTest(self, test):
         """Update the progress bar."""

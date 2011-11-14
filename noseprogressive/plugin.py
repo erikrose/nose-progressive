@@ -108,6 +108,27 @@ class ProgressivePlugin(Plugin):
                                'to a non-terminal. Specifying '
                                '--progressive-with-styling forces such '
                                'styling to be output regardless.')
+        parser.add_option('--progressive-with-bar',
+                          action='store_true',
+                          dest='with_bar',
+                          default=env.get('NOSE_PROGRESSIVE_WITH_BAR', False),
+                          help='nose-progressive automatically omits the '
+                               'progress bar when its output is directed to a '
+                               'non-terminal. Specifying '
+                               '--progressive-with-bar forces the bar to be '
+                               'output regardless. This option implies '
+                               '--progressive-with-styling.')
+
+    def configure(self, options, conf):
+        """Turn style-forcing on if bar-forcing is on.
+
+        It'd be messy to position the bar but still have the rest of the
+        terminal capabilities emit ''.
+
+        """
+        super(ProgressivePlugin, self).configure(options, conf)
+        if options.with_bar:
+            options.with_styling = True
 
     def prepareTestLoader(self, loader):
         """Insert ourselves into loader calls to count tests.

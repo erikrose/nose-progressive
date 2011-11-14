@@ -5,6 +5,9 @@ from signal import signal, SIGWINCH
 from noseprogressive.utils import nose_selector
 
 
+__all__ = ['ProgressBar', 'NullProgressBar']
+
+
 class ProgressBar(object):
     SPINNER_CHARS = r'/-\|'
     _is_dodging = 0  # Like a semaphore
@@ -102,3 +105,19 @@ class ProgressBar(object):
                 bar._is_dodging -= 1
 
         return ShyProgressBar()
+
+
+class Null(object):
+    def __getattr__(self, attr):
+        """Return a boring callable for any attribute accessed."""
+        return lambda *args, **kwargs: None
+
+
+class NullProgressBar(Null):
+    """``ProgressBar`` workalike that does nothing
+
+    Comes in handy when you want to have an option to hide the progress bar.
+
+    """
+    def dodging(self):
+        return Null()  # So Python can call __enter__ and __exit__ on it

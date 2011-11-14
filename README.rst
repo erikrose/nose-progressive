@@ -183,6 +183,11 @@ Options
   nose-progressive automatically omits bold and color formatting when its
   output is directed to a non- terminal. Specifying
   ``--progressive-with-styling`` forces such styling to be output regardless.
+``--progressive-with-bar``
+  nose-progressive automatically omits the progress bar when its output is
+  directed to a non-terminal. Specifying ``--progressive-with-bar`` forces the
+  bar to be output regardless. This option implies
+  ``--progressive-with-styling``.
 
 Caveats and Known Bugs
 ======================
@@ -220,6 +225,9 @@ Version History
   * Fix display of skipped tests in Python 2.7.
   * Require nose 0.11.0 or greater. Before that, test counting didn't work
     sometimes when test generators were involved. (David Warde-Farley)
+  * Hide the progress bar by default when not outputting to a terminal. This
+    lets you redirect nose-progressive's output to a file or another process
+    and get a nice list of tracebacks.
   * Add an option for forcing the display of terminal formatting, even when
     redirecting the output to a non-terminal.
   * Factor out the terminal formatting library into `its own package`_.
