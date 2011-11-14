@@ -21,7 +21,8 @@ class ProgressiveResult(TextTestResult):
     def __init__(self, cwd, total_tests, stream, config=None):
         super(ProgressiveResult, self).__init__(stream, None, 0, config=config)
         self._cwd = cwd
-        self._term = Terminal(stream=stream)
+        self._term = Terminal(stream=stream,
+                              force_styling=config.options.with_styling)
 
         # 1 in case test counting failed and returned 0
         self.bar = ProgressBar(total_tests or 1, self._term)

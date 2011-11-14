@@ -179,6 +179,10 @@ Options
   Color of de-emphasized text (like editor shortcuts) in tracebacks. An ANSI
   color expressed as a number 0-15. Equivalent environment variable:
   ``NOSE_PROGRESSIVE_DIM_COLOR``.
+``--progressive-with-styling``
+  nose-progressive automatically omits bold and color formatting when its
+  output is directed to a non- terminal. Specifying
+  ``--progressive-with-styling`` forces such styling to be output regardless.
 
 Caveats and Known Bugs
 ======================
@@ -216,6 +220,8 @@ Version History
   * Fix display of skipped tests in Python 2.7.
   * Require nose 0.11.0 or greater. Before that, test counting didn't work
     sometimes when test generators were involved. (David Warde-Farley)
+  * Add an option for forcing the display of terminal formatting, even when
+    redirecting the output to a non-terminal.
   * Factor out the terminal formatting library into `its own package`_.
   * Start using tox for testing under multiple versions of Python.
 

@@ -99,6 +99,15 @@ class ProgressivePlugin(Plugin):
                           help='The editor to use for the shortcuts in '
                                'tracebacks. Defaults to the value of $EDITOR '
                                'and then "vi". [NOSE_PROGRESSIVE_EDITOR]')
+        parser.add_option('--progressive-with-styling',
+                          action='store_true',
+                          dest='with_styling',
+                          default=env.get('NOSE_PROGRESSIVE_WITH_STYLING', False),
+                          help='nose-progressive automatically omits bold and '
+                               'color formatting when its output is directed '
+                               'to a non-terminal. Specifying '
+                               '--progressive-with-styling forces such '
+                               'styling to be output regardless.')
 
     def prepareTestLoader(self, loader):
         """Insert ourselves into loader calls to count tests.
