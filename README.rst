@@ -183,11 +183,13 @@ Options
   nose-progressive automatically omits bold and color formatting when its
   output is directed to a non- terminal. Specifying
   ``--progressive-with-styling`` forces such styling to be output regardless.
+  Equivalent environment variable: ``NOSE_PROGRESSIVE_WITH_STYLING``.
 ``--progressive-with-bar``
   nose-progressive automatically omits the progress bar when its output is
   directed to a non-terminal. Specifying ``--progressive-with-bar`` forces the
   bar to be output regardless. This option implies
-  ``--progressive-with-styling``.
+  ``--progressive-with-styling``. Equivalent environment variable:
+  ``NOSE_PROGRESSIVE_WITH_BAR``.
 
 Caveats and Known Bugs
 ======================
