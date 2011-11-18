@@ -22,8 +22,7 @@ def format_traceback(extracted_tb,
     Also include a pseudo-frame at the end representing the exception itself.
 
     Format things more compactly than the stock formatter, and make every
-    frame an editor shortcut. Emphasize the line representing the stack frame
-    of the test, if you pass in the index of that frameHoly.
+    frame an editor shortcut.
 
     """
     def format_shortcut(editor,
@@ -61,7 +60,7 @@ def format_traceback(extracted_tb,
 
     # Exception:
     if exc_type is SyntaxError:
-        # Format a syntaxError to look like our other traceback lines.
+        # Format a SyntaxError to look like our other traceback lines.
         # SyntaxErrors have a format different from other errors and include a
         # file path which looks out of place in our newly highlit, editor-
         # shortcutted world.
