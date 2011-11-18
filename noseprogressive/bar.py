@@ -108,9 +108,14 @@ class ProgressBar(object):
 
 
 class Null(object):
-    def __getattr__(self, attr):
+    def __getattr__(self, *args, **kwargs):
         """Return a boring callable for any attribute accessed."""
         return lambda *args, **kwargs: None
+
+    # Beginning in Python 2.7, __enter__ and __exit__ aren't looked up through
+    # __getattr__ or __getattribute__:
+    # http://docs.python.org/reference/datamodel#specialnames
+    __enter__ = __exit__ = __getattr__
 
 
 class NullProgressBar(Null):
