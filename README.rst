@@ -61,7 +61,7 @@ Some of the formatting improvements:
   Also, like unittest itself, we hide any frames that descend into trivial
   comparison helpers like ``assertEquals()`` or ``assertRaises()``.
 
-  (Aside: We're actually better at it than unittest. We don't just start hiding
+  (We're actually better at it than unittest. We don't just start hiding
   frames at the first unittest one after the test; we snip off only the last
   contiguous run of unittest frames. This lets you wrap your test in the
   decorators from the mock library, which masquerades as unittest, and still
