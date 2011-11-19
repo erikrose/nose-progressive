@@ -222,6 +222,10 @@ Erik Rose, while waiting for tests to complete ;-)
 Version History
 ===============
 
+1.2.1
+  * Tolerate empty tracebacks in the formatter. This avoids exacerbating
+    crashes that occur before any test frames.
+
 1.2
   * Fix Python 2.5 support. (David Warde-Farley)
   * Fix display of skipped tests in Python 2.7.

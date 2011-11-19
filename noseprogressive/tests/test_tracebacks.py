@@ -1,8 +1,5 @@
-"""Tests for traceback formatting.
+"""Tests for traceback formatting."""
 
-At the moment, we test only that it doesn't crash.
-
-"""
 from noseprogressive.tracebacks import format_traceback
 
 
@@ -44,10 +41,24 @@ attr_error_tb = ([
 
 
 def test_syntax_error():
-    """Exercise special handling of syntax errors."""
+    """Exercise special handling of syntax errors to show it doesn't crash."""
     ''.join(format_traceback(*syntax_error_tb))
 
 
 def test_non_syntax_error():
-    """Exercise typical error formatting."""
+    """Exercise typical error formatting to show it doesn't crash."""
     ''.join(format_traceback(*attr_error_tb))
+
+
+def test_empty_tracebacks():
+    """Make sure we don't crash on empty tracebacks.
+
+    Sometimes, stuff crashes before we even get to the test. pdbpp has been
+    doing this a lot to me lately. When that happens, we receive an empty
+    traceback.
+
+    """
+    list(format_traceback(
+        [],
+        AttributeError,
+        AttributeError("'NoneType' object has no attribute 'pgpImportPubkey'")))

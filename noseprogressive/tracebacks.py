@@ -44,19 +44,20 @@ def format_traceback(extracted_tb,
     if not term:
         term = Terminal()
 
-    # Shorten file paths:
-    for i, (file, line, function, text) in enumerate(extracted_tb):
-        extracted_tb[i] = human_path(src(file), cwd), line, function, text
+    if extracted_tb:
+        # Shorten file paths:
+        for i, (file, line, function, text) in enumerate(extracted_tb):
+            extracted_tb[i] = human_path(src(file), cwd), line, function, text
 
-    line_width = len(str(max(the_line for _, the_line, _, _ in extracted_tb)))
-    template = ('  %(fade)s%(editor)s +%(line)-' + str(line_width) + 's '
-                '%(file)s%(plain)s'
-                '%(funcemph)s%(function)s%(plain)s\n')
+        line_width = len(str(max(the_line for _, the_line, _, _ in extracted_tb)))
+        template = ('  %(fade)s%(editor)s +%(line)-' + str(line_width) + 's '
+                    '%(file)s%(plain)s'
+                    '%(funcemph)s%(function)s%(plain)s\n')
 
-    # Stack frames:
-    for i, (file, line, function, text) in enumerate(extracted_tb):
-        yield (format_shortcut(editor, file, line, function) +
-               ('    %s\n' % (text or '')))
+        # Stack frames:
+        for i, (file, line, function, text) in enumerate(extracted_tb):
+            yield (format_shortcut(editor, file, line, function) +
+                   ('    %s\n' % (text or '')))
 
     # Exception:
     if exc_type is SyntaxError:
