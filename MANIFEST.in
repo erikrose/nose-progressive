@@ -1,2 +1,3 @@
 include README.rst
-include in_progress.png
+include tox.ini
+exclude in_progress.png
