@@ -157,6 +157,11 @@ they fail::
 
   nosetests --with-progressive --logging-clear-handlers
 
+To `use nose-progressive by default`_, add ``with-progressive=1`` to
+``.noserc``.
+
+.. _`use nose-progressive by default`: http://readthedocs.org/docs/nose/en/latest/usage.html#basic-usage
+
 Options
 =======
 
