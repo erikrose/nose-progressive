@@ -38,7 +38,7 @@ class ProgressiveResult(TextTestResult):
     def startTest(self, test):
         """Update the progress bar."""
         super(ProgressiveResult, self).startTest(test)
-        self.bar.update(test, self.testsRun)
+        self.bar.update(nose_selector(test), self.testsRun)
 
     def _printTraceback(self, test, err):
         """Print a nicely formatted traceback.

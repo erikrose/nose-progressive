@@ -114,13 +114,13 @@ class UnitTestFrameSkippingTests(IntegrationTestCase):
 
 # def test_slowly():
 #     """Slow down so we can visually inspect the progress bar."""
+#     from time import sleep
 #     def failer(y):
 #         print "booga"
+#         sleep(0.1)
 #         if y == 1:
 #             assert False
 #     for x in range(10):
-#         from time import sleep
-#         sleep(0.1)
 #         yield failer, x
 
 
