@@ -165,6 +165,9 @@ To `use nose-progressive by default`_, add ``with-progressive=1`` to
 Options
 =======
 
+General Options
+---------------
+
 ``--progressive-editor``
   The editor to use for the shortcuts in tracebacks. Defaults to the value of
   ``$EDITOR`` and then "vi". Equivalent environment variable:
@@ -177,13 +180,6 @@ Options
 ``--progressive-advisories``
   Show even non-failure custom errors, like Skip and Deprecated, during test
   runs. Equivalent environment variable: ``NOSE_PROGRESSIVE_ADVISORIES``.
-``--progressive-function-color=<0..15>``
-  Color of function names in tracebacks. An ANSI color expressed as a number
-  0-15. Equivalent environment variable: ``NOSE_PROGRESSIVE_FUNCTION_COLOR``.
-``--progressive-dim-color=<0..15>``
-  Color of de-emphasized text (like editor shortcuts) in tracebacks. An ANSI
-  color expressed as a number 0-15. Equivalent environment variable:
-  ``NOSE_PROGRESSIVE_DIM_COLOR``.
 ``--progressive-with-styling``
   nose-progressive automatically omits bold and color formatting when its
   output is directed to a non- terminal. Specifying
@@ -195,6 +191,24 @@ Options
   bar to be output regardless. This option implies
   ``--progressive-with-styling``. Equivalent environment variable:
   ``NOSE_PROGRESSIVE_WITH_BAR``.
+
+Color Options
+-------------
+
+Each of these takes an ANSI color expressed as a number from 0 to 15.
+
+``--progressive-function-color=<0..15>``
+  Color of function names in tracebacks. Equivalent environment variable:
+  ``NOSE_PROGRESSIVE_FUNCTION_COLOR``.
+``--progressive-dim-color=<0..15>``
+  Color of de-emphasized text (like editor shortcuts) in tracebacks. Equivalent
+  environment variable: ``NOSE_PROGRESSIVE_DIM_COLOR``.
+``--progressive-bar-filled=<0..15>``
+  Color of the progress bar's filled portion. Equivalent environment variable:
+  ``NOSE_PROGRESSIVE_BAR_FILLED_COLOR``.
+``--progressive-bar-empty=<0..15>``
+  Color of the progress bar's empty portion. Equivalent environment variable:
+  ``NOSE_PROGRESSIVE_BAR_EMPTY_COLOR``.
 
 Caveats and Known Bugs
 ======================

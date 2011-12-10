@@ -27,7 +27,10 @@ class ProgressiveResult(TextTestResult):
 
         if self._term.is_a_tty or self._options.with_bar:
             # 1 in case test counting failed and returned 0
-            self.bar = ProgressBar(total_tests or 1, self._term)
+            self.bar = ProgressBar(total_tests or 1,
+                                   self._term,
+                                   config.options.bar_filled_color,
+                                   config.options.bar_empty_color)
         else:
             self.bar = NullProgressBar()
 

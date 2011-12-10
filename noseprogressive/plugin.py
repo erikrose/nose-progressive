@@ -61,35 +61,6 @@ class ProgressivePlugin(Plugin):
 
     def options(self, parser, env):
         super(ProgressivePlugin, self).options(parser, env)
-        parser.add_option('--progressive-function-color',
-                          type='int',
-                          dest='function_color',
-                          default=env.get('NOSE_PROGRESSIVE_FUNCTION_COLOR', 12),
-                          help='Color of function names in tracebacks. An '
-                               'ANSI color expressed as a number 0-15. '
-                               '[NOSE_PROGRESSIVE_FUNCTION_COLOR]')
-        parser.add_option('--progressive-dim-color',
-                          type='int',
-                          dest='dim_color',
-                          default=env.get('NOSE_PROGRESSIVE_DIM_COLOR', 8),
-                          help='Color of de-emphasized text (like editor '
-                               'shortcuts) in tracebacks. An ANSI color '
-                               'expressed as a number 0-15. '
-                               '[NOSE_PROGRESSIVE_DIM_COLOR]')
-        parser.add_option('--progressive-advisories',
-                          action='store_true',
-                          dest='show_advisories',
-                          default=env.get('NOSE_PROGRESSIVE_ADVISORIES', False),
-                          help='Show skips and deprecation exceptions in '
-                               'addition to failures and errors. '
-                               '[NOSE_PROGRESSIVE_ADVISORIES]')
-        parser.add_option('--progressive-abs',
-                          action='store_true',
-                          dest='absolute_paths',
-                          default=env.get('NOSE_PROGRESSIVE_ABSOLUTE_PATHS', False),
-                          help='Display paths in traceback as absolute, '
-                               'rather than relative to the current working '
-                               'directory. [NOSE_PROGRESSIVE_ABSOLUTE_PATHS]')
         parser.add_option('--progressive-editor',
                           type='string',
                           dest='editor',
@@ -98,6 +69,20 @@ class ProgressivePlugin(Plugin):
                           help='The editor to use for the shortcuts in '
                                'tracebacks. Defaults to the value of $EDITOR '
                                'and then "vi". [NOSE_PROGRESSIVE_EDITOR]')
+        parser.add_option('--progressive-abs',
+                          action='store_true',
+                          dest='absolute_paths',
+                          default=env.get('NOSE_PROGRESSIVE_ABSOLUTE_PATHS', False),
+                          help='Display paths in traceback as absolute, '
+                               'rather than relative to the current working '
+                               'directory. [NOSE_PROGRESSIVE_ABSOLUTE_PATHS]')
+        parser.add_option('--progressive-advisories',
+                          action='store_true',
+                          dest='show_advisories',
+                          default=env.get('NOSE_PROGRESSIVE_ADVISORIES', False),
+                          help='Show skips and deprecation exceptions in '
+                               'addition to failures and errors. '
+                               '[NOSE_PROGRESSIVE_ADVISORIES]')
         parser.add_option('--progressive-with-styling',
                           action='store_true',
                           dest='with_styling',
@@ -119,6 +104,35 @@ class ProgressivePlugin(Plugin):
                                'output regardless. This option implies '
                                '--progressive-with-styling. '
                                '[NOSE_PROGRESSIVE_WITH_BAR]')
+        parser.add_option('--progressive-function-color',
+                          type='int',
+                          dest='function_color',
+                          default=env.get('NOSE_PROGRESSIVE_FUNCTION_COLOR', 12),
+                          help='Color of function names in tracebacks. An '
+                               'ANSI color expressed as a number 0-15. '
+                               '[NOSE_PROGRESSIVE_FUNCTION_COLOR]')
+        parser.add_option('--progressive-dim-color',
+                          type='int',
+                          dest='dim_color',
+                          default=env.get('NOSE_PROGRESSIVE_DIM_COLOR', 8),
+                          help='Color of de-emphasized text (like editor '
+                               'shortcuts) in tracebacks. An ANSI color '
+                               'expressed as a number 0-15. '
+                               '[NOSE_PROGRESSIVE_DIM_COLOR]')
+        parser.add_option('--progressive-bar-filled-color',
+                          type='int',
+                          dest='bar_filled_color',
+                          default=env.get('NOSE_PROGRESSIVE_BAR_FILLED_COLOR', 8),
+                          help="Color of the progress bar's filled portion. An "
+                                'ANSI color expressed as a number 0-15. '
+                               '[NOSE_PROGRESSIVE_BAR_FILLED_COLOR]')
+        parser.add_option('--progressive-bar-empty-color',
+                          type='int',
+                          dest='bar_empty_color',
+                          default=env.get('NOSE_PROGRESSIVE_BAR_EMPTY_COLOR', 7),
+                          help="Color of the progress bar's empty portion. An "
+                                'ANSI color expressed as a number 0-15. '
+                               '[NOSE_PROGRESSIVE_BAR_EMPTY_COLOR]')
 
     def configure(self, options, conf):
         """Turn style-forcing on if bar-forcing is on.
