@@ -92,7 +92,6 @@ class ProgressivePlugin(Plugin):
                                'directory. [NOSE_PROGRESSIVE_ABSOLUTE_PATHS]')
         parser.add_option('--progressive-editor',
                           type='string',
-                          action='store',
                           dest='editor',
                           default=env.get('NOSE_PROGRESSIVE_EDITOR',
                                           env.get('EDITOR', 'vi')),
