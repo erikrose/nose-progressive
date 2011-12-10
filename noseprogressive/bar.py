@@ -2,14 +2,11 @@ from __future__ import with_statement
 from itertools import cycle
 from signal import signal, SIGWINCH
 
-from noseprogressive.utils import nose_selector
-
 
 __all__ = ['ProgressBar', 'NullProgressBar']
 
 
 class ProgressBar(object):
-    SPINNER_CHARS = r'/-\|'
     _is_dodging = 0  # Like a semaphore
 
     def __init__(self, max, term):
@@ -18,8 +15,18 @@ class ProgressBar(object):
         self.max = max
         self._term = term
         self.last = ''  # The contents of the previous progress line printed
-        self._spinner = cycle(self.SPINNER_CHARS)
         self._measure_terminal()
+
+        # Prepare formatting, dependent on whether we have terminal colors:
+        if term.number_of_colors >= 16:
+            self._fill_cap = term.on_bright_black
+            self._empty_cap = term.on_white
+            self._empty_char = ' '
+        else:
+            self._fill_cap = term.reverse
+            self._empty_cap = lambda s: s
+            self._empty_char = '_'
+
         signal(SIGWINCH, self._handle_winch)
 
     def _measure_terminal(self):
@@ -30,13 +37,13 @@ class ProgressBar(object):
         self._measure_terminal()
         # TODO: Reprint the bar but at the new width.
 
-    def update(self, test, number):
+    def update(self, test_path, number):
         """Draw an updated progress bar.
 
         At the moment, the graph takes a fixed width, and the test identifier
         takes the rest of the row, truncated from the left to fit.
 
-        test -- the test being run
+        test_path -- the selector of the test being run
         number -- how many tests have been run so far, including this one
 
         """
@@ -46,22 +53,19 @@ class ProgressBar(object):
         # Figure out graph:
         GRAPH_WIDTH = 14
         # min() is in case we somehow get the total test count wrong. It's tricky.
-        num_markers = int(round(min(1.0, float(number) / self.max) * GRAPH_WIDTH))
-        # If there are any markers, replace the last one with the spinner.
-        # Otherwise, have just a spinner:
-        markers = '=' * (num_markers - 1) + self._spinner.next()
-        graph = '[%s%s]' % (markers, ' ' * (GRAPH_WIDTH - len(markers)))
+        num_filled = int(round(min(1.0, float(number) / self.max) * GRAPH_WIDTH))
+        graph = ''.join([self._fill_cap(' ' * num_filled),
+                         self._empty_cap(self._empty_char * (GRAPH_WIDTH - num_filled))])
 
         # Figure out the test identifier portion:
-        test_path = nose_selector(test)
-        cols_for_path = self.cols - len(graph) - 2  # 2 spaces between path & graph
+        cols_for_path = self.cols - GRAPH_WIDTH - 2  # 2 spaces between path & graph
         if len(test_path) > cols_for_path:
             test_path = test_path[len(test_path) - cols_for_path:]
         else:
             test_path += ' ' * (cols_for_path - len(test_path))
 
         # Put them together, and let simmer:
-        self.last = self._term.bold + test_path + '  ' + graph + self._term.normal
+        self.last = self._term.bold(test_path) + '  ' + graph
         with self._at_last_line():
             self.stream.write(self.last)
 

@@ -227,6 +227,10 @@ Erik Rose, while waiting for tests to complete ;-)
 Version History
 ===============
 
+1.3
+  * Redo progress bar. Now it is made of beautiful terminal magic instead of
+    equal signs.
+
 1.2.1
   * Tolerate empty tracebacks in the formatter. This avoids exacerbating
     crashes that occur before any test frames.
