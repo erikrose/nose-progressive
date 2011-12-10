@@ -16,6 +16,17 @@ class ProgressBar(object):
         self._term = term
         self.last = ''  # The contents of the previous progress line printed
         self._measure_terminal()
+
+        # Prepare formatting, dependent on whether we have terminal colors:
+        if term.number_of_colors >= 16:
+            self._fill_cap = term.on_bright_black
+            self._empty_cap = term.on_white
+            self._empty_char = ' '
+        else:
+            self._fill_cap = term.reverse
+            self._empty_cap = lambda s: s
+            self._empty_char = '_'
+
         signal(SIGWINCH, self._handle_winch)
 
     def _measure_terminal(self):
@@ -43,8 +54,8 @@ class ProgressBar(object):
         GRAPH_WIDTH = 14
         # min() is in case we somehow get the total test count wrong. It's tricky.
         num_filled = int(round(min(1.0, float(number) / self.max) * GRAPH_WIDTH))
-        graph = ''.join([self._term.on_bright_black(' ' * num_filled),
-                         self._term.on_white(' ' * (GRAPH_WIDTH - num_filled))])
+        graph = ''.join([self._fill_cap(' ' * num_filled),
+                         self._empty_cap(self._empty_char * (GRAPH_WIDTH - num_filled))])
 
         # Figure out the test identifier portion:
         cols_for_path = self.cols - GRAPH_WIDTH - 2  # 2 spaces between path & graph
