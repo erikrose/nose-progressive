@@ -57,7 +57,7 @@ def format_traceback(extracted_tb,
         # Stack frames:
         for i, (file, line, function, text) in enumerate(extracted_tb):
             yield (format_shortcut(editor, file, line, function) +
-                   ('    %s\n' % (text or '')))
+                   ('    %s\n' % (text or '')).decode('utf-8'))
 
     # Exception:
     if exc_type is SyntaxError:
