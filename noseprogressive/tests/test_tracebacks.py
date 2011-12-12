@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Tests for traceback formatting."""
 
 from noseprogressive.tracebacks import format_traceback
@@ -62,3 +63,11 @@ def test_empty_tracebacks():
         [],
         AttributeError,
         AttributeError("'NoneType' object has no attribute 'pgpImportPubkey'")))
+
+
+def test_unicode():
+    """Don't have encoding explosions when a line of code contains non-ASCII."""
+    unicode_tb = ([
+         ("/usr/lib/whatever.py", 69, 'getMethod', """return u'あ'""")
+        ], AttributeError, AttributeError("'NoneType' object has no pants.'"))
+    ''.join(format_traceback(*unicode_tb))

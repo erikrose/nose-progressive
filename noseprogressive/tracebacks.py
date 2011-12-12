@@ -56,8 +56,10 @@ def format_traceback(extracted_tb,
 
         # Stack frames:
         for i, (file, line, function, text) in enumerate(extracted_tb):
+            # extract_tb() doesn't return Unicode, so we have to guess at the
+            # encoding. We guess utf-8. Use utf-8, everybody.
             yield (format_shortcut(editor, file, line, function) +
-                   ('    %s\n' % (text or '')).decode('utf-8'))
+                   ('    %s\n' % (text or '').decode('utf-8')))
 
     # Exception:
     if exc_type is SyntaxError:
