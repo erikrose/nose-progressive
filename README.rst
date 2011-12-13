@@ -244,6 +244,8 @@ Version History
 1.3
   * Redo progress bar. Now it is made of beautiful terminal magic instead of
     equal signs.
+  * Fix a Unicode encoding error that happened when non-ASCII chars appeared in
+    traceback text. (Naoya INADA)
 
 1.2.1
   * Tolerate empty tracebacks in the formatter. This avoids exacerbating
