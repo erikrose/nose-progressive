@@ -11,6 +11,8 @@ number of other human-centric features to speed the debugging process.
 
 .. _nose: http://somethingaboutorange.com/mrl/projects/nose/
 
+.. image:: https://github.com/erikrose/nose-progressive/raw/master/in_progress.png
+
 The governing philosophy of nose-progressive is to get useful information onto
 the screen as soon as possible and keep it there as long as possible while
 still indicating progress.
@@ -21,33 +23,25 @@ Features
 Progress Bar
 ------------
 
-nose-progressive indicates progress in a stationary progress bar at the
-bottom of the screen::
-
-  thing.tests.test_templates:TaggingTests.test_add_new         [===========-  ]
-
-It is glorious. It supports a wide variety of terminal types and reacts to
+nose-progressive indicates progress in a stationary progress bar at the bottom
+of the screen. It supports a wide variety of terminal types and reacts to
 terminal resizing with all the grace it can muster. And unlike with the
 standard dot-strewing testrunner, you can always see what test is running.
 
-Fast, Pretty, Useful Tracebacks
--------------------------------
+Tracebacks: Prompt, Pretty, and Practical
+-----------------------------------------
 
 nose typically waits until the bitter end to show error and failure tracebacks,
 which wastes a lot of time in large tests suites that take many minutes to
 complete. We show tracebacks as soon as they occur so you can start chasing
 them immediately, and we format them much better:
 
-.. image:: https://github.com/erikrose/nose-progressive/raw/master/in_progress.png
-
-Some of the formatting improvements:
-
 * Judicious use of color and other formatting makes the traceback easy to scan.
   It's especially easy to slide down the list of function names to keep your
   place while debugging.
-* Omitting the *Traceback (most recent call last)* line, using relative paths
-  (optional), and making many other tweaks fits much more in limited screen
-  space.
+* Omitting the *Traceback (most recent call last)* line and using relative
+  paths (optional), along with many other tweaks, fits much more in limited
+  screen space.
 * Identifying failed tests in a format that can be fed back to nose makes it
   easy to re-run them::
 
@@ -243,7 +237,9 @@ Version History
 
 1.3
   * Redo progress bar. Now it is made of beautiful terminal magic instead of
-    equal signs.
+    equal signs. It looks best when your terminal supports at least 16 colors,
+    but there's a monochrome fallback for fewer. Or, you can customize the
+    colors using several new command-line options.
   * Fix a Unicode encoding error that happened when non-ASCII chars appeared in
     traceback text. (Naoya INADA)
 
