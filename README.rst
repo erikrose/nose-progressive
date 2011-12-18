@@ -57,7 +57,7 @@ them immediately, and we format them much better:
 
   (We're actually better at it than unittest. We don't just start hiding
   frames at the first unittest one after the test; we snip off only the last
-  contiguous run of unittest frames. This lets you wrap your test in the
+  contiguous run of unittest frames. This lets you wrap your tests in the
   decorators from the mock library, which masquerades as unittest, and still
   see your tracebacks.)
 * Editor shortcuts (see below) let you jump right to any problem line in your
@@ -127,7 +127,7 @@ Installation
 
   pip install nose-progressive
 
-Or, to get the bleeding-edge, unreleased version::
+Or, get the bleeding-edge, unreleased version::
 
   pip install -e git://github.com/erikrose/nose-progressive.git#egg=nose-progressive
 
@@ -234,6 +234,10 @@ Erik Rose, while waiting for tests to complete ;-)
 
 Version History
 ===============
+
+1.4
+  * Hide the cursor so block-shaped ones don't obscure the first char of the
+    test path.
 
 1.3
   * Redo progress bar. Now it is made of beautiful terminal magic instead of

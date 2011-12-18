@@ -1,4 +1,5 @@
 from __future__ import with_statement
+import atexit
 
 from blessings import Terminal
 from nose.plugins.skip import SkipTest
@@ -26,6 +27,10 @@ class ProgressiveResult(TextTestResult):
                               force_styling=config.options.with_styling)
 
         if self._term.is_a_tty or self._options.with_bar:
+            # Hide the cursor. Show it on exit, even abnormal exit:
+            atexit.register(stream.write, self._term.cnorm)
+            stream.write(self._term.civis)
+
             # 1 in case test counting failed and returned 0
             self.bar = ProgressBar(total_tests or 1,
                                    self._term,
