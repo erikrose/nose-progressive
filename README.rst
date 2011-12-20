@@ -235,10 +235,6 @@ Erik Rose, while waiting for tests to complete ;-)
 Version History
 ===============
 
-1.4
-  * Hide the cursor so block-shaped ones don't obscure the first char of the
-    test path.
-
 1.3
   * Redo progress bar. Now it is made of beautiful terminal magic instead of
     equal signs. It looks best when your terminal supports at least 16 colors,
