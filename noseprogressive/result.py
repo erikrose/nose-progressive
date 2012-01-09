@@ -193,5 +193,5 @@ class ProgressiveResult(TextTestResult):
         self.bar.erase()
         self.stream.writeln()
         if self.wasSuccessful():
-            self.stream.write('OK!  ')
+            self.stream.write(self._term.bold_green('OK!  '))
         self.stream.writeln(summary)
