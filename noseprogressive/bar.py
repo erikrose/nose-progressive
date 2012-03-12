@@ -1,5 +1,4 @@
 from __future__ import with_statement
-from itertools import cycle
 from signal import signal, SIGWINCH
 
 
@@ -9,11 +8,12 @@ __all__ = ['ProgressBar', 'NullProgressBar']
 class ProgressBar(object):
     _is_dodging = 0  # Like a semaphore
 
-    def __init__(self, max_value, term, filled_color=8, empty_color=7):
+    def __init__(self, max_value, term, test_path_width, filled_color=8, empty_color=7):
         """``max_value`` is the highest value I will attain. Must be >0."""
         self.stream = term.stream
         self.max = max_value
         self._term = term
+        self._test_path_width = test_path_width
         self.last = ''  # The contents of the previous progress line printed
         self._measure_terminal()
 
@@ -50,19 +50,18 @@ class ProgressBar(object):
         # TODO: Play nicely with absurdly narrow terminals. (OS X's won't even
         # go small enough to hurt us.)
 
-        # Figure out graph:
-        GRAPH_WIDTH = 14
+        # Figure out graph (2 spaces between path & graph):
+        GRAPH_WIDTH = self.cols - self._test_path_width - 2
         # min() is in case we somehow get the total test count wrong. It's tricky.
         num_filled = int(round(min(1.0, float(number) / self.max) * GRAPH_WIDTH))
         graph = ''.join([self._fill_cap(' ' * num_filled),
                          self._empty_cap(self._empty_char * (GRAPH_WIDTH - num_filled))])
 
         # Figure out the test identifier portion:
-        cols_for_path = self.cols - GRAPH_WIDTH - 2  # 2 spaces between path & graph
-        if len(test_path) > cols_for_path:
-            test_path = test_path[len(test_path) - cols_for_path:]
+        if len(test_path) > self._test_path_width:
+            test_path = test_path[len(test_path) - self._test_path_width:]
         else:
-            test_path += ' ' * (cols_for_path - len(test_path))
+            test_path += ' ' * (self._test_path_width - len(test_path))
 
         # Put them together, and let simmer:
         self.last = self._term.bold(test_path) + '  ' + graph

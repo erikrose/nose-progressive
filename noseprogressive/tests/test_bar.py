@@ -30,7 +30,7 @@ def test_color_bar_half():
     """Assert that a half-filled 16-color bar draws properly."""
     out = StringIO()
     term = MockTerminal(kind='xterm-256color', stream=out, force_styling=True)
-    bar = ProgressBar(28, term)
+    bar = ProgressBar(28, term, 34)
 
     bar.update('HI', 14)
     eq_(out.getvalue(), u'\x1b7\x1b[25d\x1b[1mHI                                '
@@ -42,7 +42,7 @@ def test_color_bar_full():
     """Assert that a complete 16-color bar draws properly."""
     out = StringIO()
     term = MockTerminal(kind='xterm-256color', stream=out, force_styling=True)
-    bar = ProgressBar(28, term)
+    bar = ProgressBar(28, term, 34)
 
     bar.update('HI', 28)
     eq_(out.getvalue(), u'\x1b7\x1b[25d\x1b[1mHI                                '
@@ -55,9 +55,21 @@ def test_monochrome_bar():
     out = StringIO()
     term = MonochromeTerminal(kind='xterm', stream=out, force_styling=True)
     assert term.number_of_colors < 16
-    bar = ProgressBar(28, term)
+    bar = ProgressBar(28, term, 34)
 
     bar.update('HI', 14)
     eq_(out.getvalue(), u'\x1b7\x1b[25d\x1b[1mHI                                '
                          '\x1b(B\x1b[m  \x1b[7m       \x1b(B\x1b[m'
                          '_______\x1b8')
+
+
+def test_bar_graph_width():
+    """Assert that the graph is using all available space."""
+    out = StringIO()
+    term = MockTerminal(kind='xterm-256color', stream=out, force_styling=True)
+    bar = ProgressBar(28, term, 10)
+
+    bar.update('HI', 14)
+    eq_(out.getvalue(), u'\x1b7\x1b[25d\x1b[1mHI        '
+                         '\x1b(B\x1b[m  \x1b[100m                   \x1b(B\x1b[m'
+                         '\x1b[47m                   \x1b(B\x1b[m\x1b8')
