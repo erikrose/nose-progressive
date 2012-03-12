@@ -136,6 +136,13 @@ class ProgressivePlugin(Plugin):
                           help="Color of the progress bar's empty portion. An "
                                 'ANSI color expressed as a number 0-15. '
                                '[NOSE_PROGRESSIVE_BAR_EMPTY_COLOR]')
+        parser.add_option('--progressive-bar-width',
+                          type='int',
+                          dest='bar_width',
+                          default=env.get('NOSE_PROGRESSIVE_BAR_WIDTH', 0),
+                          help="Width of the progress bar in columns. A value "
+                               'of 0 makes the bar use as much space as available. '
+                               '[NOSE_PROGRESSIVE_BAR_WIDTH]')
 
     def configure(self, options, conf):
         """Turn style-forcing on if bar-forcing is on.

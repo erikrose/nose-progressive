@@ -33,7 +33,8 @@ class ProgressiveResult(TextTestResult):
                                    self._term,
                                    longest_test_path,
                                    config.options.bar_filled_color,
-                                   config.options.bar_empty_color)
+                                   config.options.bar_empty_color,
+                                   config.options.bar_width)
         else:
             self.bar = NullProgressBar()
 
