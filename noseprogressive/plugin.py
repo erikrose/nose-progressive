@@ -2,12 +2,12 @@ from functools import partial
 from os import getcwd
 import pdb
 import sys
+from warnings import warn
 
 from nose.plugins import Plugin
 
 from noseprogressive.runner import ProgressiveRunner
 from noseprogressive.wrapping import cmdloop, set_trace, StreamWrapper
-
 
 class ProgressivePlugin(Plugin):
     """A nose plugin which has a progress bar and formats tracebacks for humans"""
@@ -141,6 +141,8 @@ class ProgressivePlugin(Plugin):
         terminal capabilities emit ''.
 
         """
+        if (hasattr(options, 'verbosity') and options.verbosity > 1) and (hasattr(options, 'enable_plugin_id') and options.enable_plugin_id):
+            warn('Using --verbosity=2 or higher and --with-id with noseprogressive causes visulaization errors. Remove one or the other for best results.')
         super(ProgressivePlugin, self).configure(options, conf)
         if options.with_bar:
             options.with_styling = True
