@@ -232,8 +232,16 @@ Author
 
 Erik Rose, while waiting for tests to complete ;-)
 
+License
+=======
+
+GPL
+
 Version History
 ===============
+
+1.4
+  * Make the final "OK!" green and bold. This helps me pick it out faster.
 
 1.3
   * Redo progress bar. Now it is made of beautiful terminal magic instead of
