@@ -187,8 +187,9 @@ class ProgressivePlugin(Plugin):
 
             """
             suite = orig_method(*args, **kwargs)
-            self._testPaths += collect_test_paths(suite)
-            self._totalTests += suite.countTestCases()
+            test_paths = collect_test_paths(suite)
+            self._testPaths += test_paths
+            self._totalTests += len(test_paths)
             return orig_method(*args, **kwargs)
 
         # TODO: If there's ever a practical need, also patch loader.suiteClass
