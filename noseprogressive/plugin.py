@@ -2,12 +2,12 @@ from functools import partial
 from os import getcwd
 import pdb
 import sys
+from warnings import warn
 
 from nose.plugins import Plugin
 
 from noseprogressive.runner import ProgressiveRunner
 from noseprogressive.wrapping import cmdloop, set_trace, StreamWrapper
-
 
 class ProgressivePlugin(Plugin):
     """A nose plugin which has a progress bar and formats tracebacks for humans"""
@@ -142,6 +142,12 @@ class ProgressivePlugin(Plugin):
 
         """
         super(ProgressivePlugin, self).configure(options, conf)
+        if (getattr(options, 'verbosity', 0) > 1 and
+            getattr(options, 'enable_plugin_id', False)):
+            # TODO: Can we forcibly disable the ID plugin?
+            print ('Using --with-id and --verbosity=2 or higher with '
+                   'nose-progressive causes visualization errors. Remove one '
+                   'or the other to avoid a mess.')
         if options.with_bar:
             options.with_styling = True
 

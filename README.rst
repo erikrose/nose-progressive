@@ -242,6 +242,7 @@ Version History
 
 1.4
   * Make the final "OK!" green and bold. This helps me pick it out faster.
+  * Warn when using ``--with-id`` and ``--verbosity=2`` or higher. (Jason Ward)
 
 1.3
   * Redo progress bar. Now it is made of beautiful terminal magic instead of
