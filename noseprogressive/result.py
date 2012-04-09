@@ -18,7 +18,7 @@ class ProgressiveResult(TextTestResult):
     stderr/out wrapping.
 
     """
-    def __init__(self, cwd, total_tests, stream, config=None):
+    def __init__(self, cwd, total_tests, test_paths, stream, config=None):
         super(ProgressiveResult, self).__init__(stream, None, 0, config=config)
         self._cwd = cwd
         self._options = config.options
@@ -26,11 +26,15 @@ class ProgressiveResult(TextTestResult):
                               force_styling=config.options.with_styling)
 
         if self._term.is_a_tty or self._options.with_bar:
+            longest_test_path = max(len(p) for p in test_paths)
+
             # 1 in case test counting failed and returned 0
             self.bar = ProgressBar(total_tests or 1,
                                    self._term,
+                                   longest_test_path,
                                    config.options.bar_filled_color,
-                                   config.options.bar_empty_color)
+                                   config.options.bar_empty_color,
+                                   config.options.bar_width)
         else:
             self.bar = NullProgressBar()
 

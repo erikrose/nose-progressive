@@ -2,10 +2,12 @@ from functools import partial
 from os import getcwd
 import pdb
 import sys
+import unittest
 
 from nose.plugins import Plugin
 
 from noseprogressive.runner import ProgressiveRunner
+from noseprogressive.utils import nose_selector
 from noseprogressive.wrapping import cmdloop, set_trace, StreamWrapper
 
 
@@ -13,6 +15,7 @@ class ProgressivePlugin(Plugin):
     """A nose plugin which has a progress bar and formats tracebacks for humans"""
     name = 'progressive'
     _totalTests = 0
+    _testPaths = []
     score = 10000  # Grab stdout and stderr before the capture plugin.
 
     def __init__(self, *args, **kwargs):
@@ -133,6 +136,13 @@ class ProgressivePlugin(Plugin):
                           help="Color of the progress bar's empty portion. An "
                                 'ANSI color expressed as a number 0-15. '
                                '[NOSE_PROGRESSIVE_BAR_EMPTY_COLOR]')
+        parser.add_option('--progressive-bar-width',
+                          type='int',
+                          dest='bar_width',
+                          default=env.get('NOSE_PROGRESSIVE_BAR_WIDTH', 0),
+                          help="Width of the progress bar in columns. A value "
+                               'of 0 makes the bar use as much space as available. '
+                               '[NOSE_PROGRESSIVE_BAR_WIDTH]')
 
     def configure(self, options, conf):
         """Turn style-forcing on if bar-forcing is on.
@@ -146,7 +156,8 @@ class ProgressivePlugin(Plugin):
             options.with_styling = True
 
     def prepareTestLoader(self, loader):
-        """Insert ourselves into loader calls to count tests.
+        """Insert ourselves into loader calls to count tests and obtain their
+        paths to adapt the graph width.
 
         The top-level loader call often returns lazy results, like a LazySuite.
         This is a problem, as we would destroy the suite by iterating over it
@@ -155,6 +166,19 @@ class ProgressivePlugin(Plugin):
         to yield something we can iterate over to do the count.
 
         """
+
+        def collect_test_paths(suite):
+            """Walk through test suites and retrieve the tests path."""
+            result = []
+
+            for test in suite:
+                if isinstance(test, unittest.TestSuite):
+                    result.extend(collect_test_paths(test))
+                else:
+                    result.append(nose_selector(test))
+
+            return result
+
         def capture_suite(orig_method, *args, **kwargs):
             """Intercept calls to the loader before they get lazy.
 
@@ -162,7 +186,10 @@ class ProgressivePlugin(Plugin):
             count the tests therein.
 
             """
-            self._totalTests += orig_method(*args, **kwargs).countTestCases()
+            suite = orig_method(*args, **kwargs)
+            test_paths = collect_test_paths(suite)
+            self._testPaths += test_paths
+            self._totalTests += len(test_paths)
             return orig_method(*args, **kwargs)
 
         # TODO: If there's ever a practical need, also patch loader.suiteClass
@@ -178,6 +205,7 @@ class ProgressivePlugin(Plugin):
         """Replace TextTestRunner with something that prints fewer dots."""
         return ProgressiveRunner(self._cwd,
                                  self._totalTests,
+                                 self._testPaths,
                                  runner.stream,
                                  verbosity=self.conf.verbosity,
                                  config=self.conf)  # So we don't get a default

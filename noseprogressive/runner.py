@@ -8,10 +8,11 @@ from noseprogressive.result import ProgressiveResult
 class ProgressiveRunner(nose.core.TextTestRunner):
     """Test runner that makes a lot less noise than TextTestRunner"""
 
-    def __init__(self, cwd, totalTests, stream, **kwargs):
+    def __init__(self, cwd, totalTests, testPaths, stream, **kwargs):
         super(ProgressiveRunner, self).__init__(stream, **kwargs)
         self._cwd = cwd
         self._totalTests = totalTests
+        self._testPaths = testPaths
 
     def _makeResult(self):
         """Return a Result that doesn't print dots.
@@ -23,6 +24,7 @@ class ProgressiveRunner(nose.core.TextTestRunner):
         """
         return ProgressiveResult(self._cwd,
                                  self._totalTests,
+                                 self._testPaths,
                                  self.stream,
                                  config=self.config)
 
