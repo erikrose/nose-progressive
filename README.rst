@@ -235,6 +235,9 @@ Erik Rose, while waiting for tests to complete ;-)
 Version History
 ===============
 
+1.4
+  * Warn when using ``--with-id`` and ``--verbosity=2`` or higher. (Jason Ward)
+
 1.3
   * Redo progress bar. Now it is made of beautiful terminal magic instead of
     equal signs. It looks best when your terminal supports at least 16 colors,

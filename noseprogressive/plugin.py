@@ -141,9 +141,13 @@ class ProgressivePlugin(Plugin):
         terminal capabilities emit ''.
 
         """
-        if (hasattr(options, 'verbosity') and options.verbosity > 1) and (hasattr(options, 'enable_plugin_id') and options.enable_plugin_id):
-            warn('Using --verbosity=2 or higher and --with-id with noseprogressive causes visulaization errors. Remove one or the other for best results.')
         super(ProgressivePlugin, self).configure(options, conf)
+        if (getattr(options, 'verbosity', 0) > 1 and
+            getattr(options, 'enable_plugin_id', False)):
+            # TODO: Can we forcibly disable the ID plugin?
+            print ('Using --with-id and --verbosity=2 or higher with '
+                   'nose-progressive causes visualization errors. Remove one '
+                   'or the other to avoid a mess.')
         if options.with_bar:
             options.with_styling = True
 
