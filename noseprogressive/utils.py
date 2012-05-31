@@ -26,7 +26,7 @@ def nose_selector(test):
 
         if module:
             if rest:
-                return '%s:%s' % (module, rest)
+                return '%s:%s%s' % (module, rest, test.test.arg or '')
             else:
                 return module
     return 'Unknown test'
