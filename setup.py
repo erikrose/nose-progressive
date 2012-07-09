@@ -17,7 +17,7 @@ setup(
     license='GPL',
     packages=find_packages(exclude=['ez_setup']),
     install_requires=['Nose>=0.11.0', 'blessings>=1.3,<2.0'],
-    url='',
+    url='https://github.com/erikrose/nose-progressive',
     include_package_data=True,
     entry_points="""
         [nose.plugins.0.10]
