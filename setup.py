@@ -16,7 +16,7 @@ setup(
     author_email='erikrose@grinchcentral.com',
     license='GPL',
     packages=find_packages(exclude=['ez_setup']),
-    install_requires=['Nose>=0.11.0', 'blessings>=1.3,<2.0'],
+    install_requires=['nose>=1.2.1', 'blessings>=1.3,<2.0'],
     url='https://github.com/erikrose/nose-progressive',
     include_package_data=True,
     entry_points="""
