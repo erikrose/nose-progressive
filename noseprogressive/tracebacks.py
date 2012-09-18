@@ -71,7 +71,7 @@ def format_traceback(extracted_tb,
                      format_exception_only(SyntaxError, exc_value)[1:]
     else:
         exc_lines = format_exception_only(exc_type, exc_value)
-    yield ''.join(exc_lines)
+    yield ''.join([l.decode('utf-8') for l in exc_lines])
 
 
 # Adapted from unittest:
