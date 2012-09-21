@@ -178,7 +178,6 @@ class ProgressivePlugin(Plugin):
         if hasattr(loader, 'loadTestsFromNames'):
             loader.loadTestsFromNames = partial(capture_suite,
                                                 loader.loadTestsFromNames)
-        return loader
 
     def prepareTestRunner(self, runner):
         """Replace TextTestRunner with something that prints fewer dots."""
