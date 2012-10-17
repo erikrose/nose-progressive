@@ -94,7 +94,7 @@ class ProgressiveResult(TextTestResult):
             with self.bar.dodging():
                 self.stream.writeln(
                         '\n' +
-                        (self._term.bold if is_failure else '') +
+                        ((self._term.color(self._options.fail_color) if self._options.fail_color >= 0 else self._term.bold ) if is_failure else '') +
                         '%s: %s' % (kind, nose_selector(test)) +
                         (self._term.normal if is_failure else ''))  # end bold
 
