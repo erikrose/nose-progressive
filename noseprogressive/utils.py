@@ -15,7 +15,8 @@ def test_address(test):
 
 
 def nose_selector(test):
-    """Return the string you can pass to nose to run `test`.
+    """Return the string you can pass to nose to run `test`, including argument
+    values if the test was made by a test generator.
 
     Return "Unknown test" if it can't construct a decent path.
 
@@ -26,7 +27,10 @@ def nose_selector(test):
 
         if module:
             if rest:
-                return '%s:%s' % (module, rest)
+                try:
+                    return '%s:%s%s' % (module, rest, test.test.arg or '')
+                except AttributeError:
+                    return '%s:%s' % (module, rest)
             else:
                 return module
     return 'Unknown test'
