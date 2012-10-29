@@ -26,7 +26,10 @@ def nose_selector(test):
 
         if module:
             if rest:
-                return '%s:%s' % (module, rest)
+                try:
+                    return '%s:%s%s' % (module, rest, test.test.arg or '')
+                except AttributeError:
+                    return '%s:%s' % (module, rest)
             else:
                 return module
     return 'Unknown test'
