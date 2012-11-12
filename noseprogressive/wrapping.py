@@ -1,7 +1,6 @@
 """Facilities for wrapping stderr and stdout and dealing with the fallout"""
 
 from __future__ import with_statement
-import __builtin__
 import cmd
 import pdb
 import sys

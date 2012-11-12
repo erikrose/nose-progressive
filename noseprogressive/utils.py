@@ -95,7 +95,7 @@ def index_of_test_frame(extracted_tb, exception_type, exception_value, test):
     # one match of equal confidence.
     knower = OneTrackMind()
 
-    if isinstance(test_file, basestring):  # Sometimes it's None.
+    if test_file is not None:  # Sometimes it's None.
         test_file_path = realpath(test_file)
 
         # TODO: Perfect. Right now, I'm just comparing by function name within
