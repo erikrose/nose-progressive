@@ -1,6 +1,8 @@
 """Fancy traceback formatting"""
 
 import os
+import sys
+
 from traceback import extract_tb, format_exception_only
 
 from blessings import Terminal
@@ -56,10 +58,13 @@ def format_traceback(extracted_tb,
 
         # Stack frames:
         for i, (file, line, function, text) in enumerate(extracted_tb):
-            # extract_tb() doesn't return Unicode, so we have to guess at the
-            # encoding. We guess utf-8. Use utf-8, everybody.
+            if sys.version_info.major < 3:
+                # extract_tb() doesn't return Unicode in python2, so we have to guess at the
+                # encoding. We guess utf-8. Use utf-8, everybody.
+                text = ((text and text.strip()) or '').decode('utf-8')
+
             yield (format_shortcut(editor, file, line, function) +
-                   ('    %s\n' % ((text and text.strip()) or '').decode('utf-8')))
+                   ('    %s\n' % text))
 
     # Exception:
     if exc_type is SyntaxError:

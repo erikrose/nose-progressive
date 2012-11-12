@@ -2,3 +2,5 @@
 *.pyo
 .DS_Store
 .tox
+*.egg-info/
+.*.swp
