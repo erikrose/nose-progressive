@@ -1,7 +1,7 @@
 """Fancy traceback formatting"""
 
 import os
-import sys
+from sys import version_info
 
 from traceback import extract_tb, format_exception_only
 
@@ -58,10 +58,12 @@ def format_traceback(extracted_tb,
 
         # Stack frames:
         for i, (file, line, function, text) in enumerate(extracted_tb):
-            if sys.version_info.major < 3:
-                # extract_tb() doesn't return Unicode in python2, so we have to guess at the
-                # encoding. We guess utf-8. Use utf-8, everybody.
-                text = ((text and text.strip()) or '').decode('utf-8')
+            text = (text and text.strip()) or ''
+            if version_info[0] < 3:
+                # extract_tb() doesn't return Unicode in Python 2, so we
+                # have to guess at the encoding. We guess utf-8. Use
+                # utf-8, everybody.
+                text = text.decode('utf-8')
 
             yield (format_shortcut(editor, file, line, function) +
                    ('    %s\n' % text))

@@ -243,6 +243,8 @@ Version History
 1.4
   * Make the final "OK!" green and bold. This helps me pick it out faster.
   * Warn when using ``--with-id`` and ``--verbosity=2`` or higher. (Jason Ward)
+  * Add experimental Python 3 support. Functionality might work, but
+    tests need to be ported to pass.
 
 1.3
   * Redo progress bar. Now it is made of beautiful terminal magic instead of

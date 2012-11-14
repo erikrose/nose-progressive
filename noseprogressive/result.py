@@ -54,6 +54,14 @@ class ProgressiveResult(TextTestResult):
         # circular refs which are expensive to collect. See the
         # sys.exc_info() docs.
         exception_type, exception_value = err[:2]
+        # TODO: In Python 3, the traceback is attached to the exception
+        # instance through the __traceback__ attribute. If the instance
+        # is saved in a local variable that persists outside the except
+        # block, the traceback will create a reference cycle with the
+        # current frame and its dictionary of local variables. This will
+        # delay reclaiming dead resources until the next cyclic garbage
+        # collection pass.
+
         extracted_tb = extract_relevant_tb(
             err[2],
             exception_type,
