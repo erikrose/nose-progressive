@@ -146,6 +146,8 @@ class ProgressiveResult(TextTestResult):
         """
         self._recordAndPrintHeadline(test, SkipTest, reason)
         # Python 2.7 users get a little bonus: the reason the test was skipped.
+        if isinstance(reason, Exception):
+            reason = reason.message
         if reason and self._options.show_advisories:
             with self.bar.dodging():
                 self.stream.writeln(reason)
