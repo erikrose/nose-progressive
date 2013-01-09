@@ -19,7 +19,7 @@ def format_traceback(extracted_tb,
                      function_color=12,
                      dim_color=8,
                      editor='vi'):
-    """Return an iterable of formatted traceback frames.
+    """Return an iterable of formatted Unicode traceback frames.
 
     Also include a pseudo-frame at the end representing the exception itself.
 
@@ -35,7 +35,7 @@ def format_traceback(extracted_tb,
         return template % dict(editor=editor,
                                line=line,
                                file=file,
-                               function=('  # ' + function) if function else '',
+                               function=(u'  # ' + function) if function else u'',
                                funcemph=term.color(function_color),
                                # Underline is also nice and doesn't make us
                                # worry about appearance on different background
@@ -43,6 +43,7 @@ def format_traceback(extracted_tb,
                                plain=term.normal,
                                fade=term.color(dim_color) + term.bold)
 
+    extracted_tb = _unicode_decode_extracted_tb(extracted_tb)
     if not term:
         term = Terminal()
 
@@ -51,22 +52,17 @@ def format_traceback(extracted_tb,
         for i, (file, line, function, text) in enumerate(extracted_tb):
             extracted_tb[i] = human_path(src(file), cwd), line, function, text
 
-        line_width = len(str(max(the_line for _, the_line, _, _ in extracted_tb)))
-        template = ('  %(fade)s%(editor)s +%(line)-' + str(line_width) + 's '
-                    '%(file)s%(plain)s'
-                    '%(funcemph)s%(function)s%(plain)s\n')
+        line_width = len(unicode(max(the_line for _, the_line, _, _ in extracted_tb)))
+        template = (u'  %(fade)s%(editor)s +%(line)-' + unicode(line_width) + u's '
+                     '%(file)s%(plain)s'
+                     '%(funcemph)s%(function)s%(plain)s\n')
 
         # Stack frames:
         for i, (file, line, function, text) in enumerate(extracted_tb):
-            text = (text and text.strip()) or ''
-            if version_info[0] < 3:
-                # extract_tb() doesn't return Unicode in Python 2, so we
-                # have to guess at the encoding. We guess utf-8. Use
-                # utf-8, everybody.
-                text = text.decode('utf-8')
+            text = (text and text.strip()) or u''
 
             yield (format_shortcut(editor, file, line, function) +
-                   ('    %s\n' % text))
+                   (u'    %s\n' % text))
 
     # Exception:
     if exc_type is SyntaxError:
@@ -74,17 +70,19 @@ def format_traceback(extracted_tb,
         # SyntaxErrors have a format different from other errors and include a
         # file path which looks out of place in our newly highlit, editor-
         # shortcutted world.
-        exc_lines = [format_shortcut(editor, exc_value.filename, exc_value.lineno)] + \
-                     format_exception_only(SyntaxError, exc_value)[1:]
+        exc_lines = [format_shortcut(editor, exc_value.filename, exc_value.lineno)]
+        formatted_exception = format_exception_only(SyntaxError, exc_value)[1:]
     else:
-        exc_lines = format_exception_only(exc_type, exc_value)
-    yield ''.join(exc_lines)
+        exc_lines = []
+        formatted_exception = format_exception_only(exc_type, exc_value)
+    exc_lines.extend([_decode(f) for f in formatted_exception])
+    yield u''.join(exc_lines)
 
 
 # Adapted from unittest:
 
 def extract_relevant_tb(tb, exctype, is_test_failure):
-    """Return extracted traceback frames that aren't unittest ones.
+    """Return extracted traceback frame 4-tuples that aren't unittest ones.
 
     This used to be _exc_info_to_string().
 
@@ -97,6 +95,24 @@ def extract_relevant_tb(tb, exctype, is_test_failure):
         length = _count_relevant_tb_levels(tb)
         return extract_tb(tb, length)
     return extract_tb(tb)
+
+
+def _decode(string):
+    """Decode a string as if it were UTF-8, swallowing errors.
+
+    In Python 2, extract_tb() returns simple strings. We arbitrarily guess that
+    UTF-8 is the encoding and use "replace" mode for undecodable chars. I'm
+    guessing that in Python 3 we've come to our senses and everything's
+    Unicode. We'll see when we add Python 3 to the tox config.
+
+    """
+    return string if isinstance(string, unicode) else string.decode('utf-8', 'replace')
+
+
+def _unicode_decode_extracted_tb(extracted_tb):
+    """Return a traceback with the string elements translated into Unicode."""
+    return [(_decode(file), line, _decode(function), _decode(text))
+            for file, line, function, text in extracted_tb]
 
 
 def _is_unittest_frame(tb):

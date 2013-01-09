@@ -207,6 +207,7 @@ Each of these takes an ANSI color expressed as a number from 0 to 15.
 Caveats and Known Bugs
 ======================
 
+* Makes a cosmetic mess when used with ``ipdb``. Consider ``pdbpp`` instead.
 * Some logging handlers will smear bits of the progress bar upward if they
   don't print complete lines. I hope to fix this with some monkeypatching, but
   in the meantime, passing ``--logging-clear-handlers`` works around this.
@@ -249,6 +250,9 @@ Version History
   * Show parameter values in the names of generated tests. (Bruno Binet)
   * Tolerate a corner case in skipped tests without crashing. (Will
     Kahn-Greene)
+  * Swallow chars that don't decode with UTF-8 when printing tracebacks: both
+    in filenames and source code. (Thanks to Bruno Binet for some patches
+    inspiring a rethink here.)
 
 1.3
   * Redo progress bar. Now it is made of beautiful terminal magic instead of
