@@ -245,6 +245,10 @@ Version History
   * Warn when using ``--with-id`` and ``--verbosity=2`` or higher. (Jason Ward)
   * Add experimental Python 3 support. Functionality might work, but
     tests need to be ported to pass.
+  * Allow other nose plugins to process the test loader. (Ratnadeep Debnath)
+  * Show parameter values in the names of generated tests. (Bruno Binet)
+  * Tolerate a corner case in skipped tests without crashing. (Will
+    Kahn-Greene)
 
 1.3
   * Redo progress bar. Now it is made of beautiful terminal magic instead of
