@@ -87,7 +87,7 @@ class ProgressiveResult(TextTestResult):
                     self._term,
                     self._options.function_color,
                     self._options.dim_color,
-                    self._options.editor)))
+                    self._options.editor)).encode('utf-8'))
 
     def _printHeadline(self, kind, test, is_failure=True):
         """Output a 1-line error summary to the stream if appropriate.
