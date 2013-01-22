@@ -1,5 +1,6 @@
 from __future__ import with_statement
 
+from codecs import getwriter
 from blessings import Terminal
 from nose.plugins.skip import SkipTest
 from nose.result import TextTestResult
@@ -37,6 +38,9 @@ class ProgressiveResult(TextTestResult):
         # Declare errorclass-savviness so ErrorClassPlugins don't monkeypatch
         # half my methods away:
         self.errorClasses = {}
+
+        # use special writer to convert unicode strings to utf-8
+        self.stream = getwriter('utf-8')(self.stream)
 
     def startTest(self, test):
         """Update the progress bar."""
