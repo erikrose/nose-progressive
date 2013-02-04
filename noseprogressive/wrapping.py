@@ -18,6 +18,12 @@ def cmdloop(self, *args, **kwargs):
     https://bugzilla.redhat.com/show_bug.cgi?id=448864
 
     """
+    def set_builtin(name, value):
+        if isinstance(__builtins__, dict):
+            __builtins__[name] = value
+        else:
+            setattr(__builtins__, name, value)
+
     def unwrapping_raw_input(*args, **kwargs):
         """Call raw_input(), making sure it finds an unwrapped stdout."""
         wrapped_stdout = sys.stdout
@@ -30,14 +36,14 @@ def cmdloop(self, *args, **kwargs):
 
     orig_raw_input = raw_input
     if hasattr(sys.stdout, 'stream'):
-        __builtins__.raw_input = unwrapping_raw_input
+        set_builtin('raw_input', unwrapping_raw_input)
     # else if capture plugin has replaced it with a StringIO, don't bother.
     try:
         # Interesting things happen when you try to not reference the
         # superclass explicitly.
         ret = cmd.Cmd.cmdloop(self, *args, **kwargs)
     finally:
-        __builtins__.raw_input = orig_raw_input
+        set_builtin('raw_input', orig_raw_input)
     return ret
 
 
