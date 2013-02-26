@@ -106,6 +106,8 @@ def _decode(string):
     Unicode. We'll see when we add Python 3 to the tox config.
 
     """
+    if string is None:
+        return 'None'
     return string if isinstance(string, unicode) else string.decode('utf-8', 'replace')
 
 
