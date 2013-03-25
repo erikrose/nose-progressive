@@ -241,6 +241,11 @@ GPL
 Version History
 ===============
 
+1.4.1
+  * Fix the "AttributeError: 'dict' object has no attribute 'raw_input'" error
+    that sometimes occurred at pdb breakpoints. Thanks to David Baumgold for
+    finding the cause!
+
 1.4
   * Make the final "OK!" green and bold. This helps me pick it out faster.
   * Warn when using ``--with-id`` and ``--verbosity=2`` or higher. (Jason Ward)
