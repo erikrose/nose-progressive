@@ -169,6 +169,11 @@ class ProgressivePlugin(Plugin):
 
             """
             self._totalTests += orig_method(*args, **kwargs).countTestCases()
+
+            # Clear out the loader's cache. Otherwise, it never finds any tests
+            # for the actual test run:
+            loader._visitedPaths = set()
+
             return orig_method(*args, **kwargs)
 
         # TODO: If there's ever a practical need, also patch loader.suiteClass
