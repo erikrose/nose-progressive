@@ -33,10 +33,13 @@ def test_color_bar_half():
     bar = ProgressBar(28, term)
 
     bar.update('HI', 14)
-    eq_(out.getvalue(), u'\x1b7\x1b[25d\x1b[1mHI                                '
-                         '\x1b(B\x1b[m  \x1b[100m       \x1b(B\x1b[m'
-                         '\x1b[47m       \x1b(B\x1b[m\x1b8')
-
+    eq_(out.getvalue(), ''.join([term.save,
+                                 term.move(24, 0),
+                                 term.bold('HI                                '),
+                                 '  ',
+                                 term.on_color(8)('       '),
+                                 term.on_color(7)('       '),
+                                 term.restore]))
 
 def test_color_bar_full():
     """Assert that a complete 16-color bar draws properly."""
@@ -45,9 +48,13 @@ def test_color_bar_full():
     bar = ProgressBar(28, term)
 
     bar.update('HI', 28)
-    eq_(out.getvalue(), u'\x1b7\x1b[25d\x1b[1mHI                                '
-                         '\x1b(B\x1b[m  \x1b[100m              \x1b(B\x1b[m'
-                         '\x1b[47m\x1b(B\x1b[m\x1b8')
+    eq_(out.getvalue(), ''.join([term.save,
+                                 term.move(24, 0),
+                                 term.bold('HI                                '),
+                                 '  ',
+                                 term.on_color(8)('              '),
+                                 term.on_color(7)(''),
+                                 term.restore]))
 
 
 def test_monochrome_bar():
@@ -58,6 +65,10 @@ def test_monochrome_bar():
     bar = ProgressBar(28, term)
 
     bar.update('HI', 14)
-    eq_(out.getvalue(), u'\x1b7\x1b[25d\x1b[1mHI                                '
-                         '\x1b(B\x1b[m  \x1b[7m       \x1b(B\x1b[m'
-                         '_______\x1b8')
+    eq_(out.getvalue(), ''.join([term.save,
+                                 term.move(24, 0),
+                                 term.bold('HI                                '),
+                                 '  ',
+                                 term.reverse('       '),
+                                 '_______',
+                                 term.restore]))

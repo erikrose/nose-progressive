@@ -244,6 +244,9 @@ Version History
 1.4.2
   * Clear the TestLoader's path cache (new in nose 1.3.0) after counting the
     tests. This solves the problem of finding 0 tests to run under nose 1.3.0.
+  * Make progress bar tests less brittle so they don't falsely fail on OS X
+    10.8 or other platforms where the terminfo isn't exactly what I wrote the
+    test under.
 
 1.4.1
   * Fix the "AttributeError: 'dict' object has no attribute 'raw_input'" error
