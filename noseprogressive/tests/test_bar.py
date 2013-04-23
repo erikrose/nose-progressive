@@ -1,7 +1,10 @@
 """Tests for the progress bar"""
 # TODO: Running these on a tty of type "xterm" fails.
 
-from StringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 from blessings import Terminal
 from nose.tools import eq_

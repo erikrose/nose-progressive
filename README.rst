@@ -241,6 +241,9 @@ GPL
 Version History
 ===============
 
+1.5
+  * Add honest-to-goodness, tox-tested support for Python 3.3.
+
 1.4.2
   * Clear the TestLoader's path cache (new in nose 1.3.0) after counting the
     tests. This solves the problem of finding 0 tests to run under nose 1.3.0.
