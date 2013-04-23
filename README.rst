@@ -247,8 +247,11 @@ GPL
 Version History
 ===============
 
-1.5
-  * Add honest-to-goodness, tox-tested support for Python 3.3.
+1.4.3
+  * Fix bar not showing up in Python 3.
+  * Add honest-to-goodness, tox-tested support for Python 3.3. 3.2 may come
+    later. 3.1 and earlier won't, because its stdlib hadn't got its curses act
+    together yet.
 
 1.4.2
   * Clear the TestLoader's path cache (new in nose 1.3.0) after counting the
