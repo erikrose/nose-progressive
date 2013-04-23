@@ -17,7 +17,7 @@ if sys.version_info >= (3,):
 setup(
     name='nose-progressive',
     version='1.4.3',
-    description='Nose plugin to show progress bar and tracebacks during tests',
+    description='A testrunner with a progress bar and smarter tracebacks',
     long_description=open('README.rst').read(),
     author='Erik Rose',
     author_email='erikrose@grinchcentral.com',
