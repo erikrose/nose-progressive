@@ -2,16 +2,22 @@
 nose-progressive
 ================
 
-nose-progressive is a nose_ plugin which displays progress in a stationary
-progress bar, freeing the rest of the screen (as well as the scrollback buffer)
-for the compact display of test failures, which it formats beautifully and
-usefully. It displays failures and errors as soon as they occur and avoids
-scrolling them off the screen in favor of less useful output. It also offers a
-number of other human-centric features to speed the debugging process.
+Give your tests a progress bar and smarter tracebacks in 3 lines::
 
-.. _nose: http://somethingaboutorange.com/mrl/projects/nose/
+    pip install nose-progressive
+    cd your_project
+    nosetests --with-progressive
 
 .. image:: https://github.com/erikrose/nose-progressive/raw/master/in_progress.png
+
+nose-progressive is a nose_ plugin which displays progress in a stationary bar,
+freeing the rest of the screen (as well as the scrollback buffer) for the
+compact display of test failures, which it formats beautifully and usefully. It
+displays failures and errors as soon as they occur and avoids scrolling them
+off the screen in favor of less useful output. It also offers a number of other
+human-centric features to speed the debugging process.
+
+.. _nose: http://somethingaboutorange.com/mrl/projects/nose/
 
 The governing philosophy of nose-progressive is to get useful information onto
 the screen as soon as possible and keep it there as long as possible while
@@ -31,10 +37,10 @@ standard dot-strewing testrunner, you can always see what test is running.
 Tracebacks: Prompt, Pretty, and Practical
 -----------------------------------------
 
-nose typically waits until the bitter end to show error and failure tracebacks,
-which wastes a lot of time in large tests suites that take many minutes to
-complete. We show tracebacks as soon as they occur so you can start chasing
-them immediately, and we format them much better:
+nose, like most testrunners, typically waits until the bitter end to show error
+and failure tracebacks, which wastes a lot of time in large tests suites that
+take many minutes to complete. We show tracebacks as soon as they occur so you
+can start chasing them immediately, and we format them much better:
 
 * Judicious use of color and other formatting makes the traceback easy to scan.
   It's especially easy to slide down the list of function names to keep your
