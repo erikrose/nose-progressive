@@ -307,6 +307,8 @@ Version History
     completely customize the editor shortcuts. Now we support any text editor
     that has a go-to-line option, no matter how it's spelled.
   * Drop support for Python 2.5. We needed modern string formatting.
+  * Add first-class support for Python 3.2.3 and higher. It turned out my tox
+    config was just wrong.
   * Tolerate Nones in traceback components: file names and code extracts
     particularly. (Kyle Gibson)
 
