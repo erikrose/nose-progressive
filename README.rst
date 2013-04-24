@@ -225,7 +225,7 @@ template that controls the editor shortcut lines of the traceback.
 
 The default template is... ::
 
-    '  {dim_format}{editor} +{line_number:<{line_number_max_width}} {path}{normal}{function_format}{function}{normal}'
+    '  {dim_format}{editor} +{line_number:<{line_number_max_width}} {path}{normal}{function_format}{hash_if_function}{function}{normal}'
 
 Here are the available keys:
 
