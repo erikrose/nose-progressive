@@ -16,7 +16,7 @@ if sys.version_info >= (3,):
 
 setup(
     name='nose-progressive',
-    version='1.4.3',
+    version='1.5',
     description='A testrunner with a progress bar and smarter tracebacks',
     long_description=open('README.rst').read(),
     author='Erik Rose',
@@ -39,7 +39,6 @@ setup(
         'License :: OSI Approved :: GNU General Public License (GPL)',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.5',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
