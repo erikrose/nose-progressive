@@ -2,16 +2,22 @@
 nose-progressive
 ================
 
-nose-progressive is a nose_ plugin which displays progress in a stationary
-progress bar, freeing the rest of the screen (as well as the scrollback buffer)
-for the compact display of test failures, which it formats beautifully and
-usefully. It displays failures and errors as soon as they occur and avoids
-scrolling them off the screen in favor of less useful output. It also offers a
-number of other human-centric features to speed the debugging process.
+Give your tests a progress bar and smarter tracebacks in 3 lines::
 
-.. _nose: http://somethingaboutorange.com/mrl/projects/nose/
+    pip install nose-progressive
+    cd your_project
+    nosetests --with-progressive
 
 .. image:: https://github.com/erikrose/nose-progressive/raw/master/in_progress.png
+
+nose-progressive is a nose_ plugin which displays progress in a stationary bar,
+freeing the rest of the screen (as well as the scrollback buffer) for the
+compact display of test failures, which it formats beautifully and usefully. It
+displays failures and errors as soon as they occur and avoids scrolling them
+off the screen in favor of less useful output. It also offers a number of other
+human-centric features to speed the debugging process.
+
+.. _nose: http://somethingaboutorange.com/mrl/projects/nose/
 
 The governing philosophy of nose-progressive is to get useful information onto
 the screen as soon as possible and keep it there as long as possible while
@@ -31,10 +37,10 @@ standard dot-strewing testrunner, you can always see what test is running.
 Tracebacks: Prompt, Pretty, and Practical
 -----------------------------------------
 
-nose typically waits until the bitter end to show error and failure tracebacks,
-which wastes a lot of time in large tests suites that take many minutes to
-complete. We show tracebacks as soon as they occur so you can start chasing
-them immediately, and we format them much better:
+nose, like most testrunners, typically waits until the bitter end to show error
+and failure tracebacks, which wastes a lot of time in large tests suites that
+take many minutes to complete. We show tracebacks as soon as they occur so you
+can start chasing them immediately, and we format them much better:
 
 * Judicious use of color and other formatting makes the traceback easy to scan.
   It's especially easy to slide down the list of function names to keep your
@@ -204,6 +210,62 @@ Each of these takes an ANSI color expressed as a number from 0 to 15.
   Color of the progress bar's empty portion. Equivalent environment variable:
   ``NOSE_PROGRESSIVE_BAR_EMPTY_COLOR``.
 
+Advanced Formatting
+-------------------
+
+If you can't get what you want with the above options—for example, if your
+editor needs a different line number syntax—you can replace the entire
+template that controls the editor shortcut lines of the traceback.
+
+``--progressive-editor-shortcut-template='<template>'``
+  ``<template>`` is a `format string
+  <http://docs.python.org/2/library/string.html#formatstrings>`_ as accepted by
+  ``str.format()``. Equivalent environment variable:
+  ``NOSE_PROGRESSIVE_EDITOR_SHORTCUT_TEMPLATE``.
+
+The default template is... ::
+
+    '  {dim_format}{editor} +{line_number:<{line_number_max_width}} {path}{normal}{function_format}{function}{normal}'
+
+Here are the available keys:
+
+=====================    ======================================================
+dim_format               A terminal formatting sequence for de-emphasized text.
+                         Affected by ``--progressive-dim-color``.
+
+editor                   Your editor, set through ``--progressive-editor`` and
+                         ``$EDITOR``
+
+function                 The name of the function referenced by this stack
+                         frame
+
+function_format          A terminal formatting sequence for the function name.
+                         Affected by ``--progressive-function-color``.
+
+hash_if_function         ``'  # '`` if this frame has a ``function`` with a
+                         name; empty otherwise. Useful for commenting out the
+                         function name at the end of a line.
+
+line_number              The line number of the instruction this stack frame
+                         references
+
+line_number_max_width    The maximum width, in characters, of the line numbers
+                         in the traceback currently being formatted. Useful for
+                         aligning columns.
+
+normal                   A terminal escape sequence that turns off all special
+                         formatting. A shortcut for ``term.normal``.
+
+path                     The path to the file this stack frame references
+
+term                     A `blessings
+                         <http://pypi.python.org/pypi/blessings/>`_
+                         ``Terminal`` object, through which you can access any
+                         terminal capability, even compound ones such as
+                         ``term.bold_blue_on_bright_red``. This is your escape
+                         hatch to wild and crazy things beyond mere colors.
+=====================    ======================================================
+
 Caveats and Known Bugs
 ======================
 
@@ -211,7 +273,6 @@ Caveats and Known Bugs
 * Some logging handlers will smear bits of the progress bar upward if they
   don't print complete lines. I hope to fix this with some monkeypatching, but
   in the meantime, passing ``--logging-clear-handlers`` works around this.
-* Requires Python 2.5 or greater and doesn't support Python 3 yet.
 
 Having trouble? Pop over to the `issue tracker`_.
 
@@ -240,6 +301,32 @@ GPL
 
 Version History
 ===============
+
+1.5
+  * Add the ``--progressive-editor-shortcut-template`` option, letting you
+    completely customize the editor shortcuts. Now we support any text editor
+    that has a go-to-line option, no matter how it's spelled.
+  * Drop support for Python 2.5. We needed modern string formatting.
+  * Tolerate Nones in traceback components: file names and code extracts
+    particularly. (Kyle Gibson)
+
+1.4.3
+  * Fix bar not showing up in Python 3.
+  * Add honest-to-goodness, tox-tested support for Python 3.3. 3.2 may come
+    later. 3.1 and earlier won't, because its stdlib hadn't got its curses act
+    together yet.
+
+1.4.2
+  * Clear the TestLoader's path cache (new in nose 1.3.0) after counting the
+    tests. This solves the problem of finding 0 tests to run under nose 1.3.0.
+  * Make progress bar tests less brittle so they don't falsely fail on OS X
+    10.8 or other platforms where the terminfo isn't exactly what I wrote the
+    test under.
+
+1.4.1
+  * Fix the "AttributeError: 'dict' object has no attribute 'raw_input'" error
+    that sometimes occurred at pdb breakpoints. Thanks to David Baumgold for
+    finding the cause!
 
 1.4
   * Make the final "OK!" green and bold. This helps me pick it out faster.

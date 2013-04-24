@@ -11,6 +11,13 @@ from nose.util import src
 from noseprogressive.utils import human_path
 
 
+DEFAULT_EDITOR_SHORTCUT_TEMPLATE = (u'  {dim_format}{editor} '
+                                     '+{line_number:<{line_number_max_width}} '
+                                     '{path}{normal}'
+                                     '{function_format}{hash_if_function}'
+                                     '{function}{normal}')
+
+
 def format_traceback(extracted_tb,
                      exc_type,
                      exc_value,
@@ -18,7 +25,8 @@ def format_traceback(extracted_tb,
                      term=None,
                      function_color=12,
                      dim_color=8,
-                     editor='vi'):
+                     editor='vi',
+                     template=DEFAULT_EDITOR_SHORTCUT_TEMPLATE):
     """Return an iterable of formatted Unicode traceback frames.
 
     Also include a pseudo-frame at the end representing the exception itself.
@@ -28,40 +36,41 @@ def format_traceback(extracted_tb,
 
     """
     def format_shortcut(editor,
-                        file,
-                        line,
+                        path,
+                        line_number,
                         function=None):
         """Return a pretty-printed editor shortcut."""
-        return template % dict(editor=editor,
-                               line=line,
-                               file=file,
-                               function=(u'  # ' + function) if function else u'',
-                               funcemph=term.color(function_color),
+        return template.format(editor=editor,
+                               line_number=line_number,
+                               path=path,
+                               function=function or u'',
+                               hash_if_function=u'  # ' if function else u'',
+                               function_format=term.color(function_color),
                                # Underline is also nice and doesn't make us
                                # worry about appearance on different background
                                # colors.
-                               plain=term.normal,
-                               fade=term.color(dim_color) + term.bold)
+                               normal=term.normal,
+                               dim_format=term.color(dim_color) + term.bold,
+                               line_number_max_width=line_number_max_width,
+                               term=term)
 
+    template += '\n'  # Newlines are awkward to express on the command line.
     extracted_tb = _unicode_decode_extracted_tb(extracted_tb)
     if not term:
         term = Terminal()
 
     if extracted_tb:
         # Shorten file paths:
-        for i, (file, line, function, text) in enumerate(extracted_tb):
-            extracted_tb[i] = human_path(src(file), cwd), line, function, text
+        for i, (file, line_number, function, text) in enumerate(extracted_tb):
+            extracted_tb[i] = human_path(src(file), cwd), line_number, function, text
 
-        line_width = len(unicode(max(the_line for _, the_line, _, _ in extracted_tb)))
-        template = (u'  %(fade)s%(editor)s +%(line)-' + unicode(line_width) + u's '
-                     '%(file)s%(plain)s'
-                     '%(funcemph)s%(function)s%(plain)s\n')
+        line_number_max_width = len(unicode(max(the_line for _, the_line, _, _ in extracted_tb)))
 
         # Stack frames:
-        for i, (file, line, function, text) in enumerate(extracted_tb):
+        for i, (path, line_number, function, text) in enumerate(extracted_tb):
             text = (text and text.strip()) or u''
 
-            yield (format_shortcut(editor, file, line, function) +
+            yield (format_shortcut(editor, path, line_number, function) +
                    (u'    %s\n' % text))
 
     # Exception:
@@ -98,7 +107,8 @@ def extract_relevant_tb(tb, exctype, is_test_failure):
 
 
 def _decode(string):
-    """Decode a string as if it were UTF-8, swallowing errors.
+    """Decode a string as if it were UTF-8, swallowing errors. Turn Nones into
+    "None", which is more helpful than crashing.
 
     In Python 2, extract_tb() returns simple strings. We arbitrarily guess that
     UTF-8 is the encoding and use "replace" mode for undecodable chars. I'm
@@ -106,13 +116,15 @@ def _decode(string):
     Unicode. We'll see when we add Python 3 to the tox config.
 
     """
+    if string is None:
+        return 'None'
     return string if isinstance(string, unicode) else string.decode('utf-8', 'replace')
 
 
 def _unicode_decode_extracted_tb(extracted_tb):
     """Return a traceback with the string elements translated into Unicode."""
-    return [(_decode(file), line, _decode(function), _decode(text))
-            for file, line, function, text in extracted_tb]
+    return [(_decode(file), line_number, _decode(function), _decode(text))
+            for file, line_number, function, text in extracted_tb]
 
 
 def _is_unittest_frame(tb):

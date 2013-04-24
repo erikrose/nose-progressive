@@ -68,6 +68,7 @@ class ProgressBar(object):
         self.last = self._term.bold(test_path) + '  ' + graph
         with self._at_last_line():
             self.stream.write(self.last)
+        self.stream.flush()
 
     def erase(self):
         """White out the progress bar."""
