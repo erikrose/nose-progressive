@@ -107,7 +107,8 @@ def extract_relevant_tb(tb, exctype, is_test_failure):
 
 
 def _decode(string):
-    """Decode a string as if it were UTF-8, swallowing errors.
+    """Decode a string as if it were UTF-8, swallowing errors. Turn Nones into
+    "None", which is more helpful than crashing.
 
     In Python 2, extract_tb() returns simple strings. We arbitrarily guess that
     UTF-8 is the encoding and use "replace" mode for undecodable chars. I'm
@@ -115,6 +116,8 @@ def _decode(string):
     Unicode. We'll see when we add Python 3 to the tox config.
 
     """
+    if string is None:
+        return 'None'
     return string if isinstance(string, unicode) else string.decode('utf-8', 'replace')
 
 

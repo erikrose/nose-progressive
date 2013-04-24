@@ -307,6 +307,8 @@ Version History
     completely customize the editor shortcuts. Now we support any text editor
     that has a go-to-line option, no matter how it's spelled.
   * Drop support for Python 2.5. We needed modern string formatting.
+  * Tolerate Nones in traceback components: file names and code extracts
+    particularly. (Kyle Gibson)
 
 1.4.3
   * Fix bar not showing up in Python 3.
