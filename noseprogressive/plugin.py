@@ -1,3 +1,4 @@
+from codecs import getwriter
 from functools import partial
 from os import getcwd
 import pdb
@@ -198,7 +199,12 @@ class ProgressivePlugin(Plugin):
         """Replace TextTestRunner with something that prints fewer dots."""
         return ProgressiveRunner(self._cwd,
                                  self._totalTests,
-                                 runner.stream,
+
+                                 # Forcibly convert unicode strings to utf-8.
+                                 # Python 2.6's default writer is ASCII and
+                                 # blows up when anything is > 128:
+                                 getwriter('utf-8')(runner.stream),
+
                                  verbosity=self.conf.verbosity,
                                  config=self.conf)  # So we don't get a default
                                                     # NoPlugins manager
