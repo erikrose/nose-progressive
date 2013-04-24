@@ -215,7 +215,12 @@ Advanced Formatting
 
 If you can't get what you want with the above options—for example, if your
 editor needs a different line number syntax—you can replace the entire
-template that controls the editor shortcut lines of the traceback.
+template that controls the editor shortcut lines of the traceback. You can even
+`rig clickable URLs
+<http://blog.macromates.com/2007/the-textmate-url-scheme/>`_ `in most terminals
+<http://stackoverflow.com/questions/2338765/is-there-a-way-to-make-a-link-
+clickable-in-the-osx-terminal>`_ that take you straight to the right line in
+your editor, without even the bother of copy and paste.
 
 ``--progressive-editor-shortcut-template='<template>'``
   ``<template>`` is a `format string
@@ -256,7 +261,8 @@ line_number_max_width    The maximum width, in characters, of the line numbers
 normal                   A terminal escape sequence that turns off all special
                          formatting. A shortcut for ``term.normal``.
 
-path                     The path to the file this stack frame references
+path                     The path to the file this stack frame references.
+                         Affected by ``--progressive-abs``.
 
 term                     A `blessings
                          <http://pypi.python.org/pypi/blessings/>`_
