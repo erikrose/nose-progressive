@@ -19,7 +19,7 @@ setup(
     name='nose-progressive',
     version='1.5',
     description='A testrunner with a progress bar and smarter tracebacks',
-    long_description=codecs.open('README.rst', encoding='utf8').read(),
+    long_description=codecs.open('README.rst', encoding='utf-8').read(),
     author='Erik Rose',
     author_email='erikrose@grinchcentral.com',
     license='GPL',
