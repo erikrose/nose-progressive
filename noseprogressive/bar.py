@@ -30,7 +30,8 @@ class ProgressBar(object):
         signal(SIGWINCH, self._handle_winch)
 
     def _measure_terminal(self):
-        self.lines, self.cols = self._term.height, self._term.width
+        self.lines, self.cols = (self._term.height or 24,
+                                 self._term.width or 80)
 
     def _handle_winch(self, *args):
         #self.erase()  # Doesn't seem to help.
