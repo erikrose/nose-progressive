@@ -301,11 +301,6 @@ Author
 
 Erik Rose, while waiting for tests to complete ;-)
 
-License
-=======
-
-`The MIT License (MIT) <http://opensource.org/licenses/MIT>`_
-
 Version History
 ===============
 

@@ -22,7 +22,7 @@ setup(
     long_description=codecs.open('README.rst', encoding='utf-8').read(),
     author='Erik Rose',
     author_email='erikrose@grinchcentral.com',
-    license='MIT License',
+    license='MIT',
     packages=find_packages(exclude=['ez_setup']),
     install_requires=['nose>=1.2.1', 'blessings>=1.3,<2.0'],
     test_suite='nose.collector',
