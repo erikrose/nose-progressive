@@ -307,6 +307,7 @@ Version History
 1.5.1
   * Avoid a TypeError when running nose-progressive from within ``invoke``,
     which obscures the terminal size.
+  * Fix a Unicode error when running setup.py inside Fedora's ``mock`` tool.
 
 1.5
   * Add the ``--progressive-editor-shortcut-template`` option, letting you
