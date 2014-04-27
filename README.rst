@@ -56,6 +56,7 @@ can start chasing them immediately, and we format them much better:
   To re-run the above, do this::
 
     nosetests --with-progressive kitsune.apps.wiki.tests.test_parser:TestWikiVideo.test_video_english
+
 * The frame of the test itself always comes first; we skip any setup frames
   from test harnesses and such. This keeps your concentration where it counts.
   Also, like unittest itself, we hide any frames that descend into trivial
@@ -303,7 +304,7 @@ Erik Rose, while waiting for tests to complete ;-)
 License
 =======
 
-GPL
+`The MIT License (MIT) <http://opensource.org/licenses/MIT>`_
 
 Version History
 ===============
