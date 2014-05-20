@@ -41,7 +41,7 @@ def format_traceback(extracted_tb,
                         function=None):
         """Return a pretty-printed editor shortcut."""
         return template.format(editor=editor,
-                               line_number=line_number,
+                               line_number=str(line_number),
                                path=path,
                                function=function or u'',
                                hash_if_function=u'  # ' if function else u'',
