@@ -79,8 +79,15 @@ def format_traceback(extracted_tb,
         # SyntaxErrors have a format different from other errors and include a
         # file path which looks out of place in our newly highlit, editor-
         # shortcutted world.
-        exc_lines = [format_shortcut(editor, exc_value.filename, exc_value.lineno)]
-        formatted_exception = format_exception_only(SyntaxError, exc_value)[1:]
+        if hasattr(exc_value, 'filename') and hasattr(exc_value, 'lineno'):
+            exc_lines = [format_shortcut(editor, exc_value.filename, exc_value.lineno)]
+            formatted_exception = format_exception_only(SyntaxError, exc_value)[1:]
+        else:
+            # The logcapture plugin may format exceptions as strings,
+            # stripping them of the full filename and lineno
+            exc_lines = []
+            formatted_exception = format_exception_only(SyntaxError, exc_value)
+            formatted_exception.append(u'(Try --nologcapture for a more detailed traceback)\n')
     else:
         exc_lines = []
         formatted_exception = format_exception_only(exc_type, exc_value)
