@@ -139,7 +139,7 @@ class ProgressivePlugin(Plugin):
                           help="Color of the progress bar's filled portion. An "
                                'ANSI color expressed as a number 0-15. '
                                'or a blessings-compatible'
-                               'color string like "cyan" or "bold_red_on_white". '
+                               'color string like "cyan" or "reverse". '
                                'Default: "reverse". '
                                '[NOSE_PROGRESSIVE_BAR_FILLED_COLOR]')
         parser.add_option('--progressive-bar-empty-color',
@@ -148,7 +148,7 @@ class ProgressivePlugin(Plugin):
                           help="Color of the progress bar's empty portion. An "
                                'ANSI color expressed as a number 0-15. '
                                'or a blessings-compatible'
-                               'color string like "cyan" or "bold_red_on_white". '
+                               'color string like "cyan" or "reverse". '
                                'Default: "normal". '
                                '[NOSE_PROGRESSIVE_BAR_EMPTY_COLOR]')
         parser.add_option('--progressive-editor-shortcut-template',
