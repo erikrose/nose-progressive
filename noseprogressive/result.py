@@ -90,6 +90,30 @@ class ProgressiveResult(TextTestResult):
                     self._options.editor,
                     self._options.editor_shortcut_template)))
 
+    def _color(self, color, default=None):
+        return self._term_color(self._term, color, default)
+
+    # Static so this can be moved to util later
+    @staticmethod
+    def _term_color(term, color, default=None):
+        """Output color string given an int or a blessings-compatible color 
+        string like 'red_on_white'
+        """
+        if not default:
+            default = term.normal
+        # Try to use integer
+        try:
+            color_int = int(color)
+            return term.color(color_int)
+        except ValueError:
+            pass
+        # Try to parse a color string
+        try:
+            return getattr(term, color)
+        except:
+            pass
+        return default
+
     def _printHeadline(self, kind, test, is_failure=True):
         """Output a 1-line error summary to the stream if appropriate.
 
@@ -103,7 +127,7 @@ class ProgressiveResult(TextTestResult):
             with self.bar.dodging():
                 self.stream.writeln(
                         '\n' +
-                        ((self._term.color(self._options.fail_color) if self._options.fail_color >= 0 else self._term.bold ) if is_failure else '') +
+                        (self._color(self._options.fail_color, default=self._term.bold) if is_failure else '') +
                         '%s: %s' % (kind, nose_selector(test)) +
                         (self._term.normal if is_failure else ''))  # end bold
 
@@ -181,7 +205,7 @@ class ProgressiveResult(TextTestResult):
             ret = '%s %s%s' % (number, type, 's' if number != 1 else '')
             if is_failure and number:
                 if self._options.fail_color >= 0:
-                    ret = self._term.color(self._options.fail_color) + ret + self._term.normal
+                    ret = self._color(self._options.fail_color) + ret + self._term.normal
                 else:
                     ret = self._term.bold(ret)
             return ret

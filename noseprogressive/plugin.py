@@ -106,9 +106,8 @@ class ProgressivePlugin(Plugin):
                                '--progressive-with-styling. '
                                '[NOSE_PROGRESSIVE_WITH_BAR]')
         parser.add_option('--progressive-fail-color',
-                          type='int',
                           dest='fail_color',
-                          default=env.get('NOSE_PROGRESSIVE_FAIL_COLOR', -1),
+                          default=env.get('NOSE_PROGRESSIVE_FAIL_COLOR', 'bold'),
                           help='Color of fail message. An '
                                'ANSI color expressed as a number 0-15 '
                                'or -1 to use bold '
