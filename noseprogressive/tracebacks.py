@@ -23,8 +23,8 @@ def format_traceback(extracted_tb,
                      exc_value,
                      cwd='',
                      term=None,
-                     function_color=12,
-                     dim_color=8,
+                     function_color=None,
+                     dim_color=None,
                      editor='vi',
                      template=DEFAULT_EDITOR_SHORTCUT_TEMPLATE):
     """Return an iterable of formatted Unicode traceback frames.
@@ -35,6 +35,12 @@ def format_traceback(extracted_tb,
     frame an editor shortcut.
 
     """
+    if not term:
+        term = Terminal()
+    if not function_color:
+        function_color = term.blue
+    if not dim_color:
+        dim_color = term.dim_black
     def format_shortcut(editor,
                         path,
                         line_number,
@@ -45,19 +51,17 @@ def format_traceback(extracted_tb,
                                path=path,
                                function=function or u'',
                                hash_if_function=u'  # ' if function else u'',
-                               function_format=term.color(function_color),
+                               function_format=function_color,
                                # Underline is also nice and doesn't make us
                                # worry about appearance on different background
                                # colors.
                                normal=term.normal,
-                               dim_format=term.color(dim_color) + term.bold,
+                               dim_format=dim_color + term.bold,
                                line_number_max_width=line_number_max_width,
                                term=term)
 
     template += '\n'  # Newlines are awkward to express on the command line.
     extracted_tb = _unicode_decode_extracted_tb(extracted_tb)
-    if not term:
-        term = Terminal()
 
     if extracted_tb:
         # Shorten file paths:

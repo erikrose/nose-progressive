@@ -1,5 +1,6 @@
 from os.path import abspath, realpath
 
+from blessings import NullCallableString
 from nose.tools import nottest
 import nose.util
 
@@ -130,3 +131,35 @@ def human_path(path, cwd):
     if cwd and path.startswith(cwd):
         path = path[len(cwd) + 1:]  # Make path relative. Remove leading slash.
     return path
+
+def term_color(term, color):
+    """Output a blessings color function given an int or a blessings-compatible color 
+    string like 'red_on_white'. 
+    default is term.normal if no default specified.
+    default may be given as a string, int, or a Terminal color function
+    """
+    default = NullCallableString()
+
+    if not color:
+        return default
+
+    # Try to parse integer
+    try:
+        result = term.color(int(color))
+        # if we can call result without any errors, return the result
+        result('test')
+        return result
+    except:
+        pass
+
+    # Try to parse a color string
+    try:
+        result = getattr(term, color)
+        # if we can call result without any errors, return the result
+        result('test')
+        return result
+    except:
+        pass
+
+    return default
+

@@ -110,37 +110,46 @@ class ProgressivePlugin(Plugin):
                           default=env.get('NOSE_PROGRESSIVE_FAIL_COLOR', 'bold'),
                           help='Color of fail message. An '
                                'ANSI color expressed as a number 0-15 '
-                               'or -1 to use bold or a blessings-compatible'
-                               'color string like "bold_red_on_white"'
+                               'or a blessings-compatible'
+                               'color string like "cyan" or "bold_red_on_white". '
+                               'Default: "bold". '
                                '[NOSE_PROGRESSIVE_FAIL_COLOR]')
         parser.add_option('--progressive-function-color',
-                          type='int',
                           dest='function_color',
-                          default=env.get('NOSE_PROGRESSIVE_FUNCTION_COLOR', 12),
+                          default=env.get('NOSE_PROGRESSIVE_FUNCTION_COLOR', 'blue'),
                           help='Color of function names in tracebacks. An '
-                               'ANSI color expressed as a number 0-15. '
+                               'ANSI color expressed as a number 0-15 '
+                               'or a blessings-compatible'
+                               'color string like "cyan" or "bold_red_on_white". '
+                               'Default: "blue". '
                                '[NOSE_PROGRESSIVE_FUNCTION_COLOR]')
         parser.add_option('--progressive-dim-color',
-                          type='int',
                           dest='dim_color',
-                          default=env.get('NOSE_PROGRESSIVE_DIM_COLOR', 8),
+                          default=env.get('NOSE_PROGRESSIVE_DIM_COLOR', 'black'),
                           help='Color of de-emphasized text (like editor '
                                'shortcuts) in tracebacks. An ANSI color '
-                               'expressed as a number 0-15. '
+                               'expressed as a number 0-15 '
+                               'or a blessings-compatible'
+                               'color string like "cyan" or "bold_red_on_white". '
+                               'Default: "black". '
                                '[NOSE_PROGRESSIVE_DIM_COLOR]')
         parser.add_option('--progressive-bar-filled-color',
-                          type='int',
                           dest='bar_filled_color',
-                          default=env.get('NOSE_PROGRESSIVE_BAR_FILLED_COLOR', 8),
+                          default=env.get('NOSE_PROGRESSIVE_BAR_FILLED_COLOR', 'reverse'),
                           help="Color of the progress bar's filled portion. An "
-                                'ANSI color expressed as a number 0-15. '
+                               'ANSI color expressed as a number 0-15. '
+                               'or a blessings-compatible'
+                               'color string like "cyan" or "bold_red_on_white". '
+                               'Default: "reverse". '
                                '[NOSE_PROGRESSIVE_BAR_FILLED_COLOR]')
         parser.add_option('--progressive-bar-empty-color',
-                          type='int',
                           dest='bar_empty_color',
-                          default=env.get('NOSE_PROGRESSIVE_BAR_EMPTY_COLOR', 7),
+                          default=env.get('NOSE_PROGRESSIVE_BAR_EMPTY_COLOR', 'normal'),
                           help="Color of the progress bar's empty portion. An "
-                                'ANSI color expressed as a number 0-15. '
+                               'ANSI color expressed as a number 0-15. '
+                               'or a blessings-compatible'
+                               'color string like "cyan" or "bold_red_on_white". '
+                               'Default: "normal". '
                                '[NOSE_PROGRESSIVE_BAR_EMPTY_COLOR]')
         parser.add_option('--progressive-editor-shortcut-template',
                           type='string',

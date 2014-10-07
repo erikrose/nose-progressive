@@ -9,7 +9,7 @@ __all__ = ['ProgressBar', 'NullProgressBar']
 class ProgressBar(object):
     _is_dodging = 0  # Like a semaphore
 
-    def __init__(self, max_value, term, filled_color=8, empty_color=7):
+    def __init__(self, max_value, term, filled_color, empty_color):
         """``max_value`` is the highest value I will attain. Must be >0."""
         self.stream = term.stream
         self.max = max_value
@@ -18,9 +18,9 @@ class ProgressBar(object):
         self._measure_terminal()
 
         # Prepare formatting, dependent on whether we have terminal colors:
-        if term.number_of_colors > max(filled_color, empty_color):
-            self._fill_cap = term.on_color(filled_color)
-            self._empty_cap = term.on_color(empty_color)
+        if term.number_of_colors >= 8:
+            self._fill_cap = filled_color
+            self._empty_cap = empty_color
             self._empty_char = ' '
         else:
             self._fill_cap = term.reverse

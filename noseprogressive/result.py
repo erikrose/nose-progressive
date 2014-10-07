@@ -1,13 +1,13 @@
 from __future__ import with_statement
 
-from blessings import Terminal
+from blessings import Terminal, COLORS
 from nose.plugins.skip import SkipTest
 from nose.result import TextTestResult
 from nose.util import isclass
 
 from noseprogressive.bar import ProgressBar, NullProgressBar
 from noseprogressive.tracebacks import format_traceback, extract_relevant_tb
-from noseprogressive.utils import nose_selector, index_of_test_frame
+from noseprogressive.utils import nose_selector, index_of_test_frame, term_color
 
 
 class ProgressiveResult(TextTestResult):
@@ -24,19 +24,39 @@ class ProgressiveResult(TextTestResult):
         self._options = config.options
         self._term = Terminal(stream=stream,
                               force_styling=config.options.with_styling)
+        self.fail_color       = term_color(self._term, self._options.fail_color)
+        self.function_color   = term_color(self._term, self._options.function_color)
+        self.dim_color        = term_color(self._term, self._options.dim_color)
+        self.bar_filled_color = term_color(self._term, self.barColor(self._options.bar_filled_color))
+        self.bar_empty_color  = term_color(self._term, self.barColor(self._options.bar_empty_color))
 
         if self._term.is_a_tty or self._options.with_bar:
             # 1 in case test counting failed and returned 0
             self.bar = ProgressBar(total_tests or 1,
                                    self._term,
-                                   config.options.bar_filled_color,
-                                   config.options.bar_empty_color)
+                                   self.bar_filled_color,
+                                   self.bar_empty_color)
         else:
             self.bar = NullProgressBar()
 
         # Declare errorclass-savviness so ErrorClassPlugins don't monkeypatch
         # half my methods away:
         self.errorClasses = {}
+
+    @staticmethod
+    def barColor(color_string):
+        """Convert color strings to their "on_" variety.
+        >>> barColor('blue')
+        'on_blue'
+        >>> barColor('on_red')
+        'on_red'
+        """
+        if color_string in COLORS:
+            if not color_string.startswith("on_"):
+                color_string = "on_" + color_string
+        return color_string
+
+        
 
     def startTest(self, test):
         """Update the progress bar."""
@@ -85,34 +105,10 @@ class ProgressiveResult(TextTestResult):
                     exception_value,
                     self._cwd,
                     self._term,
-                    self._options.function_color,
-                    self._options.dim_color,
+                    self.function_color,
+                    self.dim_color,
                     self._options.editor,
                     self._options.editor_shortcut_template)))
-
-    def _color(self, color, default=None):
-        return self._term_color(self._term, color, default)
-
-    # Static so this can be moved to util later
-    @staticmethod
-    def _term_color(term, color, default=None):
-        """Output color string given an int or a blessings-compatible color 
-        string like 'red_on_white'
-        """
-        if not default:
-            default = term.normal
-        # Try to use integer
-        try:
-            color_int = int(color)
-            return term.color(color_int)
-        except ValueError:
-            pass
-        # Try to parse a color string
-        try:
-            return getattr(term, color)
-        except:
-            pass
-        return default
 
     def _printHeadline(self, kind, test, is_failure=True):
         """Output a 1-line error summary to the stream if appropriate.
@@ -125,11 +121,10 @@ class ProgressiveResult(TextTestResult):
         """
         if is_failure or self._options.show_advisories:
             with self.bar.dodging():
-                self.stream.writeln(
-                        '\n' +
-                        (self._color(self._options.fail_color, default=self._term.bold) if is_failure else '') +
-                        '%s: %s' % (kind, nose_selector(test)) +
-                        (self._term.normal if is_failure else ''))  # end bold
+                line = '%s: %s' % (kind, nose_selector(test))
+                if is_failure:
+                    line = self.fail_color(line)
+                self.stream.writeln('\n' + line)
 
     def _recordAndPrintHeadline(self, test, error_class, artifact):
         """Record that an error-like thing occurred, and print a summary.
@@ -204,10 +199,7 @@ class ProgressiveResult(TextTestResult):
             # being Englishlike:
             ret = '%s %s%s' % (number, type, 's' if number != 1 else '')
             if is_failure and number:
-                if self._options.fail_color >= 0:
-                    ret = self._color(self._options.fail_color) + ret + self._term.normal
-                else:
-                    ret = self._term.bold(ret)
+                ret = self.fail_color(ret)
             return ret
 
         # Summarize the special cases:
