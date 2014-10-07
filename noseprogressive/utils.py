@@ -15,7 +15,8 @@ def test_address(test):
 
 
 def nose_selector(test):
-    """Return the string you can pass to nose to run `test`.
+    """Return the string you can pass to nose to run `test`, including argument
+    values if the test was made by a test generator.
 
     Return "Unknown test" if it can't construct a decent path.
 
@@ -26,7 +27,10 @@ def nose_selector(test):
 
         if module:
             if rest:
-                return '%s:%s' % (module, rest)
+                try:
+                    return '%s:%s%s' % (module, rest, test.test.arg or '')
+                except AttributeError:
+                    return '%s:%s' % (module, rest)
             else:
                 return module
     return 'Unknown test'
@@ -91,7 +95,7 @@ def index_of_test_frame(extracted_tb, exception_type, exception_value, test):
     # one match of equal confidence.
     knower = OneTrackMind()
 
-    if isinstance(test_file, basestring):  # Sometimes it's None.
+    if test_file is not None:
         test_file_path = realpath(test_file)
 
         # TODO: Perfect. Right now, I'm just comparing by function name within

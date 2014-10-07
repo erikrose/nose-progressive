@@ -1,1 +1,1 @@
-from plugin import ProgressivePlugin
+from noseprogressive.plugin import ProgressivePlugin

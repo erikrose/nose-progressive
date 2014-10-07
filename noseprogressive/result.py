@@ -54,6 +54,14 @@ class ProgressiveResult(TextTestResult):
         # circular refs which are expensive to collect. See the
         # sys.exc_info() docs.
         exception_type, exception_value = err[:2]
+        # TODO: In Python 3, the traceback is attached to the exception
+        # instance through the __traceback__ attribute. If the instance
+        # is saved in a local variable that persists outside the except
+        # block, the traceback will create a reference cycle with the
+        # current frame and its dictionary of local variables. This will
+        # delay reclaiming dead resources until the next cyclic garbage
+        # collection pass.
+
         extracted_tb = extract_relevant_tb(
             err[2],
             exception_type,
@@ -79,7 +87,8 @@ class ProgressiveResult(TextTestResult):
                     self._term,
                     self._options.function_color,
                     self._options.dim_color,
-                    self._options.editor)))
+                    self._options.editor,
+                    self._options.editor_shortcut_template)))
 
     def _printHeadline(self, kind, test, is_failure=True):
         """Output a 1-line error summary to the stream if appropriate.
@@ -110,7 +119,7 @@ class ProgressiveResult(TextTestResult):
         # it and monkeying around with showAll flags to keep it from printing
         # anything.
         is_error_class = False
-        for cls, (storage, label, is_failure) in self.errorClasses.iteritems():
+        for cls, (storage, label, is_failure) in self.errorClasses.items():
             if isclass(error_class) and issubclass(error_class, cls):
                 if is_failure:
                     test.passed = False
@@ -138,6 +147,8 @@ class ProgressiveResult(TextTestResult):
         """
         self._recordAndPrintHeadline(test, SkipTest, reason)
         # Python 2.7 users get a little bonus: the reason the test was skipped.
+        if isinstance(reason, Exception):
+            reason = reason.message
         if reason and self._options.show_advisories:
             with self.bar.dodging():
                 self.stream.writeln(reason)
@@ -186,7 +197,7 @@ class ProgressiveResult(TextTestResult):
                         len(storage),
                         is_failure)
                         for (storage, label, is_failure) in
-                            self.errorClasses.itervalues() if len(storage)])
+                            self.errorClasses.values() if len(storage)])
         summary = (', '.join(renderResultType(*a) for a in counts) +
                    ' in %.1fs' % (stop - start))
 

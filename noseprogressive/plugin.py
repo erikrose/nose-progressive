@@ -7,6 +7,7 @@ from warnings import warn
 from nose.plugins import Plugin
 
 from noseprogressive.runner import ProgressiveRunner
+from noseprogressive.tracebacks import DEFAULT_EDITOR_SHORTCUT_TEMPLATE
 from noseprogressive.wrapping import cmdloop, set_trace, StreamWrapper
 
 class ProgressivePlugin(Plugin):
@@ -141,6 +142,15 @@ class ProgressivePlugin(Plugin):
                           help="Color of the progress bar's empty portion. An "
                                 'ANSI color expressed as a number 0-15. '
                                '[NOSE_PROGRESSIVE_BAR_EMPTY_COLOR]')
+        parser.add_option('--progressive-editor-shortcut-template',
+                          type='string',
+                          dest='editor_shortcut_template',
+                          default=env.get(
+                                'NOSE_PROGRESSIVE_EDITOR_SHORTCUT_TEMPLATE',
+                                DEFAULT_EDITOR_SHORTCUT_TEMPLATE),
+                          help='A str.format() template for the non-code lines'
+                               ' of the traceback. '
+                               '[NOSE_PROGRESSIVE_EDITOR_SHORTCUT_TEMPLATE]')
 
     def configure(self, options, conf):
         """Turn style-forcing on if bar-forcing is on.
@@ -177,6 +187,11 @@ class ProgressivePlugin(Plugin):
 
             """
             self._totalTests += orig_method(*args, **kwargs).countTestCases()
+
+            # Clear out the loader's cache. Otherwise, it never finds any tests
+            # for the actual test run:
+            loader._visitedPaths = set()
+
             return orig_method(*args, **kwargs)
 
         # TODO: If there's ever a practical need, also patch loader.suiteClass

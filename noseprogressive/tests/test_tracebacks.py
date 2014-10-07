@@ -68,6 +68,18 @@ def test_empty_tracebacks():
 def test_unicode():
     """Don't have encoding explosions when a line of code contains non-ASCII."""
     unicode_tb = ([
-         ("/usr/lib/whatever.py", 69, 'getMethod', """return u'あ'""")
+         ("/usr/lib/whatあever.py", 69, 'getあMethod', "return u'あ'")
         ], AttributeError, AttributeError("'NoneType' object has no pants.'"))
-    ''.join(format_traceback(*unicode_tb))
+    u''.join(format_traceback(*unicode_tb))
+
+
+def test_none_members():
+    """Don't crash if the attrs of an extracted traceback are None.
+
+    This can happen when using mocking.
+
+    """
+    list(format_traceback(
+        [(None, None, None, None)],
+        AttributeError,
+        AttributeError('I have many nasty attributes.')))
