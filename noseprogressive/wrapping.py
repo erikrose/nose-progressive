@@ -6,6 +6,10 @@ import cmd
 import pdb
 import sys
 
+# compatibility with python3
+if sys.version_info.major == 3:
+    __builtin__.raw_input = __builtin__.input
+
 
 def cmdloop(self, *args, **kwargs):
     """Call pdb's cmdloop, making readline work.
