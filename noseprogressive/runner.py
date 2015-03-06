@@ -39,7 +39,10 @@ class ProgressiveRunner(nose.core.TextTestRunner):
 
         result = self._makeResult()
         startTime = time()
-        test(result)
+        try:
+            test(result)
+        except KeyboardInterrupt:
+            pass
         stopTime = time()
 
         # We don't care to hear about errors again at the end; we take care of
