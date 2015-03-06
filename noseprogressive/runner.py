@@ -42,6 +42,11 @@ class ProgressiveRunner(nose.core.TextTestRunner):
         try:
             test(result)
         except KeyboardInterrupt:
+            # we need to ignore these exception to not
+            # show traceback when user intentionally
+            # interrupted test suite execution, and
+            # to output some reasonable results on
+            # already passed and failed tests.
             pass
         stopTime = time()
 
