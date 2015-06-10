@@ -83,3 +83,25 @@ def test_none_members():
         [(None, None, None, None)],
         AttributeError,
         AttributeError('I have many nasty attributes.')))
+
+
+def test_proxied_syntax_error():
+    """The logcapture plugin formats errors by extracting and converting
+    the value to a string. Nose recreates a proxy exception lacking
+    filename and lineno attributes, crashing the shortcut formatting
+    """
+    string_error = ''.join([
+        "invalid syntax (package.py, line 111)\n",
+        "-------------------- >> begin captured logging << --------------------\n",
+        "DEBUG: a logged message\n",
+        "--------------------- >> end captured logging << ---------------------"
+        ])
+    # This is essentially what nose does with a string exception
+    proxied_syntax_error = type('SyntaxError', (Exception,), {})(string_error)
+    proxied_syntax_tb = ([
+    ('/usr/lib/python2.7/site-packages/nose/loader.py', 403, 'loadTestsFromName', 'module = resolve_name(addr.module)'),
+    ('/usr/lib/python2.7/site-packages/nose/util.py', 311, 'resolve_name', "module = __import__('.'.join(parts_copy))"),
+    ('/usr/local/venvs/project/tests.py', 8, '<module>', 'from project.package import something')
+    ], SyntaxError, proxied_syntax_error
+    )
+    ''.join(format_traceback(*proxied_syntax_tb))
