@@ -39,7 +39,15 @@ class ProgressiveRunner(nose.core.TextTestRunner):
 
         result = self._makeResult()
         startTime = time()
-        test(result)
+        try:
+            test(result)
+        except KeyboardInterrupt:
+            # we need to ignore these exception to not
+            # show traceback when user intentionally
+            # interrupted test suite execution, and
+            # to output some reasonable results on
+            # already passed and failed tests.
+            pass
         stopTime = time()
 
         # We don't care to hear about errors again at the end; we take care of
