@@ -166,6 +166,11 @@ class ProgressiveResult(TextTestResult):
         self._printHeadline('FAIL', test)
         self._printTraceback(test, err)
 
+    def addSuccess(self, test):
+        super(ProgressiveResult, self).addSuccess(test)
+        if self._options.show_success:
+            self._printHeadline('OK', test)
+
     def printSummary(self, start, stop):
         """As a final summary, print number of tests, broken down by result."""
         def renderResultType(type, number, is_failure):

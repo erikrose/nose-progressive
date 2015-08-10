@@ -143,6 +143,12 @@ class ProgressivePlugin(Plugin):
                           help='A str.format() template for the non-code lines'
                                ' of the traceback. '
                                '[NOSE_PROGRESSIVE_EDITOR_SHORTCUT_TEMPLATE]')
+        parser.add_option('--progressive-success',
+                          action='store_true',
+                          dest='show_success',
+                          default=env.get('NOSE_PROGRESSIVE_SUCCESS', False),
+                          help='Show successful tests. '
+                               '[NOSE_PROGRESSIVE_SUCCESS]')
 
     def configure(self, options, conf):
         """Turn style-forcing on if bar-forcing is on.
