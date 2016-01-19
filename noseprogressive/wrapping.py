@@ -1,7 +1,7 @@
 """Facilities for wrapping stderr and stdout and dealing with the fallout"""
 
 from __future__ import with_statement
-import __builtin__
+import builtins
 import cmd
 import pdb
 import sys
@@ -31,14 +31,14 @@ def cmdloop(self, *args, **kwargs):
 
     orig_raw_input = raw_input
     if hasattr(sys.stdout, 'stream'):
-        __builtin__.raw_input = unwrapping_raw_input
+        builtins.raw_input = unwrapping_raw_input
     # else if capture plugin has replaced it with a StringIO, don't bother.
     try:
         # Interesting things happen when you try to not reference the
         # superclass explicitly.
         ret = cmd.Cmd.cmdloop(self, *args, **kwargs)
     finally:
-        __builtin__.raw_input = orig_raw_input
+        builtins.raw_input = orig_raw_input
     return ret
 
 
