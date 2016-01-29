@@ -64,7 +64,7 @@ def format_traceback(extracted_tb,
         for i, (file, line_number, function, text) in enumerate(extracted_tb):
             extracted_tb[i] = human_path(src(file), cwd), line_number, function, text
 
-        line_number_max_width = len(unicode(max(the_line for _, the_line, _, _ in extracted_tb)))
+        line_number_max_width = len(str(max(the_line for _, the_line, _, _ in extracted_tb)))
 
         # Stack frames:
         for i, (path, line_number, function, text) in enumerate(extracted_tb):
@@ -125,7 +125,7 @@ def _decode(string):
     """
     if string is None:
         return 'None'
-    return string if isinstance(string, unicode) else string.decode('utf-8', 'replace')
+    return string
 
 
 def _unicode_decode_extracted_tb(extracted_tb):
