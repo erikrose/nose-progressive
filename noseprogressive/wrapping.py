@@ -29,7 +29,11 @@ def cmdloop(self, *args, **kwargs):
         sys.stdout = wrapped_stdout
         return ret
 
-    orig_raw_input = raw_input
+    try:
+        orig_raw_input = raw_input
+    except:
+        # python3 compatible
+        orig_raw_input = input
     if hasattr(sys.stdout, 'stream'):
         __builtin__.raw_input = unwrapping_raw_input
     # else if capture plugin has replaced it with a StringIO, don't bother.
