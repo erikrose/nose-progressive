@@ -6,6 +6,8 @@ import cmd
 import pdb
 import sys
 
+PY3 = sys.version_info[0] == 3
+
 
 def cmdloop(self, *args, **kwargs):
     """Call pdb's cmdloop, making readline work.
@@ -29,7 +31,11 @@ def cmdloop(self, *args, **kwargs):
         sys.stdout = wrapped_stdout
         return ret
 
-    orig_raw_input = raw_input
+    if PY3:
+        orig_raw_input = input
+    else:
+        orig_raw_input = raw_input
+
     if hasattr(sys.stdout, 'stream'):
         __builtin__.raw_input = unwrapping_raw_input
     # else if capture plugin has replaced it with a StringIO, don't bother.
