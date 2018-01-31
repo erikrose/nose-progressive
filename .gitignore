@@ -4,3 +4,4 @@
 .tox
 *.egg-info/
 .*.swp
+build
