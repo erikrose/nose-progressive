@@ -304,6 +304,12 @@ Erik Rose, while waiting for tests to complete ;-)
 Version History
 ===============
 
+1.5.2
+  * Handle KeyboardInterrupt more gracefully. (Alexander Artemenko)
+  * Look up exception messages more compatibly with Python 3.4. (Paul Weaver)
+  * Gracefully handle proxied SyntaxErrors when using the logcapture plugin. (Lucas Taylor)
+  * Add LICENSE to MANIFEST.in. (Sanny Kumar)
+
 1.5.1
   * Avoid a TypeError when running nose-progressive from within ``invoke``,
     which obscures the terminal size.
