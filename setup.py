@@ -17,7 +17,7 @@ if sys.version_info >= (3,):
 
 setup(
     name='nose-progressive',
-    version='1.5.1',
+    version='1.5.2',
     description='A testrunner with a progress bar and smarter tracebacks',
     long_description=codecs.open('README.rst', encoding='utf-8').read(),
     author='Erik Rose',
