@@ -12,8 +12,6 @@ from setuptools import setup, find_packages
 
 
 extra_setup = {}
-if sys.version_info >= (3,):
-    extra_setup['use_2to3'] = True
 
 setup(
     name='nose-progressive',
